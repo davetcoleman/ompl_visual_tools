@@ -1,0 +1,9 @@
+*.pyc
+\#*#
+*~
+~*
+Debug/
+Release/
+build/
+bin/
+CMakeCache.txt

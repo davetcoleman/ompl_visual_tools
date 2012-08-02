@@ -1,0 +1,16 @@
+<package>
+  <description brief="ompl_rviz_viewer">
+
+     ompl_rviz_viewer
+
+  </description>
+  <author>David Coleman</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/ompl_rviz_viewer</url>
+  <depend package="roscpp"/>
+  <depend package="visualization_msgs"/>
+
+</package>
+
+
