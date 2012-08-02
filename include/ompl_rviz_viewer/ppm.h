@@ -13,16 +13,49 @@
 // PPMPixel Struct
 // *********************************************************************************************************************
 typedef struct {
-  unsigned char red,green,blue;
+  unsigned char red,green,blue,cost;
 } PPMPixel;
 
 // *********************************************************************************************************************
 // PPMImage Struct
 // *********************************************************************************************************************
-typedef struct {
+/*typedef struct {
   int x, y;
   PPMPixel *data;
 } PPMImage;
+*/
+class PPMImage
+{
+public:
+  PPMImage() {}
+
+  // Convert coordinates to a id number
+  int getID( int x_coord, int y_coord )
+  {
+    return y_coord * x + x_coord;
+  }
+
+  // Convert id to x
+  int getX( int id )
+  {
+    return id % x;
+  }
+
+  // Convert id to y
+  int getY( int id )
+  {
+    return id / x;
+  }
+
+  int getMaxID()
+  {
+    return x * y;
+  }
+
+  // Member variables
+  int x, y;
+  PPMPixel *data;
+};
 
 
 #define CREATOR "RPFELGUEIRAS"
