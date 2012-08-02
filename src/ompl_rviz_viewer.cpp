@@ -60,16 +60,16 @@ const unsigned int DIMENSIONS = 2;
 class TwoDimensionalValidityChecker : public ob::StateValidityChecker
 {
 private:
-  PPMImage *image_;
+  std::vector<int> cost_;
   double max_threshold_;
 
 public:
 
   /** \brief Constructor */
-  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, PPMImage* image ) :
+  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, std::vector<int> cost  ) :
     StateValidityChecker(si)
   {
-    image_ = image;
+    cost_ = cost;
     max_threshold_ = 10;
   }
 
@@ -100,7 +100,7 @@ public:
 // *********************************************************************************************************
 // Plan
 // *********************************************************************************************************
-std::vector<std::pair<double, double> > planWithSimpleSetup( PPMImage *image )
+std::vector<std::pair<double, double> > planWithSimpleSetup( std::vector<int> cost )
 {
   // The returned result
   std::vector<std::pair<double, double> > coordinates;
@@ -134,7 +134,7 @@ std::vector<std::pair<double, double> > planWithSimpleSetup( PPMImage *image )
   simple_setup.setPlanner(ob::PlannerPtr(new og::TRRT( simple_setup.getSpaceInformation() )));
 
   // Set state validity checking for this space
-  simple_setup.setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( simple_setup.getSpaceInformation(), image ) ) );
+  simple_setup.setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( simple_setup.getSpaceInformation(), cost ) ) );
 
 
 
@@ -220,7 +220,7 @@ std::vector<std::pair<double, double> > planWithSimpleSetup( PPMImage *image )
 // *********************************************************************************************************
 // Visualize Results
 // *********************************************************************************************************
-void displayCubes( PPMImage *image )
+void displayCubes( PPMImage *image, std::vector<int> cost )
 {
   // ROS Publishing stuff
   ros::NodeHandle n;
@@ -250,15 +250,15 @@ void displayCubes( PPMImage *image )
     marker.id = marker_id;
 
     // Set the color -- be sure to set alpha to something non-zero!
-    marker.color.r = image->data[ marker_id ].red; // / 255.0;
-    marker.color.g = image->data[ marker_id ].green;// / 255.0;
-    marker.color.b = image->data[ marker_id ].blue;// / 255.0;
+    marker.color.r = image->data[ marker_id ].red / 255.0;
+    marker.color.g = image->data[ marker_id ].green / 255.0;
+    marker.color.b = image->data[ marker_id ].blue / 255.0;
     marker.color.a = 1.0;
 
     // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
     marker.pose.position.x = marker_id % image->x;    // Map index back to coordinates
     marker.pose.position.y = marker_id / image->x;    // Map index back to coordinates
-    marker.pose.position.z = 1; //image->data[ marker_id ].cost / 2;
+    marker.pose.position.z = cost[ marker_id ] / 2;
     marker.pose.orientation.x = 0.0;
     marker.pose.orientation.y = 0.0;
     marker.pose.orientation.z = 0.0;
@@ -267,8 +267,9 @@ void displayCubes( PPMImage *image )
     // Set the scale of the marker -- 1x1x1 here means 1m on a side
     marker.scale.x = 1.0;
     marker.scale.y = 1.0;
-    marker.scale.z = 1.0; //image->data[ marker_id ].cost;
+    marker.scale.z = cost[ marker_id ];
 
+    /*
     std::cout << "#" << marker.id
               << " COORD: "
               << marker.pose.position.x << " "
@@ -278,8 +279,9 @@ void displayCubes( PPMImage *image )
               << marker.color.r << " "
               << marker.color.g << " "
               << marker.color.b
-              << " COST: " << (int) image->data[ marker_id ].cost
+              << " COST: " << cost[ marker.id ]
               << std::endl;
+    */
     ros::Duration(0.00001).sleep();
 
     //marker.lifetime = ros::Duration(10.0);
@@ -320,26 +322,27 @@ int main( int argc, char** argv )
     return false;
   }
 
-  /*
+  // Create an array of ints that represent the cost of every pixel
+  std::vector<int> cost( image->getSize(), 0 );
 
-    const int scale = 5;
+  const int scale = 5;
 
-    // Preprocess the pixel data for cost and give it a nice colored tint
-    for( int i = 0; i < image->getSize(); ++i )
-    {
+  // Preprocess the pixel data for cost and give it a nice colored tint
+  for( int i = 0; i < image->getSize(); ++i )
+  {
     // Calculate cost
-    image->data[ i ].cost = (image->data[ i ].red ) / scale;
+    cost[ i ]  = (image->data[ i ].red ) / scale;
 
     // prevent cost from being 0
-    if( !image->data[ i ].cost )
-    image->data[ i ].cost = 1;
+    if( !cost[ i ] )
+      cost[ i ] = 1;
 
     // Invert colors and give tint
-    image->data[ i ].red = 255 - image->data[ i ].red;
+    image->data[ i ].red = 200 - image->data[ i ].red;
     image->data[ i ].green = 255 - image->data[ i ].green;
-    image->data[ i ].blue = 100; //(255 - image->data[ i ].blue;
-    }
-  */
+    image->data[ i ].blue = 200 - image->data[ i ].blue;
+  }
+
 
   /*
 
@@ -351,7 +354,7 @@ int main( int argc, char** argv )
     std::cout << std::endl << std::endl;
 
     // Get list of coordinates
-    std::vector<std::pair<double, double> > coordinates = planWithSimpleSetup( PPMImage *image );
+    std::vector<std::pair<double, double> > coordinates = planWithSimpleSetup( cost );
 
     // Convert path coordinates to red
     for( std::vector<std::pair<double, double> >::const_iterator coord_it = coordinates.begin();
@@ -378,7 +381,7 @@ int main( int argc, char** argv )
     }
   */
 
-  displayCubes( image );
+  displayCubes( image, cost );
 
   std::cout << "SUCCESS ------------------------------ " << std::endl << std::endl;
 }
