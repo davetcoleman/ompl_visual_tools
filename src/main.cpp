@@ -1,10 +1,13 @@
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 using namespace std;
 
-
+// *********************************************************************************************************************
+// Struct
+// *********************************************************************************************************************
 struct Pixel
 {
   double x_, y_, z_;
@@ -15,22 +18,27 @@ struct Pixel
   {}
 };
 
+// *********************************************************************************************************************
+// Main
+// *********************************************************************************************************************
 int main( int argc, char** argv )
 {
   ros::init(argc, argv, "basic_shapes");
   ros::NodeHandle n;
   ros::Rate rate(40);
-  ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
+
+  visualization_msgs::MarkerArray marker_array;
 
   vector<Pixel> map;
   map.push_back( Pixel( 1, 1, 1, 1 ) );
   map.push_back( Pixel( 2, 1, 1, 1 ) );
   map.push_back( Pixel( 3, 1, 1, 1 ) );
-  map.push_back( Pixel( 1, 2, 1, 1 ) );
-  map.push_back( Pixel( 2, 2, 1, 1 ) );
-  map.push_back( Pixel( 3, 2, 1, 1 ) );
-  map.push_back( Pixel( 1, 3, 1, 1 ) );
-  map.push_back( Pixel( 2, 3, 1, 1 ) );
+  map.push_back( Pixel( 1, 2, 1, 2 ) );
+  map.push_back( Pixel( 2, 2, 1, 3 ) );
+  map.push_back( Pixel( 3, 2, 1, 3 ) );
+  map.push_back( Pixel( 1, 3, 1, 2 ) );
+  map.push_back( Pixel( 2, 3, 1, 3 ) );
   map.push_back( Pixel( 3, 3, 1, 1 ) );
 
   int marker_id = 0;
@@ -96,13 +104,17 @@ int main( int argc, char** argv )
       marker.color.a = 1.0;
     }
 
-    marker.lifetime = ros::Duration(10.0);
+    //marker.lifetime = ros::Duration(10.0);
     //marker.lifetime = ros::Duration();
 
-    // Publish the marker
-    marker_pub.publish(marker);
+    //marker_pub.publish(marker);
+    marker_array.markers.push_back( marker );
 
   }
+
+  // Publish the marker array
+  marker_pub.publish( marker_array );
+
   ros::Duration(2).sleep();
 
   cout << "Done publishing" << endl;
