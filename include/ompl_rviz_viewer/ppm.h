@@ -47,7 +47,7 @@ public:
     return id / x;
   }
 
-  int getMaxID()
+  int getSize()
   {
     return x * y;
   }

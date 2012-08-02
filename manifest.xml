@@ -9,12 +9,10 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/ompl_rviz_viewer</url>
   <depend package="roscpp"/>
+  <depend package="roslib"/>
   <depend package="visualization_msgs"/>
   <depend package="ompl" />
 
-  <export>
-    <cpp cflags="`pkg-config --cflags ompl` -I${prefix}/include `rosboost-cfg --cflags`" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lompl_interface `pkg-config --libs ompl` `rosboost-cfg --lflags thread,date_time`"/>
-  </export>
   
 </package>
 
