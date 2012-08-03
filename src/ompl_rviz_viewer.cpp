@@ -48,9 +48,13 @@
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/config.h>
 #include <iostream>
+// Boost
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
+namespace bnu = boost::numeric::ublas;
 
 const unsigned int DIMENSIONS = 2;
 
@@ -60,24 +64,24 @@ const unsigned int DIMENSIONS = 2;
 class TwoDimensionalValidityChecker : public ob::StateValidityChecker
 {
 private:
-  std::vector<int> cost_;
+  bnu::matrix<int> cost_;
   double max_threshold_;
 
 public:
 
   /** \brief Constructor */
-  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, std::vector<int> cost  ) :
+  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, const bnu::matrix<int> cost  ) :
     StateValidityChecker(si)
   {
     cost_ = cost;
-    max_threshold_ = 10;
+    max_threshold_ = 255;
   }
 
   /** \brief Constructor */
   TwoDimensionalValidityChecker( ob::SpaceInformation* si) :
     StateValidityChecker(si)
   {
-    ROS_ERROR("???");
+    ROS_ERROR("NOT IMPLEMENTED constructor");
     exit(0);
   }
 
@@ -89,9 +93,10 @@ public:
 
   virtual double cost(const ob::State *state) const
   {
-    //    const double *dims = state->as<ob::RealVectorStateSpace::StateType>()->values;
-    //    dims[0] ...
-    return 10;
+    const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
+
+    // Return the cost from the matrix at the current dimensions
+    return cost_( int(coords[0]), int(coords[1]) );
   }
 
 };
@@ -100,7 +105,7 @@ public:
 // *********************************************************************************************************
 // Plan
 // *********************************************************************************************************
-std::vector<std::pair<double, double> > planWithSimpleSetup( std::vector<int> cost )
+std::vector<std::pair<double, double> > planWithSimpleSetup( bnu::matrix<int> cost )
 {
   // The returned result
   std::vector<std::pair<double, double> > coordinates;
@@ -220,7 +225,7 @@ std::vector<std::pair<double, double> > planWithSimpleSetup( std::vector<int> co
 // *********************************************************************************************************
 // Visualize Results
 // *********************************************************************************************************
-void displayCubes( PPMImage *image, std::vector<int> cost )
+void displayCubes( PPMImage *image, bnu::matrix<int> cost )
 {
   // ROS Publishing stuff
   ros::NodeHandle n;
@@ -258,7 +263,7 @@ void displayCubes( PPMImage *image, std::vector<int> cost )
     // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
     marker.pose.position.x = marker_id % image->x;    // Map index back to coordinates
     marker.pose.position.y = marker_id / image->x;    // Map index back to coordinates
-    marker.pose.position.z = cost[ marker_id ] / 2;
+    marker.pose.position.z = cost.data()[ marker_id ] / 2;
     marker.pose.orientation.x = 0.0;
     marker.pose.orientation.y = 0.0;
     marker.pose.orientation.z = 0.0;
@@ -267,20 +272,20 @@ void displayCubes( PPMImage *image, std::vector<int> cost )
     // Set the scale of the marker -- 1x1x1 here means 1m on a side
     marker.scale.x = 1.0;
     marker.scale.y = 1.0;
-    marker.scale.z = cost[ marker_id ];
+    marker.scale.z = cost.data()[ marker_id ];
 
     /*
-    std::cout << "#" << marker.id
-              << " COORD: "
-              << marker.pose.position.x << " "
-              << marker.pose.position.y << " "
-              << marker.pose.position.z
-              << " COLOR: "
-              << marker.color.r << " "
-              << marker.color.g << " "
-              << marker.color.b
-              << " COST: " << cost[ marker.id ]
-              << std::endl;
+      std::cout << "#" << marker.id
+      << " COORD: "
+      << marker.pose.position.x << " "
+      << marker.pose.position.y << " "
+      << marker.pose.position.z
+      << " COLOR: "
+      << marker.color.r << " "
+      << marker.color.g << " "
+      << marker.color.b
+      << " COST: " << cost[ marker.id ]
+      << std::endl;
     */
     ros::Duration(0.00001).sleep();
 
@@ -323,63 +328,70 @@ int main( int argc, char** argv )
   }
 
   // Create an array of ints that represent the cost of every pixel
-  std::vector<int> cost( image->getSize(), 0 );
+  bnu::matrix<int> cost( image->x, image->y );
 
   const int scale = 5;
+  int max_cost = 0;
 
   // Preprocess the pixel data for cost and give it a nice colored tint
   for( int i = 0; i < image->getSize(); ++i )
   {
     // Calculate cost
-    cost[ i ]  = (image->data[ i ].red ) / scale;
+    cost.data()[i]  = ( image->data[ i ].red ) / scale;
 
-    // prevent cost from being 0
-    if( !cost[ i ] )
-      cost[ i ] = 1;
+    // Prevent cost from being zero
+    if( !cost.data()[i] )
+      cost.data()[i] = 1;
 
+    // Remember largest cost
+    if( cost.data()[i] > max_cost )
+      max_cost = cost.data()[i];
+    
     // Invert colors and give tint
-    image->data[ i ].red = 200 - image->data[ i ].red;
-    image->data[ i ].green = 255 - image->data[ i ].green;
-    image->data[ i ].blue = 200 - image->data[ i ].blue;
+    /*    image->data[ i ].red = 200 - image->data[ i ].red;
+          image->data[ i ].green = 200 - image->data[ i ].green;
+          image->data[ i ].blue = 100 - image->data[ i ].blue;*/
+    image->data[ i ].red = image->data[ i ].red;
+    image->data[ i ].green = 200; //255 - image->data[ i ].green;
+    image->data[ i ].blue = image->data[ i ].blue;
   }
 
 
-  /*
-
-    std::cout << "Image height: " << image->y << " width: " << image->x << std::endl;
+  std::cout << "MAX COST: " << max_cost << std::endl;
 
 
-    // OMPL Processing -------------------------------------------------------------------------------------------------
-    std::cout << "OMPL version: " << OMPL_VERSION << " ----------------------- " << std::endl;
-    std::cout << std::endl << std::endl;
+  std::cout << "Map height: " << image->y << " width: " << image->x << std::endl;
 
-    // Get list of coordinates
-    std::vector<std::pair<double, double> > coordinates = planWithSimpleSetup( cost );
+  // OMPL Processing -------------------------------------------------------------------------------------------------
+  std::cout << "OMPL version: " << OMPL_VERSION << " ----------------------- " << std::endl;
+  std::cout << std::endl << std::endl;
 
-    // Convert path coordinates to red
-    for( std::vector<std::pair<double, double> >::const_iterator coord_it = coordinates.begin();
-    coord_it != coordinates.end(); ++coord_it )
-    {
+  // Get list of coordinates
+  std::vector<std::pair<double, double> > coordinates = planWithSimpleSetup( cost );
+
+  // Convert path coordinates to red
+  for( std::vector<std::pair<double, double> >::const_iterator coord_it = coordinates.begin();
+       coord_it != coordinates.end(); ++coord_it )
+  {
     int id = image->getID( int( coord_it->first ), int(coord_it->second) );
     image->data[ id ].red = 255;
     image->data[ id ].green = 0;
     image->data[ id ].blue = 0;
-    }
+  }
 
-    // Manually override path colors for first and last
-    if( coordinates.size() > 1 )
-    {
+  // Manually override path colors for first and last
+  if( coordinates.size() > 1 )
+  {
     // Start
-    image->data[ 0 ].red = 100;
-    image->data[ 0 ].green = 255;
-    image->data[ 0 ].blue = 0;
+    image->data[ 0 ].red = 0;
+    image->data[ 0 ].green = 0;
+    image->data[ 0 ].blue = 255;
 
     // End
     image->data[ image->getSize() ].red = 150;
     image->data[ image->getSize() ].green = 0;
     image->data[ image->getSize() ].blue = 0;
-    }
-  */
+  }
 
   displayCubes( image, cost );
 
