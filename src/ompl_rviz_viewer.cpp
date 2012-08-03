@@ -125,14 +125,109 @@ private:
   bnu::matrix<int> cost_;
 
   /// The resulting graph that was searched
-  ob::PlannerData *planner_data_;
+  ob::PlannerDataPtr planner_data_;
+
+  /// Save the simple setup until the program ends so that the planner data is not lost
+  og::SimpleSetupPtr simple_setup_;
+
+  /// A shared ROS publisher
+  ros::Publisher marker_pub_;
+
+  /// A shared node handle
+  ros::NodeHandle n_;
 
 public:
 
   // *********************************************************************************************************
   // Constructor
   // *********************************************************************************************************
-  OmplRvizViewer() {}
+  OmplRvizViewer()
+  {
+
+    // ROS Publishing stuff
+    marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 0);
+
+
+    /*
+    ros::Duration(1).sleep();
+
+    std::cout << "here " << std::endl;
+
+
+    visualization_msgs::Marker marker;
+    // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+    marker.header.frame_id = "/my_frame";
+    marker.header.stamp = ros::Time();
+
+    // Set the namespace and id for this marker.  This serves to create a unique ID
+    // Any marker sent with the same namespace and id will overwrite the old one
+    marker.ns = "lines";
+
+    // Set the marker type.
+    //    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    marker.type = visualization_msgs::Marker::LINE_LIST;
+    //marker.type = visualization_msgs::Marker::SPHERE;
+
+    // Set the marker action.  Options are ADD and DELETE
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.id = 0;
+
+    std::cout << "here " << std::endl;
+    marker.pose.position.x = 1.0;
+    marker.pose.position.y = 1.0;
+    marker.pose.position.z = 1.0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 1.0;
+    marker.scale.y = 1.0;
+    marker.scale.z = 1.0;
+
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+    marker.color.a = 1.0;
+
+
+    // Create first point
+    geometry_msgs::Point this_point;
+    this_point.x = 10.0;
+    this_point.y = 10.0;
+    this_point.z = 1.0;
+    marker.points.push_back( this_point );
+
+    // Color 1
+    std_msgs::ColorRGBA color;
+    color.r = 1.0;
+    color.g = 0.0;
+    color.b = 0.0;
+    color.a = 1.0;
+    marker.colors.push_back( color );
+
+    // Create a second point
+    geometry_msgs::Point next_point;
+    next_point.x = 50.0;
+    next_point.y = 50.0;
+    next_point.z = 1.0;
+    marker.points.push_back( next_point );
+
+    // Color 2
+    std_msgs::ColorRGBA color2;
+    color2.r = 1.0;
+    color2.g = 1.0;
+    color2.b = 0.0;
+    color2.a = 1.0;
+    marker.colors.push_back( color2 );
+
+    ros::Duration(1).sleep();
+    std::cout << "here " << std::endl;
+    // Publish the marker
+    marker_pub_.publish( marker );
+
+    ros::Duration(1).sleep();
+    */
+  }
 
   // *********************************************************************************************************
   // Deconstructor
@@ -140,7 +235,6 @@ public:
   ~OmplRvizViewer()
   {
     delete image_;
-    delete planner_data_;
   }
 
   // *********************************************************************************************************
@@ -194,6 +288,7 @@ public:
     std::cout << "Map height: " << image_->y << " width: " << image_->x << std::endl;
 
     // OMPL Processing -------------------------------------------------------------------------------------------------
+
     std::cout << "OMPL version: " << OMPL_VERSION << " ----------------------- " << std::endl;
     std::cout << std::endl << std::endl;
 
@@ -228,26 +323,9 @@ public:
     displayTriangles();
 
     // Now visualize the explored space
-    //    boost::concepts::Graph boost_graph = planner_data.toBoostGraph();
-    //unsigned int ompl::base::PlannerData::getEdges (unsigned int v, std::vector<unsigned int>& edgeList) const
+    displayGraph();
 
-    // Get the starting vertex
-    ob::PlannerDataVertex pd_vertex = planner_data_->getStartVertex(0); // there is only 1 start vertex
-
-    // Get its coordinates
-    const ob::State *state = pd_vertex.getState();
-
-    if (state)
-    {
-      // Convert to RealVectorStateSpace
-      const ob::RealVectorStateSpace::StateType *real_state =
-        static_cast<const ob::RealVectorStateSpace::StateType*>(state);
-      std::cout << "Before " << std::endl;
-
-      std::cout << "X: " << real_state->values[0] << std::endl;
-      std::cout <<" Y: " << real_state->values[1] << std::endl;
-    }
-
+    // Done
     std::cout << "SUCCESS ------------------------------ " << std::endl << std::endl;
   }
 
@@ -256,6 +334,34 @@ public:
   // *********************************************************************************************************
 private:
   static const unsigned int DIMENSIONS = 2;
+
+
+  // *********************************************************************************************************
+  // Helper Function: gets the x,y coordinates for a given vertex id
+  // *********************************************************************************************************
+  std::pair<unsigned int, unsigned int> getCoordinates( int vertex_id )
+  {
+    ob::PlannerDataVertex vertex = planner_data_->getVertex( vertex_id );
+
+    // Get this vertex's coordinates
+    const ob::State *state = vertex.getState();
+
+    if (!state)
+    {
+      ROS_ERROR("No state found for a vertex");
+      exit(0);
+    }
+
+    // Convert to RealVectorStateSpace
+    const ob::RealVectorStateSpace::StateType *real_state =
+      static_cast<const ob::RealVectorStateSpace::StateType*>(state);
+
+    //std::cout << "X: " << real_state->values[0] << std::endl;
+    //std::cout <<" Y: " << real_state->values[1] << std::endl;
+
+    return std::pair<unsigned int, unsigned int>( real_state->values[0], real_state->values[1] );
+  }
+
 
   // *********************************************************************************************************
   // Plan
@@ -288,13 +394,13 @@ private:
 
 
     // Define a simple setup class ---------------------------------------
-    og::SimpleSetup simple_setup(space);
+    simple_setup_ = og::SimpleSetupPtr( new og::SimpleSetup(space) );
 
     // Set the setup planner (TRRT)
-    simple_setup.setPlanner(ob::PlannerPtr(new og::RRT( simple_setup.getSpaceInformation() )));
+    simple_setup_->setPlanner(ob::PlannerPtr(new og::RRT( simple_setup_->getSpaceInformation() )));
 
     // Set state validity checking for this space
-    simple_setup.setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( simple_setup.getSpaceInformation(), cost_ ) ) );
+    simple_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( simple_setup_->getSpaceInformation(), cost_ ) ) );
 
 
 
@@ -316,37 +422,37 @@ private:
     goal[1] = 40;
 
     // set the start and goal states
-    simple_setup.setStartAndGoalStates(start, goal);
+    simple_setup_->setStartAndGoalStates(start, goal);
 
 
     // Debug -----------------------------------------------------------
 
     // this call is optional, but we put it in to get more output information
-    simple_setup.setup();
-    simple_setup.print();
+    simple_setup_->setup();
+    simple_setup_->print();
 
 
     // Solve -----------------------------------------------------------
     std::cout << "\n\nSolve\n" << std::endl;
 
     // attempt to solve the problem within one second of planning time
-    ob::PlannerStatus solved = simple_setup.solve(1.0);
+    ob::PlannerStatus solved = simple_setup_->solve(1.0);
 
     if (solved)
     {
       // print the path to screen
-      simple_setup.simplifySolution();
+      simple_setup_->simplifySolution();
 
       std::cout << "\nFOUND SOLUTION:" << std::endl;
-      simple_setup.getSolutionPath().interpolate();
-      simple_setup.getSolutionPath().print(std::cout);
+      simple_setup_->getSolutionPath().interpolate();
+      simple_setup_->getSolutionPath().print(std::cout);
 
-      og::PathGeometric path = simple_setup.getSolutionPath();
+      og::PathGeometric path = simple_setup_->getSolutionPath();
       std::vector<ob::State*> states = path.getStates();
 
       // Get information about the exploration data structure the motion planner used.
-      planner_data_ = new ob::PlannerData( simple_setup.getSpaceInformation() );
-      simple_setup.getPlannerData( *planner_data_ );
+      planner_data_.reset( new ob::PlannerData( simple_setup_->getSpaceInformation() ) );
+      simple_setup_->getPlannerData( *planner_data_ );
 
       std::cout << "\nSOLUTION:" << std::endl;
       for( std::vector<ob::State*>::const_iterator state_it = states.begin();
@@ -379,9 +485,7 @@ private:
   void displayCubes()
   {
     // ROS Publishing stuff
-    ros::NodeHandle n;
-    ros::Rate rate(40);
-    ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1);
+
     visualization_msgs::MarkerArray marker_array;
 
     visualization_msgs::Marker marker;
@@ -447,13 +551,13 @@ private:
     }
 
     // Publish the marker array
-    marker_pub.publish( marker_array );
+    marker_pub_.publish( marker_array );
 
     ros::Duration(1).sleep();
   }
 
   // *********************************************************************************************************
-  // Helper Function to displayTriangles
+  // Helper Function to display triangles
   // *********************************************************************************************************
   void addPoint( int x, int y, visualization_msgs::Marker* marker )
   {
@@ -480,11 +584,6 @@ private:
   // *********************************************************************************************************
   void displayTriangles()
   {
-    // ROS Publishing stuff
-    ros::NodeHandle n;
-    ros::Rate rate(40);
-    ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
-
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
     marker.header.frame_id = "/my_frame";
@@ -492,10 +591,11 @@ private:
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
     // Any marker sent with the same namespace and id will overwrite the old one
-    marker.ns = "basic_shapes";
+    marker.ns = "cost_map";
 
     // Set the marker type.
-    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    //    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    marker.type = visualization_msgs::Marker::LINE_LIST;
 
     // Set the marker action.  Options are ADD and DELETE
     marker.action = visualization_msgs::Marker::ADD;
@@ -546,19 +646,271 @@ private:
       }
 
 
-      //marker.lifetime = ros::Duration(10.0);
-      //marker.lifetime = ros::Duration();
       ros::Duration(0.000001).sleep();
 
+      //      if( marker_id > 9502 )
+      //        break;
+      //      std::cout << marker_id << " ";
+      //      break;
     }
 
+    //    ros::Duration(0.000001).sleep();
+    //    marker.lifetime = ros::Duration(4.0);
+
     // Publish the marker array
-    marker_pub.publish( marker );
+    marker_pub_.publish( marker );
 
     ros::Duration(1).sleep();
   }
 
-};
+  // *********************************************************************************************************
+  // Display Explored Space
+  // *********************************************************************************************************
+  void displayGraph()
+  {
+    visualization_msgs::Marker marker;
+    // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+    marker.header.frame_id = "/my_frame";
+    marker.header.stamp = ros::Time();
+
+    // Set the namespace and id for this marker.  This serves to create a unique ID
+    // Any marker sent with the same namespace and id will overwrite the old one
+    marker.ns = "space_exploration";
+
+    // Set the marker type.
+    //    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    marker.type = visualization_msgs::Marker::LINE_LIST;
+    //    marker.type = visualization_msgs::Marker::CUBE_LIST;
+
+    // Set the marker action.  Options are ADD and DELETE
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.id = 0;
+
+    marker.pose.position.x = 1.0;
+    marker.pose.position.y = 1.0;
+    marker.pose.position.z = 1.0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 1.0;
+    marker.scale.y = 1.0;
+    marker.scale.z = 1.0;
+
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+    marker.color.a = 1.0;
+
+    /*
+    // Create first point
+    geometry_msgs::Point this_point;
+    this_point.x = 10.0;
+    this_point.y = 10.0;
+    this_point.z = 1.0;
+    marker.points.push_back( this_point );
+
+    // Color 1
+    std_msgs::ColorRGBA color;
+    color.r = 1.0;
+    color.g = 0.0;
+    color.b = 0.0;
+    color.a = 1.0;
+    marker.colors.push_back( color );
+
+    // Create a second point
+    geometry_msgs::Point next_point;
+    next_point.x = 50.0;
+    next_point.y = 50.0;
+    next_point.z = 1.0;
+    marker.points.push_back( next_point );
+
+    // Color 2
+    std_msgs::ColorRGBA color2;
+    color2.r = 1.0;
+    color2.g = 1.0;
+    color2.b = 0.0;
+    color2.a = 1.0;
+    marker.colors.push_back( color2 );
+
+    ros::Duration(1).sleep();
+
+    // Publish the marker
+    marker_pub_.publish( marker );
+
+    ros::Duration(1).sleep();
+    */
+
+    std::pair<unsigned int, unsigned int> this_vertex;
+    std::pair<unsigned int, unsigned int> next_vertex;
+
+    // Loop through all verticies
+    for( int vertex_id = 0; vertex_id < int( planner_data_->numVertices() ); ++vertex_id )
+    {
+
+      this_vertex = getCoordinates( vertex_id );
+
+      // Get the out edges from the current vertex
+      std::vector<unsigned int> edge_list;
+      planner_data_->getEdges( vertex_id, edge_list );
+
+      // Now loop through each edge
+      for( std::vector<unsigned int>::const_iterator edge_it = edge_list.begin();
+           edge_it != edge_list.end(); ++edge_it)
+      {
+        // Convert vertex id to next coordinates
+        next_vertex = getCoordinates( *edge_it );
+
+        // Create first point
+        geometry_msgs::Point this_point;
+        this_point.x = this_vertex.first;
+        this_point.y = this_vertex.second;
+        this_point.z = 10;
+
+        // Create a second point
+        geometry_msgs::Point next_point;
+        next_point.x = next_vertex.first;
+        next_point.y = next_vertex.second;
+        next_point.z = 10;
+
+        std::cout << "FROM: (" << this_point.x << "," << this_point.y << ") TO (";
+        std::cout << next_point.x << "," << next_point.y << ")" << std::endl;
+
+        // Add the point pair to the line message
+        marker.points.push_back( this_point );
+
+        // Color 1
+        std_msgs::ColorRGBA color;
+        color.r = 1.0;
+        color.g = 0;
+        color.b = 0;
+        color.a = 1.0;
+        marker.colors.push_back( color );
+
+        marker.points.push_back( next_point );
+
+        // Color 2
+        std_msgs::ColorRGBA color2;
+        color2.r = 1.0;
+        color2.g = 0.0;
+        color2.b = 0.0;
+        color2.a = 1.0;
+        marker.colors.push_back( color2 );
+
+        ros::Duration(0.00001).sleep();
+      }
+    }
+
+    // Publish the marker
+    marker_pub_.publish( marker );
+
+    ros::Duration(1).sleep();
+
+
+    /*
+      visualization_msgs::Marker marker;
+      // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+      marker.header.frame_id = "/my_frame";
+      marker.header.stamp = ros::Time::now();
+
+      // Set the namespace and id for this marker.  This serves to create a unique ID
+      // Any marker sent with the same namespace and id will overwrite the old one
+      marker.ns = "basic_shapes";
+
+      // Set the marker type.
+      marker.type = visualization_msgs::Marker::LINE_LIST;
+
+      // Set the marker action.  Options are ADD and DELETE
+      marker.action = visualization_msgs::Marker::ADD;
+      marker.id = 1;
+
+      marker.pose.position.x = 0;
+      marker.pose.position.y = 0;
+      marker.pose.position.z = 0;
+      marker.pose.orientation.x = 0.0;
+      marker.pose.orientation.y = 0.0;
+      marker.pose.orientation.z = 0.0;
+      marker.pose.orientation.w = 1.0;
+      marker.scale.x = 1.0;
+      marker.scale.y = 1.0;
+      marker.scale.z = 1.0;
+      marker.color.r = 255;
+      marker.color.g = 0;
+      marker.color.b = 0;
+      marker.color.a = 1.0;
+
+      // Get the starting vertex
+      std::cout << "Verticies: " << planner_data_->numVertices() << std::endl;
+      std::cout << "Start S: " << planner_data_->numStartVertices() << std::endl;
+
+      std::pair<unsigned int, unsigned int> this_vertex;
+      std::pair<unsigned int, unsigned int> next_vertex;
+
+      // Loop through all verticies
+      for( int vertex_id = 0; vertex_id < int( planner_data_->numVertices() ); ++vertex_id )
+      {
+
+      this_vertex = getCoordinates( vertex_id );
+
+      // Create first point
+      geometry_msgs::Point this_point;
+      this_point.x = this_vertex.first;
+      this_point.y = this_vertex.second;
+      this_point.z = 10;
+
+      // Get the out edges from the current vertex
+      std::vector<unsigned int> edge_list;
+      planner_data_->getEdges( vertex_id, edge_list );
+
+      // Now loop through each edge
+      for( std::vector<unsigned int>::const_iterator edge_it = edge_list.begin();
+      edge_it != edge_list.end(); ++edge_it)
+      {
+      // Convert vertex id to next coordinates
+      next_vertex = getCoordinates( *edge_it );
+
+      // Create a second point
+      geometry_msgs::Point next_point;
+      next_point.x = next_vertex.first;
+      next_point.y = next_vertex.second;
+      next_point.z = 10;
+
+      std::cout << "FROM: (" << this_point.x << "," << this_point.y << ") TO (";
+      std::cout << next_point.x << "," << next_point.y << ")" << std::endl;
+
+
+      // Add the point pair to the line message
+      marker.points.push_back( this_point );
+      marker.points.push_back( next_point );
+
+      // Color 1
+      std_msgs::ColorRGBA color;
+      color.r = 255;
+      color.g = 0;
+      color.b = 0;
+      color.a = 1.0;
+      marker.colors.push_back( color );
+
+      // Color 2
+      std_msgs::ColorRGBA color2;
+      color2.r = 0;
+      color2.g = 100;
+      color2.b = 255;
+      color2.a = 1.0;
+      marker.colors.push_back( color2 );
+
+      ros::Duration(0.00001).sleep();
+      }
+      }
+
+      // Publish the marker array
+      marker_pub_.publish( marker );
+
+      ros::Duration(1).sleep();
+    */
+  }
+
+}; // end of class
 
 // *********************************************************************************************************
 // Main
