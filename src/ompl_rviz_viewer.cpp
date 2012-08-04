@@ -58,6 +58,16 @@ namespace ob = ompl::base;
 namespace og = ompl::geometric;
 namespace bnu = boost::numeric::ublas;
 
+
+// *********************************************************************************************************
+// Nat_Rounding helper function to make readings from cost map more accurate
+// *********************************************************************************************************
+int nat_round(double x)
+{
+  return static_cast<int>(floor(x + 0.5f));
+}
+
+
 // *********************************************************************************************************
 // *********************************************************************************************************
 // Custom State Validity Checker with cost function
@@ -98,7 +108,7 @@ public:
     const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
 
     // Return the cost from the matrix at the current dimensions
-    double cost = cost_( int(coords[0]), int(coords[1]) );
+    double cost = cost_( nat_round(coords[1]), nat_round(coords[0]) );
     //    std::cout << "cost: " << cost << " - "; //std::endl;
 
     return cost;
@@ -402,18 +412,18 @@ private:
 
     // Create start space
     ob::ScopedState<> start(space);
-    //start.random();
+    start.random();
 
     // Manually set the start location
-    start[0] = 95;
-    start[1] = 10;
+    //start[0] = 95;
+    //    start[1] = 10;
 
     // create a goal state
     ob::ScopedState<> goal(space);
-    //goal.random();
+    goal.random();
     // Manually set the start location
-    goal[0] = 10;
-    goal[1] = 40;
+    //goal[0] = 10;
+    //    goal[1] = 40;
 
     // Modify the map to show start and end locations
     image_->data[ image_->getID( start[0], start[1] ) ].red = 50;
@@ -421,8 +431,8 @@ private:
     image_->data[ image_->getID( start[0], start[1] ) ].green = 255;
 
     image_->data[ image_->getID( goal[0], goal[1] ) ].red = 255;
-    image_->data[ image_->getID( goal[0], goal[1] ) ].blue = 50;
-    image_->data[ image_->getID( goal[0], goal[1] ) ].green = 50;
+    image_->data[ image_->getID( goal[0], goal[1] ) ].blue = 255;
+    image_->data[ image_->getID( goal[0], goal[1] ) ].green = 10;
 
     // set the start and goal states
     simple_setup_->setStartAndGoalStates(start, goal);
@@ -446,9 +456,9 @@ private:
       std::cout << "\nSOLUTION FOUND!" << std::endl;
       //      simple_setup_->getSolutionPath().print(std::cout);
 
-    // Get information about the exploration data structure the motion planner used.
-    planner_data_.reset( new ob::PlannerData( simple_setup_->getSpaceInformation() ) );
-    simple_setup_->getPlannerData( *planner_data_ );
+      // Get information about the exploration data structure the motion planner used.
+      planner_data_.reset( new ob::PlannerData( simple_setup_->getSpaceInformation() ) );
+      simple_setup_->getPlannerData( *planner_data_ );
 
 
     }
@@ -625,14 +635,6 @@ private:
   }
 
   // *********************************************************************************************************
-  // Rounding helper function to make readings from cost map more accurate
-  // *********************************************************************************************************
-  int round(double x)
-  {
-    return static_cast<int>(floor(x + 0.5f));
-  }
-
-  // *********************************************************************************************************
   // Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
   // *********************************************************************************************************
   void interpolateLine( double x1, double y1, double x2, double y2, visualization_msgs::Marker* marker, std_msgs::ColorRGBA* color )
@@ -710,12 +712,12 @@ private:
       // Create first point
       point_a.x = float(x_a);
       point_a.y = float(y_a);
-      point_a.z = cost_( round(point_a.y), round(point_a.x) ) / 2 + 2;
+      point_a.z = cost_( nat_round(point_a.y), nat_round(point_a.x) ) / 2 + 2;
 
       // Create a second point
       point_b.x = float(x_b);
       point_b.y = float(y_b);
-      point_b.z = cost_( round(point_b.y), round(point_b.x) ) / 2 + 2;
+      point_b.z = cost_( nat_round(point_b.y), nat_round(point_b.x) ) / 2 + 2;
 
       //      std::cout << "FROM: (" << point_a.x << "," << point_a.y << ") TO (" << point_b.x << "," << point_b.y << ")" << std::endl;
 
@@ -737,12 +739,12 @@ private:
     // Create first point
     point_a.x = float(x_a);
     point_a.y = float(y_a);
-    point_a.z = cost_( round(point_a.y), round(point_a.x) ) / 2 + 2;
+    point_a.z = cost_( nat_round(point_a.y), nat_round(point_a.x) ) / 2 + 2;
 
     // Create a second point
     point_b.x = float(x2);
     point_b.y = float(y2);
-    point_b.z = cost_( round(point_b.y), round(point_b.x) ) / 2 + 2;
+    point_b.z = cost_( nat_round(point_b.y), nat_round(point_b.x) ) / 2 + 2;
 
     // Add the point pair to the line message
     marker->points.push_back( point_a );
@@ -903,12 +905,12 @@ private:
       // First point
       point_a.x = x1;
       point_a.y = y1;
-      point_a.z = cost_( round(point_a.y), round(point_a.x) ) / 2 + 3;
+      point_a.z = cost_( nat_round(point_a.y), nat_round(point_a.x) ) / 2 + 3;
 
       // Create a second point
       point_b.x = x2;
       point_b.y = y2;
-      point_b.z = cost_( round(point_b.y), round(point_b.x) ) / 2 + 3;
+      point_b.z = cost_( nat_round(point_b.y), nat_round(point_b.x) ) / 2 + 3;
 
       // Add the point pair to the line message
       marker.points.push_back( point_a );
