@@ -393,8 +393,9 @@ private:
     // Set the bounds for the R^2
     ob::RealVectorBounds bounds( DIMENSIONS );
     bounds.setLow( 0 ); // both dimensions start at 0
-    bounds.setHigh( 0, image_->x ); // allow for non-square images
-    bounds.setHigh( 1, image_->y ); // allow for non-square images
+    //    bounds.setHigh( 99 ); // both dimensions start at 0
+    bounds.setHigh( 0, image_->x - 1 ); // allow for non-square images
+    bounds.setHigh( 1, image_->y - 1 ); // allow for non-square images
     space->as<ob::RealVectorStateSpace>()->setBounds( bounds );
 
     // Define a simple setup class ---------------------------------------
@@ -454,7 +455,7 @@ private:
     // The interval in which obstacles are checked for between states
     //    simple_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
 
-    
+
     // Debug -----------------------------------------------------------
 
     // this call is optional, but we put it in to get more output information
@@ -1023,16 +1024,25 @@ int main( int argc, char** argv )
 {
   ros::init(argc, argv, "ompl_rviz_viewer");
 
-  // Get image path based on package name
-  std::string image_path = ros::package::getPath("ompl_rviz_viewer");
-  if( image_path.empty() )
-  {
-    std::cout << "Unable to get OMPL RViz Viewer package path " << std::endl;
-    return false;
-  }
-  image_path.append( "/resources/mountains.ppm" );
-  //image_path.append( "/resources/height_map1.ppm" );
+  std::string image_path;
 
+  // Check if user has passed in an image to read
+  if( argc > 1 )
+  {
+    image_path = argv[1];
+  }
+  else // use default image
+  {
+    // Get image path based on package name
+    image_path = ros::package::getPath("ompl_rviz_viewer");
+    if( image_path.empty() )
+    {
+      std::cout << "Unable to get OMPL RViz Viewer package path " << std::endl;
+      return false;
+    }
+    image_path.append( "/resources/mountains.ppm" );
+    //image_path.append( "/resources/height_map1.ppm" );
+  }
 
   // Run the program
   OmplRvizViewer viewer;

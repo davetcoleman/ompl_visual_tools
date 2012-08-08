@@ -32,6 +32,8 @@ The image must be in the PPM "Netpbm color image" format. To convert a jpg, png 
 
 This convert package can be found using apt-get in Ubuntu.
 
+In general, a 100x100 pixel image is a decent space size, and larger dimensions will require much more computational resources or may hang your computer. GIMP is a good editor for scaling images down.
+
 
 DEVELOP
 ---------
