@@ -144,11 +144,16 @@ private:
   /// A shared node handle
   ros::NodeHandle n_;
 
-  /// Remember the max cost from the cost_ matrix for color visualization
+  /// Remember the min and max cost from the cost_ matrix for color visualization
   int max_cost_;
+  int min_cost_;
 
   /// The cost at which it becomes an obstacle
   double max_threshold_;
+
+  // The number of dimensions - always 2 for images
+  static const unsigned int DIMENSIONS = 2;
+
 
 public:
 
@@ -164,7 +169,7 @@ public:
     ros::Duration(1).sleep();
     // TODO: add smarter waiting
 
-    max_threshold_ = 15;
+    max_threshold_ = 25;
   }
 
   // *********************************************************************************************************
@@ -193,7 +198,25 @@ public:
     // Create an array of ints that represent the cost of every pixel
     cost_.resize( image_->x, image_->y );
 
-    const int scale = 5;
+    // Find the min and max cost from the image
+    min_cost_ = image_->data[ 0 ].red;
+    max_cost_ = image_->data[ 0 ].red;
+
+    for( int i = 0; i < image_->getSize(); ++i )
+    {
+      // Max
+      if( image_->data[ i ].red > max_cost_ )
+        max_cost_ = image_->data[ i ].red;
+      // Min
+      else if( image_->data[ i ].red < min_cost_ )
+        min_cost_ = image_->data[ i ].red;
+    }
+
+    // This factor is the author's visual preference for scaling any cost map in Rviz
+    const int scale_factor = 49;
+
+    // This scale adapts that factor depending on the cost map min max
+    const int scale = (max_cost_ - min_cost_ ) / scale_factor;
 
     // Preprocess the pixel data for cost and give it a nice colored tint
     for( int i = 0; i < image_->getSize(); ++i )
@@ -205,20 +228,6 @@ public:
       if( !cost_.data()[i] )
         cost_.data()[i] = 1;
 
-      // Remember largest cost
-      if( cost_.data()[i] > max_cost_ )
-        max_cost_ = cost_.data()[i];
-
-      // Invert colors and give tint
-      /*    image->data[ i ].red = 200 - image->data[ i ].red;
-            image->data[ i ].green = 200 - image->data[ i ].green;
-            image->data[ i ].blue = 100 - image->data[ i ].blue;*/
-      /*
-        image_->data[ i ].red = image_->data[ i ].red;
-        image_->data[ i ].green = image_->data[ i ].green;
-        image_->data[ i ].blue = image_->data[ i ].blue;
-      */
-
       // Color different if it is an obstacle
       if( cost_.data()[i] > max_threshold_ )
       {
@@ -229,76 +238,84 @@ public:
 
     }
 
-    std::cout << "MAX COST: " << max_cost_ << std::endl;
-    std::cout << "Map height: " << image_->y << " width: " << image_->x << std::endl;
-    //    std::cout << "OMPL version: " << OMPL_VERSION << " ----------------------- " << std::endl << std::endl << std::endl;
+    std::cout << "Cost - Min: " << min_cost_ << " Max: " << max_cost_ << std::endl;
+    std::cout << "Map - Height: " << image_->y << " Width: " << image_->x << std::endl;
+    std::cout << "OMPL version: " << OMPL_VERSION << " ----------------------- " << std::endl << std::endl << std::endl;
 
     // OMPL Processing -------------------------------------------------------------------------------------------------
     // Run OMPL and display
     if( planWithSimpleSetup() )
     {
-
       // Setup
       std::vector<std::pair<double, double> > coordinates;
+
       // Make line color
       std_msgs::ColorRGBA color;
       color.a = 1.0;
 
       // Render the map ---------------------------------------------------
       displayTriangles();
-      ros::Duration(1).sleep();
-
+      ros::Duration(0.25).sleep();
 
       // Visualize the explored space ---------------------------------------
       displayGraph();
-      ros::Duration(1).sleep();
+      ros::Duration(0.25).sleep();
 
+      // Visualize the sample locations -----------------------------------
+      displaySamples();
+      ros::Duration(0.25).sleep();
 
       // Show basic solution ----------------------------------------
       // Get solution coordinates
-      coordinates = convertSolutionToVector();
+      if( false )
+      {
+        coordinates = convertSolutionToVector();
 
-      // Visualize the chosen path
-      color.r = 1.0;
-      color.g = 0.0;
-      color.b = 0.0;
-      displayResult( coordinates, &color );
-      ros::Duration(1).sleep();
+        // Visualize the chosen path
+        color.r = 1.0;
+        color.g = 0.0;
+        color.b = 0.0;
+        displayResult( coordinates, &color );
+        ros::Duration(0.25).sleep();
+      }
 
+      // Interpolate -------------------------------------------------------
+      if( true )
+      {
+        simple_setup_->getSolutionPath().interpolate();
 
-      // Now interpolate -------------------------------------------------------
-      simple_setup_->getSolutionPath().interpolate();
+        // Get solutippon coordinates
+        coordinates = convertSolutionToVector();      // Get basic solution
 
-      // Get solutippon coordinates
-      coordinates = convertSolutionToVector();      // Get basic solution
-
-      // Visualize the chosen path
-      color.r = 0.0;
-      color.g = 1.0;
-      color.b = 0.0;
-      displayResult( coordinates, &color );
-      ros::Duration(1).sleep();
-
+        // Visualize the chosen path
+        color.r = 0.0;
+        color.g = 1.0;
+        color.b = 0.0;
+        displayResult( coordinates, &color );
+        //      ros::Duration(0.25).sleep();
+      }
 
       // Simplify solution ------------------------------------------------------
-      simple_setup_->simplifySolution();
+      if( false )
+      {
+        simple_setup_->simplifySolution();
 
-      // Get solution coordinates
-      coordinates = convertSolutionToVector();      // Get basic solution
+        // Get solution coordinates
+        coordinates = convertSolutionToVector();      // Get basic solution
 
-      // Visualize the chosen path
-      color.r = 0.0;
-      color.g = 0.5;
-      color.b = 0.5;
-      displayResult( coordinates, &color );
-      ros::Duration(1).sleep();
-
+        // Visualize the chosen path
+        color.r = 0.0;
+        color.g = 0.5;
+        color.b = 0.5;
+        displayResult( coordinates, &color );
+        ros::Duration(0.25).sleep();
+      }
     }
     else // just show the map
     {
       // Render the map
       displayTriangles();
-      ros::Duration(1).sleep();
+      ros::Duration(0.25).sleep();
     }
 
     // Done
@@ -309,8 +326,6 @@ public:
   // Private
   // *********************************************************************************************************
 private:
-  static const unsigned int DIMENSIONS = 2;
-
 
   // *********************************************************************************************************
   // Helper Function: gets the x,y coordinates for a given vertex id
@@ -331,9 +346,6 @@ private:
     // Convert to RealVectorStateSpace
     const ob::RealVectorStateSpace::StateType *real_state =
       static_cast<const ob::RealVectorStateSpace::StateType*>(state);
-
-    //std::cout << "X: " << real_state->values[0] << std::endl;
-    //std::cout <<" Y: " << real_state->values[1] << std::endl;
 
     return std::pair<double, double>( real_state->values[0], real_state->values[1] );
   }
@@ -375,55 +387,53 @@ private:
   // *********************************************************************************************************
   bool planWithSimpleSetup()
   {
-    // construct the state space we are planning in
+    // Construct the state space we are planning in
     ob::StateSpacePtr space( new ob::RealVectorStateSpace( DIMENSIONS ));
-    /*
-      ob::StateSpacePtr space1( new ob::DiscreteStateSpace());
-      ob::StateSpacePtr space2( new ob::DiscreteStateSpace());
-      ob::StateSpacePtr space = space1 + space2;
 
-      state->as<ob::CompoundState>()->components[0]->as<ob::DiscreteStateSpace::StateType>()->value
-
-
-      state->as<ob::CompoundState>()->as<ob::DiscreteStateSpace::StateType>(0)->value
-    */
-
-    // set the bounds for the R^2
+    // Set the bounds for the R^2
     ob::RealVectorBounds bounds( DIMENSIONS );
-    bounds.setLow(0);
-    bounds.setHigh(99);
-    //  space->as<ob::SE3StateSpace>()->setBounds(bounds);
-    space->as<ob::RealVectorStateSpace>()->setBounds(bounds);
-
-
+    bounds.setLow( 0 ); // both dimensions start at 0
+    bounds.setHigh( 0, image_->x ); // allow for non-square images
+    bounds.setHigh( 1, image_->y ); // allow for non-square images
+    space->as<ob::RealVectorStateSpace>()->setBounds( bounds );
 
     // Define a simple setup class ---------------------------------------
     simple_setup_ = og::SimpleSetupPtr( new og::SimpleSetup(space) );
 
     // Set the setup planner (TRRT)
-    simple_setup_->setPlanner(ob::PlannerPtr(new og::RRT( simple_setup_->getSpaceInformation() )));
+    og::TRRT *trrt = new og::TRRT( simple_setup_->getSpaceInformation() );
+    //    trrt->setRange(15.0); // this will shorten the allowed distance between each state
+    simple_setup_->setPlanner(ob::PlannerPtr(trrt));
 
     // Set state validity checking for this space
     simple_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( simple_setup_->getSpaceInformation(), cost_, max_threshold_ ) ) );
-
 
 
     // Start and Goal State ---------------------------------------------
 
     // Create start space
     ob::ScopedState<> start(space);
-    start.random();
-
-    // Manually set the start location
-    //start[0] = 95;
-    //    start[1] = 10;
+    if( false )
+    {
+      start.random();
+    }
+    else // Manually set the start location
+    {
+      start[0] = 95;
+      start[1] = 10;
+    }
 
     // create a goal state
     ob::ScopedState<> goal(space);
-    goal.random();
-    // Manually set the start location
-    //goal[0] = 10;
-    //    goal[1] = 40;
+    if( false )
+    {
+      goal.random();
+    }
+    else // Manually set the start location
+    {
+      goal[0] = 10;
+      goal[1] = 40;
+    }
 
     // Modify the map to show start and end locations
     image_->data[ image_->getID( start[0], start[1] ) ].red = 50;
@@ -437,34 +447,38 @@ private:
     // set the start and goal states
     simple_setup_->setStartAndGoalStates(start, goal);
 
+    // Setup -----------------------------------------------------------
 
+    // Auto setup parameters
+    simple_setup_->setup();
+    // The interval in which obstacles are checked for between states
+    //    simple_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
+
+    
     // Debug -----------------------------------------------------------
 
     // this call is optional, but we put it in to get more output information
-    simple_setup_->setup();
     simple_setup_->print();
 
 
     // Solve -----------------------------------------------------------
-    std::cout << "\n\nSolve\n" << std::endl;
+    std::cout << "\n\nSOLVE \n" << std::endl;
 
-    // attempt to solve the problem within one second of planning time
-    ob::PlannerStatus solved = simple_setup_->solve(1.0);
+    // attempt to solve the problem within x seconds of planning time
+    ob::PlannerStatus solved = simple_setup_->solve(5.0);
 
     if (solved)
     {
-      std::cout << "\nSOLUTION FOUND!" << std::endl;
+      std::cout << "\nSOLUTION FOUND! -----------------------------------------" << std::endl;
       //      simple_setup_->getSolutionPath().print(std::cout);
 
-      // Get information about the exploration data structure the motion planner used.
+      // Get information about the exploration data structure the motion planner used. Used later in visualizing
       planner_data_.reset( new ob::PlannerData( simple_setup_->getSpaceInformation() ) );
       simple_setup_->getPlannerData( *planner_data_ );
-
-
     }
     else
     {
-      std::cout << "NO SOLUTION FOUND" << std::endl;
+      std::cout << "NO SOLUTION FOUND ------------------------------------------ " << std::endl;
     }
 
     return solved;
@@ -831,6 +845,79 @@ private:
         //        ros::Duration(0.00001).sleep();
       }
 
+    }
+
+    // Publish the marker
+    marker_pub_.publish( marker );
+  }
+
+  // *********************************************************************************************************
+  // Display Sample Points
+  // *********************************************************************************************************
+  void displaySamples()
+  {
+    visualization_msgs::Marker marker;
+    // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+    marker.header.frame_id = "/my_frame";
+    marker.header.stamp = ros::Time();
+
+    // Set the namespace and id for this marker.  This serves to create a unique ID
+    // Any marker sent with the same namespace and id will overwrite the old one
+    marker.ns = "sample_locations";
+
+    // Set the marker type.
+    marker.type = visualization_msgs::Marker::SPHERE_LIST;
+
+    // Set the marker action.  Options are ADD and DELETE
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.id = 0;
+
+    marker.pose.position.x = 1.0;
+    marker.pose.position.y = 1.0;
+    marker.pose.position.z = 1.0;
+
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+
+    marker.scale.x = 0.4;
+    marker.scale.y = 0.4;
+    marker.scale.z = 0.4;
+
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+    marker.color.a = 1.0;
+
+    std::pair<double, double> this_vertex;
+
+    // Make line color
+    std_msgs::ColorRGBA color;
+    color.r = 0.8;
+    color.g = 0.1;
+    color.b = 0.1;
+    color.a = 1.0;
+
+    // Point
+    geometry_msgs::Point point_a;
+
+    std::cout << "\n\nDISPLAYING SPHERES\n";
+
+    // Loop through all verticies
+    for( int vertex_id = 0; vertex_id < int( planner_data_->numVertices() ); ++vertex_id )
+    {
+
+      this_vertex = getCoordinates( vertex_id );
+
+      // First point
+      point_a.x = this_vertex.first;
+      point_a.y = this_vertex.second;
+      point_a.z = cost_( nat_round(point_a.y), nat_round(point_a.x) ) / 2 + 2;
+
+      // Add the point pair to the line message
+      marker.points.push_back( point_a );
+      marker.colors.push_back( color );
     }
 
     // Publish the marker
