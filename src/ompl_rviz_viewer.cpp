@@ -151,6 +151,9 @@ private:
   /// The cost at which it becomes an obstacle
   double max_threshold_;
 
+  // The percentage of the top min/max cost value that is considered an obstacle, e.g. 10 is top 10% of peaks
+  static const double max_threshold_percentage_ = 40;
+
   // The number of dimensions - always 2 for images
   static const unsigned int DIMENSIONS = 2;
 
@@ -167,9 +170,7 @@ public:
     ROS_INFO("Advertising 'visualization_marker'");
     marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
     ros::Duration(1).sleep();
-    // TODO: add smarter waiting
 
-    max_threshold_ = 25;
   }
 
   // *********************************************************************************************************
@@ -212,11 +213,17 @@ public:
         min_cost_ = image_->data[ i ].red;
     }
 
-    // This factor is the author's visual preference for scaling any cost map in Rviz
-    const int scale_factor = 49;
+    // This factor is the author's visual preference for scaling a cost map in Rviz
+    const int artistic_scale = 2;
 
     // This scale adapts that factor depending on the cost map min max
-    const int scale = (max_cost_ - min_cost_ ) / scale_factor;
+    const int scale = (max_cost_ - min_cost_ ) / ( image_->x / artistic_scale );
+
+    // Dynamically calculate the obstacle threshold
+    max_threshold_ = max_cost_ - ( max_threshold_percentage_ / 100 * (max_cost_ - min_cost_) );
+
+    std::cout << max_cost_ << " " << min_cost_ << " " << scale << " " << max_threshold_ << std::endl;
+
 
     // Preprocess the pixel data for cost and give it a nice colored tint
     for( int i = 0; i < image_->getSize(); ++i )
@@ -296,7 +303,7 @@ public:
       }
 
       // Simplify solution ------------------------------------------------------
-      if( false )
+      if( true )
       {
         simple_setup_->simplifySolution();
 
@@ -500,8 +507,7 @@ private:
       marker.header.stamp = ros::Time::now();
 
       // Set the namespace and id for this marker.  This serves to create a unique ID
-      // Any marker sent with the same namespace and id will overwrite the old one
-      marker.ns = "basic_shapes";
+        marker.ns = "basic_shapes";
 
       // Set the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
       marker.type = visualization_msgs::Marker::CUBE;
@@ -562,8 +568,6 @@ private:
     point.z = cost_( y, x ) / 2;
     marker->points.push_back( point );
 
-    //  std::cout << "Point " << x << " " << y << " " << point.z << std::endl;
-
     // Color
     std_msgs::ColorRGBA color;
     color.r = image_->data[ image_->getID( x, y ) ].red / 255.0;
@@ -584,12 +588,10 @@ private:
     marker.header.stamp = ros::Time::now();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
-    // Any marker sent with the same namespace and id will overwrite the old one
     marker.ns = "cost_map";
 
     // Set the marker type.
     marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
-    //    marker.type = visualization_msgs::Marker::LINE_LIST;
 
     // Set the marker action.  Options are ADD and DELETE
     marker.action = visualization_msgs::Marker::ADD;
@@ -621,8 +623,6 @@ private:
       // Check that we are not on the far right or bottom
       if( ! (x + 1 >= image_->x ||  y + 1 >= image_->y ) )
       {
-        //std::cout << " ---- " << std::endl;
-
         addPoint( x,   y, &marker );
         addPoint( x+1, y, &marker );
         addPoint( x,   y+1, &marker );
@@ -632,19 +632,12 @@ private:
       // Check that we are not on the far left or bottom
       if( ! (x - 1 < 0 ||  y + 1 >= image_->y ) )
       {
-        //std::cout << " ---- " << std::endl;
-
         addPoint( x,   y, &marker );
         addPoint( x,   y+1, &marker );
         addPoint( x-1, y+1, &marker );
       }
 
-
-      //            ros::Duration(0.000001).sleep();
-
     }
-
-    //    marker.lifetime = ros::Duration(4.0);
 
     marker_pub_.publish( marker );
   }
@@ -665,8 +658,6 @@ private:
       x2 = x_temp;
       y2 = y_temp;
     }
-
-    //    std::cout << "------------------------\nx1="<< x1 << " y1=" << y1 << "\nx2=" << x2 << " y2="<<y2<<"\n";
 
     // Points
     geometry_msgs::Point point_a;
@@ -701,11 +692,9 @@ private:
 
     // Calculate slope between the lines
     double m = (y2 - y1)/(x2 - x1);
-    //    std::cout << "SLOPE = " << m << std::endl;
 
     // Calculate the y-intercep
     double b = y1 - m * x1;
-    //    std::cout << "B = " << b << std::endl;
 
     // Define the interpolation interval
     double interval = 0.5;
@@ -722,8 +711,6 @@ private:
       // Find the y coordinate
       y_b = m*x_b + b;
 
-      //      std::cout << "x_b = " << x_b << " y_b = " << y_b << std::endl;
-
       // Create first point
       point_a.x = float(x_a);
       point_a.y = float(y_a);
@@ -733,8 +720,6 @@ private:
       point_b.x = float(x_b);
       point_b.y = float(y_b);
       point_b.z = cost_( nat_round(point_b.y), nat_round(point_b.x) ) / 2 + 2;
-
-      //      std::cout << "FROM: (" << point_a.x << "," << point_a.y << ") TO (" << point_b.x << "," << point_b.y << ")" << std::endl;
 
       // Add the point pair to the line message
       marker->points.push_back( point_a );
@@ -782,13 +767,10 @@ private:
     marker.header.stamp = ros::Time();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
-    // Any marker sent with the same namespace and id will overwrite the old one
     marker.ns = "space_exploration";
 
     // Set the marker type.
-    //    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
     marker.type = visualization_msgs::Marker::LINE_LIST;
-    //    marker.type = visualization_msgs::Marker::CUBE_LIST;
 
     // Set the marker action.  Options are ADD and DELETE
     marker.action = visualization_msgs::Marker::ADD;
@@ -842,8 +824,6 @@ private:
         next_vertex = getCoordinates( *edge_it );
 
         interpolateLine( this_vertex.first, this_vertex.second, next_vertex.first, next_vertex.second, &marker, &color );
-
-        //        ros::Duration(0.00001).sleep();
       }
 
     }
@@ -858,12 +838,11 @@ private:
   void displaySamples()
   {
     visualization_msgs::Marker marker;
-    // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+    // Set the frame ID and timestamp.  
     marker.header.frame_id = "/my_frame";
     marker.header.stamp = ros::Time();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
-    // Any marker sent with the same namespace and id will overwrite the old one
     marker.ns = "sample_locations";
 
     // Set the marker type.
@@ -931,18 +910,15 @@ private:
   void displayResult( std::vector<std::pair<double, double> > coordinates, std_msgs::ColorRGBA* color )
   {
     visualization_msgs::Marker marker;
-    // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+    // Set the frame ID and timestamp.  
     marker.header.frame_id = "/my_frame";
     marker.header.stamp = ros::Time();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
-    // Any marker sent with the same namespace and id will overwrite the old one
     marker.ns = "result_path";
 
     // Set the marker type.
-    //    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
     marker.type = visualization_msgs::Marker::LINE_LIST;
-    //    marker.type = visualization_msgs::Marker::CUBE_LIST;
 
     // Set the marker action.  Options are ADD and DELETE
     marker.action = visualization_msgs::Marker::ADD;
@@ -983,8 +959,6 @@ private:
     {
       x2 = coordinates[i].first;
       y2 = coordinates[i].second;
-
-      //      std::cout << "------------------------\nx1="<< x1 << " y1=" << y1 << "\nx2=" << x2 << " y2="<<y2<<"\n";
 
       // Points
       geometry_msgs::Point point_a;
@@ -1041,7 +1015,6 @@ int main( int argc, char** argv )
       return false;
     }
     image_path.append( "/resources/mountains.ppm" );
-    //image_path.append( "/resources/height_map1.ppm" );
   }
 
   // Run the program
