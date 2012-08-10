@@ -197,57 +197,24 @@ public:
             return;
         }
 
-        // Create an array of ints that represent the cost of every pixel
-        cost_.resize( image_->x, image_->y );
-
-        // Find the min and max cost from the image
-        min_cost_ = image_->data[ 0 ].red;
-        max_cost_ = image_->data[ 0 ].red;
-
-        for( size_t i = 0; i < image_->getSize(); ++i )
+        // Disallow non-square
+        if( image_->x != image_->y )
         {
-            // Max
-            if( image_->data[ i ].red > max_cost_ )
-                max_cost_ = image_->data[ i ].red;
-            // Min
-            else if( image_->data[ i ].red < min_cost_ )
-                min_cost_ = image_->data[ i ].red;
+            ROS_ERROR( "Does not currently support non-square images because of some weird bug" );
+            return;
         }
 
         std::cout << "Map - Height: " << image_->y << " Width: " << image_->x << std::endl;
 
-        // This factor is the author's visual preference for scaling a cost map in Rviz
-        const double artistic_scale = 2.0;
+        // Create an array of ints that represent the cost of every pixel
+        cost_.resize( image_->x, image_->y );
 
-        // This scale adapts that factor depending on the cost map min max
-        const double scale = (max_cost_ - min_cost_ ) / ( image_->x / artistic_scale );
-
-        // Dynamically calculate the obstacle threshold
-        max_threshold_ = max_cost_ - ( MAX_THRESHOLD_PERCENTAGE_ / 100 * (max_cost_ - min_cost_) );
-
-        std::cout << "\nCOST MAP STATS:\nMIN COST: " << min_cost_ << " MAX_COST: " << max_cost_ << " SCALE: " << scale
-                  << " MAX THRESHOLD: " << max_threshold_ << std::endl << std::endl;
-
-        // Preprocess the pixel data for cost and give it a nice colored tint
-        for( size_t i = 0; i < image_->getSize(); ++i )
-        {
-            // Calculate cost
-            cost_.data()[i]  = ( image_->data[ i ].red ) / scale;
-
-            // Prevent cost from being zero
-            if( !cost_.data()[i] )
-                cost_.data()[i] = 1;
-
-            // Color different if it is an obstacle
-            if( cost_.data()[i] > max_threshold_ )
-            {
-                image_->data[ i ].red = 255; //image_->data[ i ].red;
-                image_->data[ i ].green = image_->data[ i ].green;
-                image_->data[ i ].blue = image_->data[ i ].blue;
-            }
-
-        }
-
+		// gets the min and max values of the cost map
+		getMinMaxCost();
+		
+		// Generate the cost map
+		createCostMap();
+		
         std::cout << "OMPL version: " << OMPL_VERSION << " ----------------------- " << std::endl << std::endl << std::endl;
 
         // OMPL Processing -------------------------------------------------------------------------------------------------
@@ -335,6 +302,68 @@ public:
     // *********************************************************************************************************
 private:
 
+	// *********************************************************************************************************
+    // Helper Function: calculate cost map
+    // *********************************************************************************************************
+	void createCostMap()
+	{
+		        // This factor is the author's visual preference for scaling a cost map in Rviz
+        const double artistic_scale = 2.0;
+
+        // This scale adapts that factor depending on the cost map min max
+        const double scale = (max_cost_ - min_cost_ ) / ( image_->x / artistic_scale );
+
+        // Dynamically calculate the obstacle threshold
+        max_threshold_ = max_cost_ - ( MAX_THRESHOLD_PERCENTAGE_ / 100 * (max_cost_ - min_cost_) );
+
+        std::cout << "\nCOST MAP STATS:\nMIN COST: " << min_cost_ << " MAX_COST: " << max_cost_ << " SCALE: " << scale
+                  << " MAX THRESHOLD: " << max_threshold_ << std::endl << std::endl;
+
+        // Preprocess the pixel data for cost and give it a nice colored tint
+        for( size_t i = 0; i < image_->getSize(); ++i )
+        {
+            // Calculate cost
+            cost_.data()[i]  = ( image_->data[ i ].red ) / scale;
+
+            // Prevent cost from being zero
+            if( !cost_.data()[i] )
+                cost_.data()[i] = 1;
+
+            // Color different if it is an obstacle
+            if( cost_.data()[i] > max_threshold_ )
+            {
+                image_->data[ i ].red = 255; //image_->data[ i ].red;
+                image_->data[ i ].green = image_->data[ i ].green;
+                image_->data[ i ].blue = image_->data[ i ].blue;
+            }
+
+        }
+
+
+
+
+	}
+	
+    // *********************************************************************************************************
+    // Helper Function: gets the min and max values of the cost map
+    // *********************************************************************************************************
+	void getMinMaxCost()
+	{
+        // Find the min and max cost from the image
+        min_cost_ = image_->data[ 0 ].red;
+        max_cost_ = image_->data[ 0 ].red;
+
+        for( size_t i = 0; i < image_->getSize(); ++i )
+        {
+            // Max
+            if( image_->data[ i ].red > max_cost_ )
+                max_cost_ = image_->data[ i ].red;
+            // Min
+            else if( image_->data[ i ].red < min_cost_ )
+                min_cost_ = image_->data[ i ].red;
+        }
+	}
+	
     // *********************************************************************************************************
     // Helper Function: gets the x,y coordinates for a given vertex id
     // *********************************************************************************************************
@@ -1017,16 +1046,28 @@ int main( int argc, char** argv )
             std::cout << "Unable to get OMPL RViz Viewer package path " << std::endl;
             return false;
         }
-		//        if( rand() % 2)
-        {
-            image_path.append( "/resources/grand_canyon.ppm" );
-        }
-		/*        else
-        {
-            image_path.append( "/resources/height_map2.ppm" );
-			}*/
-    }
 
+		// Seed random
+		srand ( time(NULL) );
+
+		// Choose random image
+        switch( rand() % 4 )
+        {
+        case 0:
+            image_path.append( "/resources/grand_canyon.ppm" );
+            break;
+        case 1:
+            image_path.append( "/resources/height_map0.ppm" );
+            break;
+        case 2:
+            image_path.append( "/resources/height_map1.ppm" );
+            break;
+        case 3:
+            image_path.append( "/resources/height_map2.ppm" );
+            break;
+        }
+    }
+	
     // Run the program
     OmplRvizViewer viewer;
     viewer.runImage( image_path );
