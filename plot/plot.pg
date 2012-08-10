@@ -1,0 +1,29 @@
+#!/usr/bin/gnuplot
+reset
+#set terminal png
+
+set terminal wxt size 1800,1000
+
+set xlabel "Samples"
+
+set ylabel "Temp"
+
+set yrange [0:0.05]
+#set autoscale
+
+set title "OMPL T-RRT"
+set key reverse Left inside
+set grid
+
+set style data lines
+#set style line 1 lw 6
+
+
+set datafile separator ","
+
+plot "temperatures.dat" using 1:2 title 'Temperature' linecolor rgb "green"
+#     "temperatures.dat" using 1:3 title 'Ratio' linecolor rgb "red"
+
+     
+#pause 10
+#reread

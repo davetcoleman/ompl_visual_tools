@@ -13,7 +13,7 @@
 // PPMPixel Struct
 // *********************************************************************************************************************
 typedef struct {
-  unsigned char red,green,blue;
+    unsigned char red,green,blue;
 } PPMPixel;
 
 // *********************************************************************************************************************
@@ -22,39 +22,48 @@ typedef struct {
 /*typedef struct {
   int x, y;
   PPMPixel *data;
-} PPMImage;
+  } PPMImage;
 */
 class PPMImage
 {
 public:
-  PPMImage() {}
+    PPMImage() :
+        x(0), y(0), data(NULL)
+    {
+    }
 
-  // Convert coordinates to a id number
-  unsigned int getID( unsigned int x_coord, unsigned int y_coord )
-  {
-    return y_coord * x + x_coord;
-  }
+    ~PPMImage()
+    {
+        if( data != NULL )
+            delete data;
+    }
 
-  // Convert id to x
-  unsigned int getX( unsigned int id )
-  {
-    return id % x;
-  }
+    // Convert coordinates to a id number
+    unsigned int getID( unsigned int x_coord, unsigned int y_coord )
+    {
+        return y_coord * x + x_coord;
+    }
 
-  // Convert id to y
-  unsigned int getY( unsigned int id )
-  {
-    return id / x;
-  }
+    // Convert id to x
+    unsigned int getX( unsigned int id )
+    {
+        return id % x;
+    }
 
-  unsigned int getSize()
-  {
-    return x * y;
-  }
+    // Convert id to y
+    unsigned int getY( unsigned int id )
+    {
+        return id / x;
+    }
 
-  // Member variables
-  unsigned int x, y;
-  PPMPixel *data;
+    unsigned int getSize()
+    {
+        return x * y;
+    }
+
+    // Member variables
+    unsigned int x, y;
+    PPMPixel *data;
 };
 
 

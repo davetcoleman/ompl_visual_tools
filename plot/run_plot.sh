@@ -1,0 +1,1 @@
+gnuplot -persist plot.pg

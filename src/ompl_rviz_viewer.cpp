@@ -166,12 +166,11 @@ public:
     // *********************************************************************************************************
     OmplRvizViewer()
     {
+        image_ = NULL;
 
         // ROS Publishing stuff
-        //ROS_INFO("Advertising 'visualization_marker'");
         marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
         ros::Duration(1).sleep();
-
     }
 
     // *********************************************************************************************************
@@ -179,7 +178,7 @@ public:
     // *********************************************************************************************************
     ~OmplRvizViewer()
     {
-        //    delete image_;
+        delete image_;
     }
 
     // *********************************************************************************************************
@@ -204,18 +203,18 @@ public:
             return;
         }
 
-        std::cout << "Map - Height: " << image_->y << " Width: " << image_->x << std::endl;
+        std::cout << "Map Height: " << image_->y << " Map Width: " << image_->x << std::endl;
 
         // Create an array of ints that represent the cost of every pixel
         cost_.resize( image_->x, image_->y );
 
-		// gets the min and max values of the cost map
-		getMinMaxCost();
-		
-		// Generate the cost map
-		createCostMap();
-		
-        std::cout << "OMPL version: " << OMPL_VERSION << " ----------------------- " << std::endl << std::endl << std::endl;
+        // gets the min and max values of the cost map
+        getMinMaxCost();
+
+        // Generate the cost map
+        createCostMap();
+
+        std::cout << "OMPL version: " << OMPL_VERSION << std::endl << std::endl;
 
         // OMPL Processing -------------------------------------------------------------------------------------------------
         // Run OMPL and display
@@ -294,7 +293,7 @@ public:
         }
 
         // Done
-        std::cout << "SUCCESS ------------------------------ " << std::endl << std::endl;
+        std::cout << std::endl;
     }
 
     // *********************************************************************************************************
@@ -302,12 +301,12 @@ public:
     // *********************************************************************************************************
 private:
 
-	// *********************************************************************************************************
+    // *********************************************************************************************************
     // Helper Function: calculate cost map
     // *********************************************************************************************************
-	void createCostMap()
-	{
-		        // This factor is the author's visual preference for scaling a cost map in Rviz
+    void createCostMap()
+    {
+        // This factor is the author's visual preference for scaling a cost map in Rviz
         const double artistic_scale = 2.0;
 
         // This scale adapts that factor depending on the cost map min max
@@ -316,8 +315,8 @@ private:
         // Dynamically calculate the obstacle threshold
         max_threshold_ = max_cost_ - ( MAX_THRESHOLD_PERCENTAGE_ / 100 * (max_cost_ - min_cost_) );
 
-        std::cout << "\nCOST MAP STATS:\nMIN COST: " << min_cost_ << " MAX_COST: " << max_cost_ << " SCALE: " << scale
-                  << " MAX THRESHOLD: " << max_threshold_ << std::endl << std::endl;
+		// std::cout << "\nCOST MAP STATS:\nMIN COST: " << min_cost_ << " MAX_COST: " << max_cost_ << " SCALE: " << scale
+        //          << " MAX THRESHOLD: " << max_threshold_ << std::endl << std::endl;
 
         // Preprocess the pixel data for cost and give it a nice colored tint
         for( size_t i = 0; i < image_->getSize(); ++i )
@@ -342,13 +341,13 @@ private:
 
 
 
-	}
-	
+    }
+
     // *********************************************************************************************************
     // Helper Function: gets the min and max values of the cost map
     // *********************************************************************************************************
-	void getMinMaxCost()
-	{
+    void getMinMaxCost()
+    {
         // Find the min and max cost from the image
         min_cost_ = image_->data[ 0 ].red;
         max_cost_ = image_->data[ 0 ].red;
@@ -362,8 +361,8 @@ private:
             else if( image_->data[ i ].red < min_cost_ )
                 min_cost_ = image_->data[ i ].red;
         }
-	}
-	
+    }
+
     // *********************************************************************************************************
     // Helper Function: gets the x,y coordinates for a given vertex id
     // *********************************************************************************************************
@@ -441,9 +440,6 @@ private:
         // Set the setup planner (TRRT)
         og::TRRT *trrt = new og::TRRT( simple_setup_->getSpaceInformation() );
 
-        double range = image_->x / 20; // TODO: make this work with more than 1 dimension
-        trrt->setRange( range ); // this will shorten the allowed distance between each state
-
         simple_setup_->setPlanner(ob::PlannerPtr(trrt));
 
         // Set state validity checking for this space
@@ -495,21 +491,20 @@ private:
         // The interval in which obstacles are checked for between states
         //    simple_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
 
-        std::cout << "after setup" << std::endl;
         // Debug -----------------------------------------------------------
         // this call is optional, but we put it in to get more output information
         //simple_setup_->print();
 
 
         // Solve -----------------------------------------------------------
-        std::cout << "\n\nSOLVE \n" << std::endl;
+		ROS_INFO( "Starting OMPL motion planner..." );
 
         // attempt to solve the problem within x seconds of planning time
         ob::PlannerStatus solved = simple_setup_->solve( 10.0 );
 
         if (solved)
         {
-            std::cout << "\nSOLUTION FOUND! -----------------------------------------" << std::endl;
+            ROS_INFO("Solution Found");
             //      simple_setup_->getSolutionPath().print(std::cout);
 
             // Get information about the exploration data structure the motion planner used. Used later in visualizing
@@ -518,7 +513,7 @@ private:
         }
         else
         {
-            std::cout << "NO SOLUTION FOUND ------------------------------------------ " << std::endl;
+            ROS_INFO("No Solution Found");
         }
 
         return solved;
@@ -836,7 +831,7 @@ private:
         color.b = 1.0;
         color.a = 1.0;
 
-        std::cout << "\n\nDISPLAYING GRAPH\n";
+        ROS_INFO("Publishing Graph");
 
         // Loop through all verticies
         for( int vertex_id = 0; vertex_id < int( planner_data_->numVertices() ); ++vertex_id )
@@ -914,7 +909,7 @@ private:
         // Point
         geometry_msgs::Point point_a;
 
-        std::cout << "\n\nDISPLAYING SPHERES\n";
+        ROS_INFO("Publishing Spheres");
 
         // Loop through all verticies
         for( int vertex_id = 0; vertex_id < int( planner_data_->numVertices() ); ++vertex_id )
@@ -977,7 +972,7 @@ private:
         marker.color.b = 0.0;
         marker.color.a = 1.0;
 
-        std::cout << "\n\nDISPLAYING RESULT\n";
+        ROS_INFO("Publishing result");
 
         // Get the initial points
         double x1 = coordinates[0].first;
@@ -1028,6 +1023,7 @@ private:
 // *********************************************************************************************************
 int main( int argc, char** argv )
 {
+    std::cout << std::endl << "OMPL RViz Viewer ----------------------------------------- " << std::endl << std::endl;
     ros::init(argc, argv, "ompl_rviz_viewer");
 
     std::string image_path;
@@ -1047,11 +1043,11 @@ int main( int argc, char** argv )
             return false;
         }
 
-		// Seed random
-		srand ( time(NULL) );
+        // Seed random
+        srand ( time(NULL) );
 
-		// Choose random image
-        switch( rand() % 4 )
+        // Choose random image
+        switch( 2 ) //rand() % 4 )
         {
         case 0:
             image_path.append( "/resources/grand_canyon.ppm" );
@@ -1067,7 +1063,7 @@ int main( int argc, char** argv )
             break;
         }
     }
-	
+
     // Run the program
     OmplRvizViewer viewer;
     viewer.runImage( image_path );
