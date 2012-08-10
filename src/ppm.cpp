@@ -77,7 +77,7 @@ PPMImage *readPPM(const char *filename)
   }
 
   //read pixel data from file
-  if (int( fread( img->data, 3 * img->x, img->y, fp) ) != img->y) {
+  if ( fread( img->data, 3 * img->x, img->y, fp) != img->y) {
     fprintf(stderr, "Error loading image '%s'\n", filename);
     exit(1);
   }

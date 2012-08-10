@@ -30,30 +30,30 @@ public:
   PPMImage() {}
 
   // Convert coordinates to a id number
-  int getID( int x_coord, int y_coord )
+  unsigned int getID( unsigned int x_coord, unsigned int y_coord )
   {
     return y_coord * x + x_coord;
   }
 
   // Convert id to x
-  int getX( int id )
+  unsigned int getX( unsigned int id )
   {
     return id % x;
   }
 
   // Convert id to y
-  int getY( int id )
+  unsigned int getY( unsigned int id )
   {
     return id / x;
   }
 
-  int getSize()
+  unsigned int getSize()
   {
     return x * y;
   }
 
   // Member variables
-  int x, y;
+  unsigned int x, y;
   PPMPixel *data;
 };
 
