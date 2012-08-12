@@ -82,57 +82,9 @@ PPMImage *readPPM(const char *filename)
     exit(1);
   }
 
+  // Close the file pointer
   fclose(fp);
+  
   return img;
 }
-
-// *********************************************************************************************************************
-// Writing Function
-// *********************************************************************************************************************
-/*
-void writePPM(const char *filename, PPMImage *img)
-{
-  FILE *fp;
-  //open file for output
-  fp = fopen(filename, "wb");
-  if (!fp) {
-    fprintf(stderr, "Unable to open file '%s'\n", filename);
-    exit(1);
-  }
-
-  //write the header file
-  //image format
-  fprintf(fp, "P6\n");
-
-  //comments
-  fprintf(fp, "# Created by %s\n",CREATOR);
-
-  //image size
-  fprintf(fp, "%d %d\n",img->x,img->y);
-
-  // rgb component depth
-  fprintf(fp, "%d\n",RGB_COMPONENT_COLOR);
-
-  // pixel data
-  fwrite(img->data, 3 * img->x, img->y, fp);
-  fclose(fp);
-}
-
-// *********************************************************************************************************************
-// Changing Color Function
-// *********************************************************************************************************************
-void changeColorPPM(PPMImage *img)
-{
-  int i;
-  if(img){
-
-    for(i=0;i<img->x*img->y;i++){
-      img->data[i].red=RGB_COMPONENT_COLOR-img->data[i].red;
-      img->data[i].green=RGB_COMPONENT_COLOR-img->data[i].green;
-      img->data[i].blue=RGB_COMPONENT_COLOR-img->data[i].blue;
-    }
-  }
-}
-*/
-
 

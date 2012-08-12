@@ -27,15 +27,17 @@ typedef struct {
 class PPMImage
 {
 public:
+	// Constructor
     PPMImage() :
         x(0), y(0), data(NULL)
     {
     }
 
+	// Deconstructor
     ~PPMImage()
     {
         if( data != NULL )
-            delete data;
+            free(data);
     }
 
     // Convert coordinates to a id number
