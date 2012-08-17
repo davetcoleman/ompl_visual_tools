@@ -1,9 +1,11 @@
 /*
  * PPM Image Format Reader
- * Code originally from http://stackoverflow.com/questions/2693631/read-ppm-file-and-store-it-in-an-array-coded-with-c
+ * Code adapted from http://stackoverflow.com/questions/2693631/read-ppm-file-and-store-it-in-an-array-coded-with-c
+ * 8/1/2012
+ * License Unkown
  */
 
-#include "ompl_rviz_viewer/ppm.h"
+#include "ppm.h"
 
 // *********************************************************************************************************************
 // Reading Function
