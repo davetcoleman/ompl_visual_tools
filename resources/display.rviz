@@ -13,31 +13,15 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
-    - Alpha: 0.5
-      Cell Size: 1
-      Class: rviz/Grid
-      Color: 160; 160; 164
-      Enabled: true
-      Line Style:
-        Line Width: 0.03
-        Value: Lines
-      Name: Grid
-      Normal Cell Count: 0
-      Offset:
-        Value: 0; 0; 0
-        X: 0
-        Y: 0
-        Z: 0
-      Plane: XY
-      Plane Cell Count: 11
-      Reference Frame: <Fixed Frame>
-      Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: visualization_marker
       Name: Marker
       Namespaces:
-        basic_shapes: true
+        cost_map: true
+        result_path: true
+        sample_locations: true
+        space_exploration: true
       Queue Size: 10000
       Value: true
   Enabled: true
@@ -52,18 +36,18 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 22.9653
+      Distance: 858.445
       Focal Point:
-        Value: 0; 0; 0
-        X: 0
-        Y: 0
-        Z: 0
+        Value: 158.11; 158.48; -190.93
+        X: 158.107
+        Y: 158.476
+        Z: -190.927
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.615399
+      Pitch: 1.1604
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.2354
+      Yaw: 0.5554
     Saved: ~
 Window Geometry:
   Height: 1080

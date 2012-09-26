@@ -16,8 +16,14 @@ BUILDING
 RUN
 ---------
 
-    rosrun ompl_rviz_viewer ompl_rviz_viewer
+# Start Rviz
 
+    roscd ompl_rviz_viewer
+    rosrun rviz rviz -d resources/display.rviz
+
+# Run Visualizer
+
+    rosrun ompl_rviz_viewer ompl_rviz_viewer
 
 USAGE
 ---------
