@@ -57,6 +57,8 @@ namespace ob = ompl::base;
 namespace og = ompl::geometric;
 namespace bnu = boost::numeric::ublas;
 
+namespace ompl_rviz_viewer
+{
 
 // *********************************************************************************************************
 // Nat_Rounding helper function to make readings from cost map more accurate
@@ -80,19 +82,12 @@ private:
 public:
 
   /** \brief Constructor */
-  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, const bnu::matrix<int> cost, double max_threshold  ) :
+  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, const bnu::matrix<int>& cost, 
+				 double max_threshold ) :
     StateValidityChecker(si)
   {
     cost_ = cost;
     max_threshold_ = max_threshold;
-  }
-
-  /** \brief Constructor */
-  TwoDimensionalValidityChecker( ob::SpaceInformation* si) :
-    StateValidityChecker(si)
-  {
-    ROS_ERROR("NOT IMPLEMENTED constructor");
-    exit(0);
   }
 
   /** \brief Obstacle checker */
@@ -107,10 +102,8 @@ public:
 
     // Return the cost from the matrix at the current dimensions
     double cost = cost_( nat_round(coords[1]), nat_round(coords[0]) );
-    //    std::cout << "cost: " << cost << " - "; //std::endl;
 
     return cost;
-    //    return 0;
   }
 
 };
@@ -203,7 +196,7 @@ public:
       return;
     }
 
-    std::cout << "Map Height: " << image_->y << " Map Width: " << image_->x << std::endl;
+    ROS_DEBUG_STREAM( "Map Height: " << image_->y << " Map Width: " << image_->x );
 
     // Create an array of ints that represent the cost of every pixel
     cost_.resize( image_->x, image_->y );
@@ -214,7 +207,7 @@ public:
     // Generate the cost map
     createCostMap();
 
-    std::cout << "OMPL version: " << OMPL_VERSION << std::endl << std::endl;
+    ROS_DEBUG_STREAM( "OMPL version: " << OMPL_VERSION );
 
     // OMPL Processing -------------------------------------------------------------------------------------------------
     // Run OMPL and display
@@ -292,8 +285,6 @@ public:
       ros::Duration(0.25).sleep();
     }
 
-    // Done
-    std::cout << std::endl;
   }
 
   // *********************************************************************************************************
@@ -373,7 +364,7 @@ private:
     if (!state)
     {
       ROS_ERROR("No state found for a vertex");
-      exit(0);
+      exit(1);
     }
 
     // Convert to RealVectorStateSpace
@@ -393,13 +384,14 @@ private:
 
     // Get data
     og::PathGeometric path = simple_setup_->getSolutionPath();
-    std::vector<ob::State*> states = path.getStates();
+    const std::vector<ob::State*>& states = path.getStates();
 
-    // Convert solution to coordiante vector
-    for( std::vector<ob::State*>::const_iterator state_it = states.begin();
-         state_it != states.end(); ++state_it )
+    // Convert solution to coordinate vector
+    //for( std::vector<ob::State*>::const_iterator state_it = states.begin();
+    //         state_it != states.end(); ++state_it )
+    for( size_t state_id = 0; state_id < states.size(); ++state_id )
     {
-      const ob::State *state = *state_it;
+      const ob::State *state = states[ state_id ];
 
       if (!state)
         continue; // no data?
@@ -503,7 +495,6 @@ private:
     if (solved)
     {
       ROS_INFO("Solution Found");
-      //      simple_setup_->getSolutionPath().print(std::cout);
 
       // Get information about the exploration data structure the motion planner used. Used later in visualizing
       planner_data_.reset( new ob::PlannerData( simple_setup_->getSpaceInformation() ) );
@@ -868,7 +859,7 @@ private:
   // *********************************************************************************************************
   // Display Result Path
   // *********************************************************************************************************
-  void displayResult( std::vector<std::pair<double, double> > coordinates, std_msgs::ColorRGBA* color )
+  void displayResult( const std::vector<std::pair<double, double> > coordinates, std_msgs::ColorRGBA* color )
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.
@@ -952,12 +943,15 @@ private:
 
 }; // end of class
 
+} // namespace
+
+
 // *********************************************************************************************************
 // Main
 // *********************************************************************************************************
 int main( int argc, char** argv )
 {
-  std::cout << std::endl << "OMPL RViz Viewer ----------------------------------------- " << std::endl << std::endl;
+  ROS_DEBUG( "OMPL RViz Viewer ----------------------------------------- " );
   ros::init(argc, argv, "ompl_rviz_viewer");
 
   std::string image_path;
@@ -973,7 +967,7 @@ int main( int argc, char** argv )
     image_path = ros::package::getPath("ompl_rviz_viewer");
     if( image_path.empty() )
     {
-      std::cout << "Unable to get OMPL RViz Viewer package path " << std::endl;
+      ROS_ERROR( "Unable to get OMPL RViz Viewer package path " );
       return false;
     }
 
@@ -999,7 +993,7 @@ int main( int argc, char** argv )
   }
 
   // Run the program
-  OmplRvizViewer viewer;
+  ompl_rviz_viewer::OmplRvizViewer viewer;
   viewer.runImage( image_path );
 
   // Wait to let anything still being published finish
@@ -1007,6 +1001,5 @@ int main( int argc, char** argv )
 
   return true;
 }
-
 
 
