@@ -1,0 +1,73 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Marker1
+      Splitter Ratio: 0.5
+    Tree Height: 814
+  - Class: rviz/Help
+    Name: Help
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        Value: 0; 0; 0
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 11
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: visualization_marker
+      Name: Marker
+      Namespaces:
+        basic_shapes: true
+      Queue Size: 10000
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: /my_frame
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+    - Class: rviz/MoveCamera
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 22.9653
+      Focal Point:
+        Value: 0; 0; 0
+        X: 0
+        Y: 0
+        Z: 0
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 0.615399
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 3.2354
+    Saved: ~
+Window Geometry:
+  Height: 1080
+  QMainWindow State: 000000ff00000000fd0000000100000000000001b1000003bcfc0200000002fb000000100044006900730070006c0061007900730100000041000003bc000000dc00fffffffb0000000800480065006c00700000000342000000bb0000007900ffffff000005c7000003bc00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Width: 1920
+  X: 1918
+  Y: -80
