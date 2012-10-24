@@ -975,7 +975,7 @@ int main( int argc, char** argv )
     srand ( time(NULL) );
 
     // Choose random image
-    switch( 2 ) //rand() % 4 )
+    switch( 0 ) //rand() % 4 )
     {
     case 0:
       image_path.append( "/resources/grand_canyon.ppm" );
