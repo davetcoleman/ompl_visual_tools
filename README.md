@@ -8,6 +8,7 @@ OMPL RViz Viewer
 3-D visualizer for cost-based planning algorithms implemented with the Open Motion Planning Library (OMPL). Publishes ROS messages to the RViz visualizer software using RViz markers. Displays all explored states, connecting edges and the final solution path. Great for learning and testing robotic motion planning algorithsm.
 
 'master' branch tested on: ROS Groovy | Ubuntu Precise | Catkin
+
 'rosbuild' branch tested on: ROS Fuerte | Ubuntu Natty | Rosbuild
 
 BUILDING
