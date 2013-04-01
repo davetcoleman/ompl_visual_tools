@@ -1,27 +1,29 @@
 OMPL RViz Viewer
 ==========
 * Author: Dave Coleman <davetcoleman@gmail.com>
-* Website: http://ros.org/wiki/ompl_rviz_viewer
-* License: BSD License
+* Website: https://github.com/davetcoleman/ompl_rviz_viewer
+* License: Modified BSD License
 * Inception Date: 8/1/2012
 
 3-D visualizer for cost-based planning algorithms implemented with the Open Motion Planning Library (OMPL). Publishes ROS messages to the RViz visualizer software using RViz markers. Displays all explored states, connecting edges and the final solution path. Great for learning and testing robotic motion planning algorithsm.
 
+'master' branch tested on: ROS Groovy | Ubuntu Precise | Catkin
+'rosbuild' branch tested on: ROS Fuerte | Ubuntu Natty | Rosbuild
 
 BUILDING
 ---------
-
-    rosmake ompl_rviz_viewer
+	
+    cd YOUR_WORKSPACE
+    catkin_make
 
 RUN
 ---------
 
 Start Rviz
 
-    roscd ompl_rviz_viewer
-    rosrun rviz rviz -d resources/display.rviz
+    roslaunch ompl_rviz_viewer rviz.launch
 
-Run Visualizer
+Run OMPL Rviz Viewer
 
     rosrun ompl_rviz_viewer ompl_rviz_viewer
 

@@ -1,0 +1,12 @@
+<!-- -*- mode: XML -*- -->
+<launch>
+
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <!-- Launch visualizer -->  
+  <node name="$(anon rviz)" launch-prefix="$(arg launch_prefix)" pkg="rviz" type="rviz" 
+	respawn="false" output="screen" args="-d $(find ompl_rviz_viewer)/launch/rviz.rviz" />
+
+</launch>

@@ -7,9 +7,14 @@ Panels:
         - /Global Options1
         - /Marker1
       Splitter Ratio: 0.5
-    Tree Height: 814
+    Tree Height: 810
   - Class: rviz/Help
     Name: Help
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
 Visualization Manager:
   Class: ""
   Displays:
@@ -31,27 +36,35 @@ Visualization Manager:
   Name: root
   Tools:
     - Class: rviz/Interact
+      Hide Inactive Objects: true
     - Class: rviz/MoveCamera
   Value: true
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 858.445
+      Distance: 1068.37
       Focal Point:
-        Value: 158.11; 158.48; -190.93
-        X: 158.107
-        Y: 158.476
-        Z: -190.927
+        X: 316.7
+        Y: 503.679
+        Z: 21.5348
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.1604
+      Pitch: 1.0248
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.5554
+      Yaw: 5.73858
     Saved: ~
 Window Geometry:
-  Height: 1080
-  QMainWindow State: 000000ff00000000fd0000000100000000000001b1000003bcfc0200000002fb000000100044006900730070006c0061007900730100000041000003bc000000dc00fffffffb0000000800480065006c00700000000342000000bb0000007900ffffff000005c7000003bc00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
-  Width: 1920
-  X: 1918
-  Y: -80
+  Displays:
+    collapsed: false
+  Height: 1078
+  Help:
+    collapsed: false
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000100000000000001b1000003b9fc0200000003fb000000100044006900730070006c0061007900730100000041000003b9000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff00000382000003b900000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Views:
+    collapsed: false
+  Width: 1339
+  X: 2500
+  Y: -109

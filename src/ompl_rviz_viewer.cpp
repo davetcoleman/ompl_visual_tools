@@ -150,7 +150,7 @@ private:
   static const unsigned int DIMENSIONS = 2;
 
   // Use random goal and start locations
-  static const bool USE_RANDOM_STATES = false;
+  static const bool USE_RANDOM_STATES = true;
 
 public:
 
@@ -192,11 +192,11 @@ public:
     // Disallow non-square
     if( image_->x != image_->y )
     {
-      ROS_ERROR( "Does not currently support non-square images because of some weird bug" );
+      ROS_ERROR( "Does not currently support non-square images because of some weird bug. Feel free to fork and fix!" );
       return;
     }
 
-    ROS_DEBUG_STREAM( "Map Height: " << image_->y << " Map Width: " << image_->x );
+    ROS_INFO_STREAM( "Map Height: " << image_->y << " Map Width: " << image_->x );
 
     // Create an array of ints that represent the cost of every pixel
     cost_.resize( image_->x, image_->y );
@@ -207,7 +207,7 @@ public:
     // Generate the cost map
     createCostMap();
 
-    ROS_DEBUG_STREAM( "OMPL version: " << OMPL_VERSION );
+    ROS_INFO_STREAM( "OMPL version: " << OMPL_VERSION );
 
     // OMPL Processing -------------------------------------------------------------------------------------------------
     // Run OMPL and display
@@ -951,7 +951,7 @@ private:
 // *********************************************************************************************************
 int main( int argc, char** argv )
 {
-  ROS_DEBUG( "OMPL RViz Viewer ----------------------------------------- " );
+  ROS_INFO( "OMPL RViz Viewer ----------------------------------------- " );
   ros::init(argc, argv, "ompl_rviz_viewer");
 
   std::string image_path;
