@@ -1,18 +1,16 @@
 <package>
   <name>ompl_rviz_viewer</name>
-  <version>1.0.0</version>
-  <description>3-D visualizer for cost-based planning algorithms implemented with the Open Motion Planning Library (OMPL). Publishes ROS messages to the RViz visualizer software using RViz markers. Displays all explored states, connecting edges and the final solution path. Great for learning and testing robotic motion planning algorithsm.</description>
+  <version>1.0.1</version>
+  <description>3-D visualizer for cost-based planning algorithms implemented with the Open Motion Planning Library (OMPL). Publishes ROS messages to the RViz using RViz markers. Displays all explored states, connecting edges and the final solution path. Useful for learning and testing robotic motion planning algorithms.</description>
 
   <maintainer email="davetcoleman@gmail.com">Dave Coleman</maintainer>
   <author email="davetcoleman@gmail.com">Dave Coleman</author>
 
   <license>BSD</license>
 
-  <url type="website">https://github.com/davetcoleman/omlp_rviz_viewer</url>
+  <url type="website">http://ros.org/wiki/ompl_rviz_viewer</url>
   <url type="bugtracker">https://github.com/davetcoleman/omlp_rviz_viewer/issues</url>
   <url type="repository">https://github.com/davetcoleman/omlp_rviz_viewer/</url>
-
-  <author>Dave Coleman</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
