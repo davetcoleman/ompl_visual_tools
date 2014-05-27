@@ -1,11 +1,10 @@
 OMPL RViz Viewer
 ==========
 
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/resources/ompl_rviz_viewer.png" />
-
 ## What does the OMPL RViz Viewer do?
 
-It is a tool for developing cost-based algorithms for the Open Motion Planning Library that allows you to easily visualize the 
+It is a tool for developing cost-based algorithms for the [Open Motion Planning Library](http://ompl.kavrakilab.org/) 
+that allows you to easily visualize the 
 algorithm in a two dimensional space. The space is specified as a grey scale image that can be passed in to the program. 
 The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
 Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
@@ -13,17 +12,21 @@ Additionally, absolute obstacles can be specified by defining a max limit to the
 This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more 
 streamlined for considering costs.
 
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/resources/ompl_rviz_viewer.png" />
+
 ## How to Build
-Clone the repo to the src/ folder of your catkin workspace. Then simply cd to the root of your workspace and run catkin_make
+
+Clone into your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) and rebuild.
 
 ## How to Run
-Start Rviz using the included custom configuration file
+
+Start Rviz using the included launch file:
 
 ```
 roslaunch ompl_rviz_viewer ompl_rviz.launch
 ```
 
-Run OMPL RViz Viewer
+Then run the OMPL RViz planner:
 
 ```
 roslaunch ompl_rviz_viewer ompl_rviz_planner.launch
