@@ -18,24 +18,52 @@ catkin_package(
     roslib
     visualization_msgs 
   INCLUDE_DIRS 
-    #${OMPL_INCLUDE_DIRS}
+    include
   LIBRARIES 
-    #${OMPL_LIBRARIES}
+    ${PROJECT_NAME}_ppm
 )
 
-include_directories(${catkin_INCLUDE_DIRS}
-		    ${OMPL_INCLUDE_DIRS})
+include_directories(
+  ${catkin_INCLUDE_DIRS} 
+  ${OMPL_INCLUDE_DIRS}
+  include
+)
 
-#link_directories(${Boost_LIBRARY_DIRS})
-#link_directories(${OMPL_LIBRARY_DIRS})
+## Build
 
-# Build
-add_executable(ompl_rviz_planner
+# PPM Library for loading images
+add_library(${PROJECT_NAME}_ppm
   src/utilities/ppm.cpp
+)
+target_link_libraries(${PROJECT_NAME}_ppm
+  ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+)
+
+# Executable for SimpleSetup (in our case T-RRT)
+add_executable(ompl_rviz_planner
   src/ompl_rviz_planner.cpp 
 )
-target_link_libraries(ompl_rviz_planner ${OMPL_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(ompl_rviz_planner 
+  ${OMPL_LIBRARIES} 
+  ${catkin_LIBRARIES} 
+  ${Boost_LIBRARIES}
+  ${PROJECT_NAME}_ppm
+)
 
+# Executable for ExperienceSetup
+# TODO
+
+# Install
+install(TARGETS ${PROJECT_NAME}_ppm
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
+
+# Mark executables for installation
 install(TARGETS ompl_rviz_planner
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
