@@ -781,9 +781,6 @@ private:
 
     }
 
-    ROS_INFO_STREAM_NAMED("temp","marker:\b" << marker);
-    ros::Duration(5.0).sleep();
-
     // Publish the marker
     marker_pub_.publish( marker );
   }
@@ -855,9 +852,6 @@ private:
       marker.points.push_back( point_a );
       marker.colors.push_back( color );
     }
-
-    ROS_INFO_STREAM_NAMED("temp","marker:\b" << marker);
-    ros::Duration(5.0).sleep();
 
     // Publish the marker
     marker_pub_.publish( marker );
@@ -943,9 +937,6 @@ private:
       x1 = x2;
       y1 = y2;
     }
-
-    ROS_INFO_STREAM_NAMED("temp","marker:\b" << marker);
-    ros::Duration(5.0).sleep();
 
     // Publish the marker
     marker_pub_.publish( marker );

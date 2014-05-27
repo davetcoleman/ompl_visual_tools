@@ -23,13 +23,12 @@ Visualization Manager:
       Marker Topic: /ompl_rviz_markers
       Name: OMPL Rviz Viewer
       Namespaces:
-        cost_map: true
-        space_exploration: true
+        {}
       Queue Size: 10000
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 247; 229; 25
+    Background Color: 126; 169; 225
     Fixed Frame: base
     Frame Rate: 30
   Name: root
@@ -70,5 +69,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1496
-  X: 1049
-  Y: 414
+  X: 1042
+  Y: 410
