@@ -14,17 +14,20 @@ include_directories(${Boost_INCLUDE_DIRS} ${OMPL_INCLUDE_DIRS})
 
 catkin_package(
   CATKIN_DEPENDS 
+    roscpp
+    roslib
+    visualization_msgs 
   INCLUDE_DIRS 
-    ${OMPL_INCLUDE_DIRS}
+    #${OMPL_INCLUDE_DIRS}
   LIBRARIES 
-    ${OMPL_LIBRARIES}
+    #${OMPL_LIBRARIES}
 )
 
 include_directories(${catkin_INCLUDE_DIRS}
 		    ${OMPL_INCLUDE_DIRS})
 
-link_directories(${Boost_LIBRARY_DIRS})
-link_directories(${OMPL_LIBRARY_DIRS})
+#link_directories(${Boost_LIBRARY_DIRS})
+#link_directories(${OMPL_LIBRARY_DIRS})
 
 # Build
 add_executable(ompl_rviz_planner
@@ -32,3 +35,7 @@ add_executable(ompl_rviz_planner
   src/ompl_rviz_planner.cpp 
 )
 target_link_libraries(ompl_rviz_planner ${OMPL_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+install(TARGETS ompl_rviz_planner
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
