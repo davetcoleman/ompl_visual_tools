@@ -1,6 +1,7 @@
 OMPL RViz Viewer
 ==========
-See the [ROS Wiki Page](http://ros.org/wiki/ompl_rviz_viewer) for more info on the OMPL RViz Viewer.
+
+<img align="right" src="https://raw.github.com/davetcoleman/ompl_rviz_viewer/master/resource/ompl_rviz_viewer.png" />
 
 ## What does the OMPL RViz Viewer do?
 

@@ -4,9 +4,10 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
         - /OMPL Rviz Viewer1
       Splitter Ratio: 0.5
-    Tree Height: 1286
+    Tree Height: 896
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -23,14 +24,12 @@ Visualization Manager:
       Name: OMPL Rviz Viewer
       Namespaces:
         cost_map: true
-        result_path: true
-        sample_locations: true
         space_exploration: true
       Queue Size: 10000
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 247; 229; 25
     Fixed Frame: base
     Frame Rate: 30
   Name: root
@@ -42,34 +41,34 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 368.404
+      Distance: 211.523
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 31.9795
+        Y: 29.3058
+        Z: -40.9993
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.800398
+      Pitch: 0.805398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.970398
+      Yaw: 0.975398
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1524
+  Height: 1134
   Help:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000001b100000595fc0200000003fb000000100044006900730070006c006100790073010000004100000595000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff000003490000059500000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000001b10000040ffc0200000003fb000000100044006900730070006c00610079007301000000410000040f000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff000004210000040f00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 1280
-  X: 1277
-  Y: 24
+  Width: 1496
+  X: 1049
+  Y: 414
