@@ -38,9 +38,8 @@
 #include <ros/ros.h>
 #include <ros/package.h> // for getting file path for loading images
 #include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
 // This package
-#include "ppm.h" // for reading image files
+#include "utilities/ppm.h" // for reading image files
 // OMPL
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
@@ -59,6 +58,8 @@ namespace bnu = boost::numeric::ublas;
 
 namespace ompl_rviz_viewer
 {
+
+static const std::string BASE_FRAME = "/world";
 
 // *********************************************************************************************************
 // Nat_Rounding helper function to make readings from cost map more accurate
@@ -113,7 +114,7 @@ public:
 // Rviz Visualizer Class
 // *********************************************************************************************************
 // *********************************************************************************************************
-class OmplRvizViewer
+class OmplRvizPlanner
 {
 
 private:
@@ -157,19 +158,19 @@ public:
   // *********************************************************************************************************
   // Constructor
   // *********************************************************************************************************
-  OmplRvizViewer()
+  OmplRvizPlanner()
   {
     image_ = NULL;
 
     // ROS Publishing stuff
-    marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+    marker_pub_ = n_.advertise<visualization_msgs::Marker>("ompl_rviz_markers", 1);
     ros::Duration(1).sleep();
   }
 
   // *********************************************************************************************************
   // Deconstructor
   // *********************************************************************************************************
-  ~OmplRvizViewer()
+  ~OmplRvizPlanner()
   {
     delete image_;
   }
@@ -536,7 +537,7 @@ private:
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-    marker.header.frame_id = "/my_frame";
+    marker.header.frame_id = BASE_FRAME;
     marker.header.stamp = ros::Time::now();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -715,7 +716,7 @@ private:
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-    marker.header.frame_id = "/my_frame";
+    marker.header.frame_id = BASE_FRAME;
     marker.header.stamp = ros::Time();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -780,6 +781,9 @@ private:
 
     }
 
+    ROS_INFO_STREAM_NAMED("temp","marker:\b" << marker);
+    ros::Duration(5.0).sleep();
+
     // Publish the marker
     marker_pub_.publish( marker );
   }
@@ -791,7 +795,7 @@ private:
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.
-    marker.header.frame_id = "/my_frame";
+    marker.header.frame_id = BASE_FRAME;
     marker.header.stamp = ros::Time();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -852,6 +856,9 @@ private:
       marker.colors.push_back( color );
     }
 
+    ROS_INFO_STREAM_NAMED("temp","marker:\b" << marker);
+    ros::Duration(5.0).sleep();
+
     // Publish the marker
     marker_pub_.publish( marker );
   }
@@ -863,7 +870,7 @@ private:
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.
-    marker.header.frame_id = "/my_frame";
+    marker.header.frame_id = BASE_FRAME;
     marker.header.stamp = ros::Time();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -937,6 +944,9 @@ private:
       y1 = y2;
     }
 
+    ROS_INFO_STREAM_NAMED("temp","marker:\b" << marker);
+    ros::Duration(5.0).sleep();
+
     // Publish the marker
     marker_pub_.publish( marker );
   }
@@ -951,8 +961,12 @@ private:
 // *********************************************************************************************************
 int main( int argc, char** argv )
 {
-  ROS_INFO( "OMPL RViz Viewer ----------------------------------------- " );
   ros::init(argc, argv, "ompl_rviz_viewer");
+  ROS_INFO( "OMPL RViz Viewer ----------------------------------------- " );
+
+  // Allow the action server to recieve and send ros messages
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
 
   std::string image_path;
 
@@ -975,7 +989,7 @@ int main( int argc, char** argv )
     srand ( time(NULL) );
 
     // Choose random image
-    switch( 0 ) //rand() % 4 )
+    switch( 1 ) //rand() % 4 )
     {
     case 0:
       image_path.append( "/resources/grand_canyon.ppm" );
@@ -993,13 +1007,16 @@ int main( int argc, char** argv )
   }
 
   // Run the program
-  ompl_rviz_viewer::OmplRvizViewer viewer;
-  viewer.runImage( image_path );
+  ompl_rviz_viewer::OmplRvizPlanner planner;
+  ROS_INFO_STREAM_NAMED("main","Loading image " << image_path);
+  planner.runImage( image_path );
 
   // Wait to let anything still being published finish
   ros::Duration(1).sleep();
 
-  return true;
+  ROS_INFO_STREAM("Shutting down.");
+
+  return 0;
 }
 
 
