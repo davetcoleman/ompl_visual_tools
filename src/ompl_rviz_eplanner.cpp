@@ -1,6 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
+ *  Copyright (c) 2014, University of Colorado, Boulder
  *  Copyright (c) 2012, Willow Garage, Inc.
  *  All rights reserved.
  *
@@ -32,7 +33,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Dave Coleman */
+/* 
+   Author: Dave Coleman <dave@dav.ee>
+   Desc:   Visualize planning with OMPL in Rviz
+*/
 
 // ROS
 #include <ros/ros.h>
@@ -44,6 +48,9 @@
 // Display in Rviz tool
 #include <ompl_rviz_viewer/ompl_rviz_viewer.h>
 
+// Custom validity checker that accounts for cost
+#include <ompl_rviz_viewer/two_dimensional_validity_checker.h>
+
 // OMPL planner
 #include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
@@ -54,44 +61,6 @@ namespace bnu = boost::numeric::ublas;
 
 namespace ompl_rviz_viewer
 {
-
-/**
- * \brief Custom State Validity Checker with cost function
- */
-class TwoDimensionalValidityChecker : public ob::StateValidityChecker
-{
-private:
-  bnu::matrix<int> cost_;
-  double max_threshold_;
-
-public:
-
-  /** \brief Constructor */
-  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, const bnu::matrix<int>& cost,
-    double max_threshold ) :
-    StateValidityChecker(si)
-  {
-    cost_ = cost;
-    max_threshold_ = max_threshold;
-  }
-
-  /** \brief Obstacle checker */
-  virtual bool isValid(const ob::State * state ) const
-  {
-    return cost(state) < max_threshold_;
-  }
-
-  virtual double cost(const ob::State *state) const
-  {
-    const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
-
-    // Return the cost from the matrix at the current dimensions
-    double cost = cost_( nat_round(coords[1]), nat_round(coords[0]) );
-
-    return cost;
-  }
-
-};
 
 /**
  * \brief SimpleSetup Planning Class
