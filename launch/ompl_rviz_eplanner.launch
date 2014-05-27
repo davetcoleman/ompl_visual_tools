@@ -1,0 +1,13 @@
+<!-- -*- mode: XML -*- -->
+<launch>
+
+  <!-- Debug Arguments -->  
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <!-- Launch planner with experience planning -->  
+  <node name="ompl_rviz_planner" launch-prefix="$(arg launch_prefix)" pkg="ompl_rviz_viewer" type="ompl_rviz_eplanner" 
+	respawn="false" output="screen" />
+
+</launch>

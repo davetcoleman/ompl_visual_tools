@@ -26,13 +26,19 @@ Start Rviz using the included launch file:
 roslaunch ompl_rviz_viewer ompl_rviz.launch
 ```
 
-Then run the OMPL RViz planner:
+Then run one of the OMPL RViz planner:
 
+### Cost-based planner with Transition-based RRT:
 ```
 roslaunch ompl_rviz_viewer ompl_rviz_planner.launch
 ```
 
-## Usage
+### Experience-based planner:
+```
+roslaunch ompl_rviz_viewer ompl_rviz_eplanner.launch
+```
+
+## Cost Map Usage
 
 A default cost map image will be used, located in the resources/ folder, for running the algorithm. 
 Optionally one can pass in their own cost map image through a command line argument, as shown in the following example:
