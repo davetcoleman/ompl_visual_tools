@@ -52,6 +52,7 @@
 #include <ompl_rviz_viewer/two_dimensional_validity_checker.h>
 
 // OMPL planner
+#include <ompl/geometric/ExperienceSetup.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
 
@@ -63,7 +64,7 @@ namespace ompl_rviz_viewer
 {
 
 /**
- * \brief SimpleSetup Planning Class
+ * \brief ExperienceSetup Planning Class
  */
 class OmplRvizPlanner
 {
@@ -78,8 +79,8 @@ class OmplRvizPlanner
   // The resulting graph that was searched
   ob::PlannerDataPtr planner_data_;
 
-  // Save the simple setup until the program ends so that the planner data is not lost
-  og::SimpleSetupPtr simple_setup_;
+  // Save the experience setup until the program ends so that the planner data is not lost
+  og::ExperienceSetupPtr experience_setup_;
 
   // The visual tools for interfacing with Rviz
   ompl_rviz_viewer::OmplRvizViewerPtr viewer_;
@@ -159,7 +160,7 @@ class OmplRvizPlanner
 
     // OMPL Processing -------------------------------------------------------------------------------------------------
     // Run OMPL and display
-    if( planWithSimpleSetup() )
+    if( planWithExperienceSetup() )
     {
       // Make line color
       std_msgs::ColorRGBA color;
@@ -184,33 +185,33 @@ class OmplRvizPlanner
         color.r = 1.0;
         color.g = 0.0;
         color.b = 0.0;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( experience_setup_->getSolutionPath(), &color, cost_ );
         ros::Duration(0.25).sleep();
       }
 
       // Interpolate -------------------------------------------------------
       if( true )
       {
-        simple_setup_->getSolutionPath().interpolate();
+        experience_setup_->getSolutionPath().interpolate();
 
         // Visualize the chosen path
         color.r = 0.0;
         color.g = 1.0;
         color.b = 0.0;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( experience_setup_->getSolutionPath(), &color, cost_ );
         //      ros::Duration(0.25).sleep();
       }
 
       // Simplify solution ------------------------------------------------------
       if( false )
       {
-        simple_setup_->simplifySolution();
+        experience_setup_->simplifySolution();
 
         // Visualize the chosen path
         color.r = 0.0;
         color.g = 0.5;
         color.b = 0.5;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( experience_setup_->getSolutionPath(), &color, cost_ );
         ros::Duration(0.25).sleep();
       }
     }
@@ -301,7 +302,7 @@ class OmplRvizPlanner
   /**
    * \brief Plan
    */
-  bool planWithSimpleSetup()
+  bool planWithExperienceSetup()
   {
     // Construct the state space we are planning in
     ob::StateSpacePtr space( new ob::RealVectorStateSpace( DIMENSIONS ));
@@ -313,17 +314,17 @@ class OmplRvizPlanner
     bounds.setHigh( 1, image_->y - 1 ); // allow for non-square images
     space->as<ob::RealVectorStateSpace>()->setBounds( bounds );
 
-    // Define a simple setup class ---------------------------------------
-    simple_setup_ = og::SimpleSetupPtr( new og::SimpleSetup(space) );
+    // Define a experience setup class ---------------------------------------
+    experience_setup_ = og::ExperienceSetupPtr( new og::ExperienceSetup(space) );
 
     // Set the setup planner (TRRT)
-    og::TRRT *trrt = new og::TRRT( simple_setup_->getSpaceInformation() );
-    //og::RRT *trrt = new og::RRT( simple_setup_->getSpaceInformation() );
+    og::TRRT *trrt = new og::TRRT( experience_setup_->getSpaceInformation() );
+    //og::RRT *trrt = new og::RRT( experience_setup_->getSpaceInformation() );
 
-    simple_setup_->setPlanner(ob::PlannerPtr(trrt));
+    experience_setup_->setPlanner(ob::PlannerPtr(trrt));
 
     // Set state validity checking for this space
-    simple_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( simple_setup_->getSpaceInformation(), cost_, max_threshold_ ) ) );
+    experience_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( experience_setup_->getSpaceInformation(), cost_, max_threshold_ ) ) );
 
     // Start and Goal State ---------------------------------------------
 
@@ -355,32 +356,32 @@ class OmplRvizPlanner
     showStartGoal(start, goal);
 
     // set the start and goal states
-    simple_setup_->setStartAndGoalStates(start, goal);
+    experience_setup_->setStartAndGoalStates(start, goal);
 
     // Setup -----------------------------------------------------------
 
     // Auto setup parameters (optional actually)
-    simple_setup_->setup();
+    experience_setup_->setup();
 
     // The interval in which obstacles are checked for between states
-    // simple_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
+    // experience_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
 
     // Debug - this call is optional, but we put it in to get more output information
-    simple_setup_->print();
+    experience_setup_->print();
 
     // Solve -----------------------------------------------------------
     ROS_INFO( "Starting OMPL motion planner..." );
 
     // attempt to solve the problem within x seconds of planning time
-    ob::PlannerStatus solved = simple_setup_->solve( 10.0 );
+    ob::PlannerStatus solved = experience_setup_->solve( 10.0 );
 
     if (solved)
     {
       ROS_INFO("Solution Found");
 
       // Get information about the exploration data structure the motion planner used. Used later in visualizing
-      planner_data_.reset( new ob::PlannerData( simple_setup_->getSpaceInformation() ) );
-      simple_setup_->getPlannerData( *planner_data_ );
+      planner_data_.reset( new ob::PlannerData( experience_setup_->getSpaceInformation() ) );
+      experience_setup_->getPlannerData( *planner_data_ );
     }
     else
     {

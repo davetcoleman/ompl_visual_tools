@@ -47,7 +47,8 @@
 // OMPL
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
-#include <ompl/geometric/SimpleSetup.h>
+#include <ompl/geometric/PathGeometric.h>
+#include <ompl/base/PlannerData.h>
 #include <ompl/config.h>
 
 namespace ob = ompl::base;

@@ -51,6 +51,7 @@
 #include <ompl_rviz_viewer/two_dimensional_validity_checker.h>
 
 // OMPL planner
+#include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
 
