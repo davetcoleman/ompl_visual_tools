@@ -1,7 +1,7 @@
 OMPL RViz Viewer
 ==========
 
-<img align="right" src="https://raw.github.com/davetcoleman/ompl_rviz_viewer/master/resource/ompl_rviz_viewer.png" />
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/resources/ompl_rviz_viewer.png" />
 
 ## What does the OMPL RViz Viewer do?
 
