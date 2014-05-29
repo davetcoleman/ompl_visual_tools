@@ -52,19 +52,20 @@
 #include <ompl_rviz_viewer/two_dimensional_validity_checker.h>
 
 // OMPL planner
-#include <ompl/geometric/ExperienceSetup.h>
+#include <ompl/tools/lightning/Lightning.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
+#include <ompl/base/PlannerTerminationCondition.h>
 
 namespace ob = ompl::base;
+namespace ot = ompl::tools;
 namespace og = ompl::geometric;
-namespace bnu = boost::numeric::ublas;
 
 namespace ompl_rviz_viewer
 {
 
 /**
- * \brief ExperienceSetup Planning Class
+ * \brief Lightning Planning Class
  */
 class OmplRvizPlanner
 {
@@ -74,13 +75,13 @@ class OmplRvizPlanner
   PPMImage *image_;
 
   // The cost for each x,y - which is derived from the RGB data
-  bnu::matrix<int> cost_;
+  boost::numeric::ublas::matrix<int> cost_;
 
   // The resulting graph that was searched
   ob::PlannerDataPtr planner_data_;
 
   // Save the experience setup until the program ends so that the planner data is not lost
-  og::ExperienceSetupPtr experience_setup_;
+  ot::LightningPtr experience_setup_;
 
   // The visual tools for interfacing with Rviz
   ompl_rviz_viewer::OmplRvizViewerPtr viewer_;
@@ -160,7 +161,7 @@ class OmplRvizPlanner
 
     // OMPL Processing -------------------------------------------------------------------------------------------------
     // Run OMPL and display
-    if( planWithExperienceSetup() )
+    if( planWithLightning() )
     {
       // Make line color
       std_msgs::ColorRGBA color;
@@ -302,7 +303,7 @@ class OmplRvizPlanner
   /**
    * \brief Plan
    */
-  bool planWithExperienceSetup()
+  bool planWithLightning()
   {
     // Construct the state space we are planning in
     ob::StateSpacePtr space( new ob::RealVectorStateSpace( DIMENSIONS ));
@@ -315,7 +316,10 @@ class OmplRvizPlanner
     space->as<ob::RealVectorStateSpace>()->setBounds( bounds );
 
     // Define a experience setup class ---------------------------------------
-    experience_setup_ = og::ExperienceSetupPtr( new og::ExperienceSetup(space) );
+    //lightning_ = ompl::
+
+
+    experience_setup_ = ot::LightningPtr( new ot::Lightning(space) );
 
     // Set the setup planner (TRRT)
     og::TRRT *trrt = new og::TRRT( experience_setup_->getSpaceInformation() );
@@ -372,8 +376,11 @@ class OmplRvizPlanner
     // Solve -----------------------------------------------------------
     ROS_INFO( "Starting OMPL motion planner..." );
 
+    // Create the termination condition
+    ob::PlannerTerminationCondition ptc = ob::timedPlannerTerminationCondition( 10.0, 0.1 );
+
     // attempt to solve the problem within x seconds of planning time
-    ob::PlannerStatus solved = experience_setup_->solve( 10.0 );
+    ob::PlannerStatus solved = experience_setup_->solve( ptc );
 
     if (solved)
     {
