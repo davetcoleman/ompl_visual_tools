@@ -50,17 +50,6 @@ target_link_libraries(ompl_rviz_planner
   ${PROJECT_NAME}_ppm
 )
 
-# Executable for ExperienceSetup
-add_executable(ompl_rviz_eplanner
-  src/ompl_rviz_eplanner.cpp 
-)
-target_link_libraries(ompl_rviz_eplanner 
-  ${OMPL_LIBRARIES} 
-  ${catkin_LIBRARIES} 
-  ${Boost_LIBRARIES}
-  ${PROJECT_NAME}_ppm
-)
-
 # Install
 install(TARGETS ${PROJECT_NAME}_ppm
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
@@ -72,6 +61,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 # Mark executables for installation
-install(TARGETS ompl_rviz_planner ompl_rviz_eplanner
+install(TARGETS ompl_rviz_planner 
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
