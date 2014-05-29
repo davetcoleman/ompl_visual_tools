@@ -159,6 +159,20 @@ class OmplRvizLightning
 
     ROS_INFO_STREAM( "OMPL version: " << OMPL_VERSION );
 
+
+    /*
+    ROS_DEBUG_STREAM_NAMED("temp","TEMP TESTING ------------------------------");
+
+    // Render the map ---------------------------------------------------
+    viewer_->displayTriangles(image_, cost_);
+    ros::Duration(0.1).sleep();
+    
+    viewer_->displayGraph(cost_, planner_data_);
+    ros::Duration(0.1).sleep();
+
+    return;
+    */
+
     // OMPL Processing -------------------------------------------------------------------------------------------------
     // Run OMPL and display
     if( planWithLightning() )
@@ -328,7 +342,8 @@ class OmplRvizLightning
     experience_setup_->setPlanner(ob::PlannerPtr(trrt));
 
     // Set state validity checking for this space
-    experience_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( experience_setup_->getSpaceInformation(), cost_, max_threshold_ ) ) );
+    experience_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( experience_setup_->getSpaceInformation(),
+                cost_, max_threshold_ ) ) );
 
     // Start and Goal State ---------------------------------------------
 
@@ -409,7 +424,7 @@ class OmplRvizLightning
 int main( int argc, char** argv )
 {
   ros::init(argc, argv, "ompl_rviz_viewer");
-  ROS_INFO( "OMPL RViz Viewer ----------------------------------------- " );
+  ROS_INFO( "OMPL RViz Viewer with Lightning ----------------------------------------- " );
 
   // Allow the action server to recieve and send ros messages
   ros::AsyncSpinner spinner(1);
@@ -438,7 +453,7 @@ int main( int argc, char** argv )
     srand ( time(NULL) );
 
     // Choose random image
-    switch( 0 ) //rand() % 4 )
+    switch( 1 ) //rand() % 4 )
     {
       case 0:
         image_path.append( "/resources/grand_canyon.ppm" );
