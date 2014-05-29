@@ -67,7 +67,7 @@ namespace ompl_rviz_viewer
 /**
  * \brief Lightning Planning Class
  */
-class OmplRvizPlanner
+class OmplRvizLightning
 {
 
  private:
@@ -108,7 +108,7 @@ class OmplRvizPlanner
   /**
    * \brief Constructor
    */
-  OmplRvizPlanner()
+  OmplRvizLightning()
   {
     image_ = NULL;
 
@@ -119,7 +119,7 @@ class OmplRvizPlanner
   /**
    * \brief Deconstructor
    */
-  ~OmplRvizPlanner()
+  ~OmplRvizLightning()
   {
     delete image_;
   }
@@ -456,7 +456,7 @@ int main( int argc, char** argv )
   }
 
   // Create the planner
-  ompl_rviz_viewer::OmplRvizPlanner planner;
+  ompl_rviz_viewer::OmplRvizLightning planner;
 
   // Load an image and run the planner
   ROS_INFO_STREAM_NAMED("main","Loading image " << image_path);
@@ -465,7 +465,7 @@ int main( int argc, char** argv )
   // Wait to let anything still being published finish
   ros::Duration(1).sleep();
 
-  ROS_INFO_STREAM("Shutting down. TESTING HERE");
+  ROS_INFO_STREAM("Shutting down.");
 
   return 0;
 }

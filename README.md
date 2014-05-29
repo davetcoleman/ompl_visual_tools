@@ -33,9 +33,10 @@ Then run one of the OMPL RViz planner:
 roslaunch ompl_rviz_viewer ompl_rviz_planner.launch
 ```
 
-### Experience-based planner:
+### Experienced based-planning with Lightning Framework
+
 ```
-roslaunch ompl_rviz_viewer ompl_rviz_eplanner.launch
+roslaunch ompl_rviz_viewer ompl_rviz_lightning.launch
 ```
 
 ## Cost Map Usage
