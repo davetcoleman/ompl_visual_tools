@@ -68,6 +68,72 @@ int nat_round(double x)
   return static_cast<int>(floor(x + 0.5f));
 }
 
+// Helper function for converting a point to the correct cost
+double getCost(const geometry_msgs::Point &point, bnu::matrix<int> &cost)
+{
+  return double(cost( nat_round(point.y), nat_round(point.x) )) / 2.0;
+}
+
+double getCostHeight(const geometry_msgs::Point &point, bnu::matrix<int> &cost)
+{
+  //std::cout << "------------------------" << std::endl;
+
+  // check if whole number
+  if (floor(point.x) == point.x && floor(point.y) == point.y)
+    return getCost(point, cost);
+
+  // else do Bilinear Interpolation
+  // From http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
+
+  // top left
+  geometry_msgs::Point a;
+  a.x = floor(point.x);
+  a.y = ceil(point.y);
+  a.z = getCost(a, cost);
+
+  // bottom left
+  geometry_msgs::Point b;
+  b.x = floor(point.x);
+  b.y = floor(point.y);
+  b.z = getCost(b, cost);
+
+  // bottom right
+  geometry_msgs::Point c;
+  c.x = ceil(point.x);
+  c.y = floor(point.y);
+  c.z = getCost(c, cost);
+
+  // top right
+  geometry_msgs::Point d;
+  d.x = ceil(point.x);
+  d.y = ceil(point.y);
+  d.z = getCost(d, cost);
+
+
+  //std::cout << "a: " << a << std::endl;
+  //std::cout << "b: " << b << std::endl;
+  //std::cout << "c: " << c << std::endl;
+  //std::cout << "d: " << d << std::endl;
+
+  double R1 = ((c.x - point.x)/(c.x - b.x))*b.z + ((point.x - b.x)/(c.x - b.x))*c.z;
+  double R2 = ((c.x - point.x)/(c.x - b.x))*a.z + ((point.x - b.x)/(c.x - b.x))*d.z;
+
+  //std::cout << "R1: " << R1 << std::endl;
+  //std::cout << "R2: " << R2 << std::endl;
+
+  // After the two R values are calculated, the value of P can finally be calculated by a weighted average of R1 and R2.  
+  double val;
+
+  if ( a.y - b.y == 0) // division by zero
+    val = R1;
+  else
+    val = ((a.y - point.y)/(a.y - b.y))*R1 + ((point.y - b.y)/(a.y - b.y))*R2;
+
+  //std::cout << "val: " << val << std::endl;
+  return val + 0.2;
+}
+
+
 class OmplRvizViewer
 {
 private:
@@ -203,117 +269,120 @@ public:
   }
 
   // *********************************************************************************************************
+  // Helper Function to display triangles
+  // *********************************************************************************************************
+  void addPoint( int x, int y, visualization_msgs::Marker* marker, PPMImage *image, bnu::matrix<int> &cost )
+  {
+    // Point
+    geometry_msgs::Point point;
+    point.x = x;
+    point.y = y;
+    point.z = getCost(point, cost); // to speed things up, we know is always whole number
+    marker->points.push_back( point );
+
+    // Color
+    std_msgs::ColorRGBA color;
+    color.r = image->data[ image->getID( x, y ) ].red / 255.0;
+    color.g = image->data[ image->getID( x, y ) ].green / 255.0;
+    color.b = image->data[ image->getID( x, y ) ].blue / 255.0;
+    color.a = 1.0;
+    marker->colors.push_back( color );
+  }
+
+  // *********************************************************************************************************
   // Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
   // *********************************************************************************************************
-  void interpolateLine( double x1, double y1, double x2, double y2, visualization_msgs::Marker* marker, 
-    std_msgs::ColorRGBA* color, bnu::matrix<int> &cost )
+  void interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker, 
+    std_msgs::ColorRGBA &color, bnu::matrix<int> &cost )
   {
+    // Copy to non-const
+    geometry_msgs::Point point_a = p1;
+    geometry_msgs::Point point_b = p2;
+
+    // Get the heights
+    point_a.z = getCostHeight(point_a, cost);
+    point_b.z = getCostHeight(point_b, cost);
+
+    ROS_INFO_STREAM("a is: " << point_a);
+    ROS_INFO_STREAM("b is: " << point_b);
+
     // Switch the coordinates such that x1 < x2
-    if( x1 > x2 )
+    if( point_a.x > point_b.x )
     {
-      // Swap the coordinates
-      double x_temp = x1;
-      double y_temp = y1;
-      x1 = x2;
-      y1 = y2;
-      x2 = x_temp;
-      y2 = y_temp;
+      // Swap the coordinates      
+      geometry_msgs::Point point_temp = point_a;      
+      point_a = point_b;
+      point_b = point_temp;
     }
 
-    // Points
-    geometry_msgs::Point point_a;
-    geometry_msgs::Point point_b;
+    // temp
+    std_msgs::ColorRGBA color2 = color;
+    color2.r = 1;
 
     // Show the straight line --------------------------------------------------------------------
     if( false )
     {
-      // First point
-      point_a.x = x1;
-      point_a.y = y1;
-      point_a.z = 20.0;
-
-      // Create a second point
-      point_b.x = x2;
-      point_b.y = y2;
-      point_b.z = 20.0;
-
       // Change Color
-      color->g = 0.8;
+      color.g = 0.8;
 
       // Add the point pair to the line message
       marker->points.push_back( point_a );
       marker->points.push_back( point_b );
-      marker->colors.push_back( *color );
-      marker->colors.push_back( *color );
+      marker->colors.push_back( color );
+      marker->colors.push_back( color );
+
+      // Show start and end point
+      publishSphere(point_a, color2);
+      publishSphere(point_b, color2);
     }
 
-
     // Interpolate the line ----------------------------------------------------------------------
-    color->g = 0.0;
+    color.g = 0.0;
 
     // Calculate slope between the lines
-    double m = (y2 - y1)/(x2 - x1);
+    double m = (point_b.y - point_a.y)/(point_b.x - point_a.x);
 
     // Calculate the y-intercep
-    double b = y1 - m * x1;
+    double b = point_a.y - m * point_a.x;
 
     // Define the interpolation interval
-    double interval = 0.5;
+    double interval = 0.25; //0.5;
 
-    // Remember the previous points
-    double x_a = x1;
-    double y_a = y1;
-    double x_b;
-    double y_b;
+    // Make new locations
+    geometry_msgs::Point temp_a = point_a; // remember the last point
+    geometry_msgs::Point temp_b = point_a; // move along this point
 
     // Loop through the line adding segements along the cost map
-    for( x_b = x1 + interval; x_b < x2; x_b += interval )
+    for( temp_b.x = point_a.x + interval; temp_b.x < point_b.x; temp_b.x += interval )
     {
+      publishSphere(temp_a, color2);
+
       // Find the y coordinate
-      y_b = m*x_b + b;
+      temp_b.y = m*temp_b.x + b;
 
-      // Create first point
-      point_a.x = float(x_a);
-      point_a.y = float(y_a);
-      point_a.z = cost( nat_round(point_a.y), nat_round(point_a.x) ) / 2 + 2;
-
-      // Create a second point
-      point_b.x = float(x_b);
-      point_b.y = float(y_b);
-      point_b.z = cost( nat_round(point_b.y), nat_round(point_b.x) ) / 2 + 2;
+      // Add the new heights
+      temp_a.z = getCostHeight(temp_a, cost);
+      temp_b.z = getCostHeight(temp_b, cost);
 
       // Add the point pair to the line message
-      marker->points.push_back( point_a );
-      marker->points.push_back( point_b );
+      marker->points.push_back( temp_a );
+      marker->points.push_back( temp_b );
 
       // Add colors
-      marker->colors.push_back( *color );
-      marker->colors.push_back( *color );
+      marker->colors.push_back( color );
+      marker->colors.push_back( color );
 
       // Remember the last coordiante for next iteration
-      x_a = x_b;
-      y_a = y_b;
+      temp_a = temp_b;
     }
 
     // Finish the line for non-even interval lengths
-
-    // Create first point
-    point_a.x = float(x_a);
-    point_a.y = float(y_a);
-    point_a.z = cost( nat_round(point_a.y), nat_round(point_a.x) ) / 2 + 2;
-
-    // Create a second point
-    point_b.x = float(x2);
-    point_b.y = float(y2);
-    point_b.z = cost( nat_round(point_b.y), nat_round(point_b.x) ) / 2 + 2;
-
-    // Add the point pair to the line message
-    marker->points.push_back( point_a );
+    marker->points.push_back( temp_a );
     marker->points.push_back( point_b );
 
     // Add colors
-    marker->colors.push_back( *color );
-    marker->colors.push_back( *color );
+    marker->colors.push_back( color );
+    marker->colors.push_back( color );
 
   }
 
@@ -337,9 +406,9 @@ public:
     marker.action = visualization_msgs::Marker::ADD;
     marker.id = 0;
 
-    marker.pose.position.x = 1.0;
-    marker.pose.position.y = 1.0;
-    marker.pose.position.z = 1.0;
+    marker.pose.position.x = 0.0;
+    marker.pose.position.y = 0.0;
+    marker.pose.position.z = 0.0;
 
     marker.pose.orientation.x = 0.0;
     marker.pose.orientation.y = 0.0;
@@ -367,6 +436,17 @@ public:
 
     ROS_INFO("Publishing Graph");
 
+
+    // TEMP
+    geometry_msgs::Point p1;
+    p1.x = 0;
+    p1.y = 0;
+    geometry_msgs::Point p2;
+    p2.x = 6;
+    p2.y = 0;
+    interpolateLine( p1, p2, &marker, color, cost );
+
+    /*
     // Loop through all verticies
     for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
     {
@@ -388,6 +468,7 @@ public:
       }
 
     }
+    */
 
     // Publish the marker
     marker_pub_.publish( marker );
@@ -454,7 +535,7 @@ public:
       // First point
       point_a.x = this_vertex.first;
       point_a.y = this_vertex.second;
-      point_a.z = cost( nat_round(point_a.y), nat_round(point_a.x) ) / 2 + 2;
+      point_a.z = getCostHeight(point_a, cost); 
 
       // Add the point pair to the line message
       marker.points.push_back( point_a );
@@ -465,6 +546,53 @@ public:
     marker_pub_.publish( marker );
   }
 
+  void publishSphere(const geometry_msgs::Point &point, const std_msgs::ColorRGBA &color)
+  {
+    visualization_msgs::Marker sphere_marker;
+
+    sphere_marker.header.frame_id = BASE_FRAME;
+
+    // Set the namespace and id for this marker.  This serves to create a unique ID
+    sphere_marker.ns = "Sphere";
+    // Set the marker type.
+    sphere_marker.type = visualization_msgs::Marker::SPHERE_LIST;
+    // Set the marker action.  Options are ADD and DELETE
+    sphere_marker.action = visualization_msgs::Marker::ADD;
+    // Marker group position and orientation
+    sphere_marker.pose.position.x = 0;
+    sphere_marker.pose.position.y = 0;
+    sphere_marker.pose.position.z = 0;
+    sphere_marker.pose.orientation.x = 0.0;
+    sphere_marker.pose.orientation.y = 0.0;
+    sphere_marker.pose.orientation.z = 0.0;
+    sphere_marker.pose.orientation.w = 1.0;
+
+    // Add the point pair to the line message
+    sphere_marker.points.push_back( point );
+    sphere_marker.colors.push_back( color );
+    // Lifetime
+    //sphere_marker.lifetime = ros
+
+    // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+    sphere_marker.header.stamp = ros::Time::now();
+
+    static int sphere_id_ = 0;
+    sphere_marker.id = ++sphere_id_;
+    sphere_marker.color = color;
+    sphere_marker.scale.x = 0.3;
+    sphere_marker.scale.y = 0.3;
+    sphere_marker.scale.z = 0.3;
+
+    // Update the single point with new pose
+    sphere_marker.points[0] = point;
+    sphere_marker.colors[0] = color;
+
+    // Publish
+    marker_pub_.publish( sphere_marker );
+    ros::spinOnce();
+  }
+
+  
   // *********************************************************************************************************
   // Display Result Path
   // *********************************************************************************************************
@@ -530,12 +658,12 @@ public:
       // First point
       point_a.x = x1;
       point_a.y = y1;
-      point_a.z = cost( nat_round(point_a.y), nat_round(point_a.x) ) / 2 + 3;
+      point_a.z = getCostHeight(point_a, cost); 
 
       // Create a second point
       point_b.x = x2;
       point_b.y = y2;
-      point_b.z = cost( nat_round(point_b.y), nat_round(point_b.x) ) / 2 + 3;
+      point_b.z = getCostHeight(point_b, cost);
 
       // Add the point pair to the line message
       marker.points.push_back( point_a );
@@ -550,27 +678,6 @@ public:
 
     // Publish the marker
     marker_pub_.publish( marker );
-  }
-
-  // *********************************************************************************************************
-  // Helper Function to display triangles
-  // *********************************************************************************************************
-  void addPoint( int x, int y, visualization_msgs::Marker* marker, PPMImage *image, bnu::matrix<int> &cost )
-  {
-    // Point
-    geometry_msgs::Point point;
-    point.x = x;
-    point.y = y;
-    point.z = cost( y, x ) / 2;
-    marker->points.push_back( point );
-
-    // Color
-    std_msgs::ColorRGBA color;
-    color.r = image->data[ image->getID( x, y ) ].red / 255.0;
-    color.g = image->data[ image->getID( x, y ) ].green / 255.0;
-    color.b = image->data[ image->getID( x, y ) ].blue / 255.0;
-    color.a = 1.0;
-    marker->colors.push_back( color );
   }
 
   // *********************************************************************************************************
