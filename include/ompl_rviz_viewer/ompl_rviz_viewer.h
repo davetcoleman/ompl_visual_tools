@@ -59,80 +59,17 @@ namespace ompl_rviz_viewer
 {
 
 static const std::string BASE_FRAME = "/world";
+static const double COST_HEIGHT_OFFSET = 0.5;
 
-// *********************************************************************************************************
-// Nat_Rounding helper function to make readings from cost map more accurate
-// *********************************************************************************************************
+/**
+ * \brief Nat_Rounding helper function to make readings from cost map more accurate
+ * \param double
+ * \return rounded down number
+ */
 int nat_round(double x)
 {
   return static_cast<int>(floor(x + 0.5f));
 }
-
-// Helper function for converting a point to the correct cost
-double getCost(const geometry_msgs::Point &point, bnu::matrix<int> &cost)
-{
-  return double(cost( nat_round(point.y), nat_round(point.x) )) / 2.0;
-}
-
-double getCostHeight(const geometry_msgs::Point &point, bnu::matrix<int> &cost)
-{
-  //std::cout << "------------------------" << std::endl;
-
-  // check if whole number
-  if (floor(point.x) == point.x && floor(point.y) == point.y)
-    return getCost(point, cost);
-
-  // else do Bilinear Interpolation
-  // From http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
-
-  // top left
-  geometry_msgs::Point a;
-  a.x = floor(point.x);
-  a.y = ceil(point.y);
-  a.z = getCost(a, cost);
-
-  // bottom left
-  geometry_msgs::Point b;
-  b.x = floor(point.x);
-  b.y = floor(point.y);
-  b.z = getCost(b, cost);
-
-  // bottom right
-  geometry_msgs::Point c;
-  c.x = ceil(point.x);
-  c.y = floor(point.y);
-  c.z = getCost(c, cost);
-
-  // top right
-  geometry_msgs::Point d;
-  d.x = ceil(point.x);
-  d.y = ceil(point.y);
-  d.z = getCost(d, cost);
-
-
-  //std::cout << "a: " << a << std::endl;
-  //std::cout << "b: " << b << std::endl;
-  //std::cout << "c: " << c << std::endl;
-  //std::cout << "d: " << d << std::endl;
-
-  double R1 = ((c.x - point.x)/(c.x - b.x))*b.z + ((point.x - b.x)/(c.x - b.x))*c.z;
-  double R2 = ((c.x - point.x)/(c.x - b.x))*a.z + ((point.x - b.x)/(c.x - b.x))*d.z;
-
-  //std::cout << "R1: " << R1 << std::endl;
-  //std::cout << "R2: " << R2 << std::endl;
-
-  // After the two R values are calculated, the value of P can finally be calculated by a weighted average of R1 and R2.  
-  double val;
-
-  if ( a.y - b.y == 0) // division by zero
-    val = R1;
-  else
-    val = ((a.y - point.y)/(a.y - b.y))*R1 + ((point.y - b.y)/(a.y - b.y))*R2;
-
-  //std::cout << "val: " << val << std::endl;
-  return val + 0.2;
-}
-
 
 class OmplRvizViewer
 {
@@ -149,6 +86,10 @@ private:
 
 public:
 
+  // Shared colors
+  std_msgs::ColorRGBA green_;
+  std_msgs::ColorRGBA red_;
+
   /**
    * \brief Constructor
    * \param verbose - run in debug mode
@@ -160,6 +101,18 @@ public:
     marker_pub_ = nh_.advertise<visualization_msgs::Marker>("ompl_rviz_markers", 1);
     ros::Duration(1).sleep();
 
+    // Re-usable colors
+    green_.r = 50;
+    green_.b = 50;
+    green_.g = 255;
+    green_.a = 1;
+
+    red_.r = 255;
+    red_.b = 255;
+    red_.g = 10;
+    red_.a = 1;
+
+
     ROS_INFO_STREAM_NAMED("ompl_rviz_viewer","OmplRvizViewer Ready.");
   }
 
@@ -169,6 +122,92 @@ public:
   ~OmplRvizViewer()
   {
 
+  }
+
+  /**
+   * \brief Helper function for converting a point to the correct cost
+   */
+  double getCost(const geometry_msgs::Point &point, const bnu::matrix<int> &cost)
+  {
+    return double(cost( nat_round(point.y), nat_round(point.x) )) / 2.0;
+  }
+
+  /**
+   * \brief Use bilinear interpolation, if necessary, to find the cost of a point between whole numbers
+   *        From http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
+   */
+  double getCostHeight(const geometry_msgs::Point &point, const bnu::matrix<int> &cost)
+  {
+    // TODO make faster
+
+    //std::cout << "------------------------" << std::endl;
+
+    // check if whole number
+    if (floor(point.x) == point.x && floor(point.y) == point.y)
+      return getCost(point, cost) + COST_HEIGHT_OFFSET;
+
+    // else do Bilinear Interpolation
+
+    // top left
+    geometry_msgs::Point a;
+    a.x = floor(point.x);
+    a.y = ceil(point.y);
+    a.z = getCost(a, cost);
+
+    // bottom left
+    geometry_msgs::Point b;
+    b.x = floor(point.x);
+    b.y = floor(point.y);
+    b.z = getCost(b, cost);
+
+    // bottom right
+    geometry_msgs::Point c;
+    c.x = ceil(point.x);
+    c.y = floor(point.y);
+    c.z = getCost(c, cost);
+
+    // top right
+    geometry_msgs::Point d;
+    d.x = ceil(point.x);
+    d.y = ceil(point.y);
+    d.z = getCost(d, cost);
+
+    //std::cout << "point: \n" << point << std::endl;
+    //std::cout << "a: \n" << a << std::endl;
+    //std::cout << "b: \n" << b << std::endl;
+    //std::cout << "c: \n" << c << std::endl;
+    //std::cout << "d: \n" << d << std::endl;
+
+    double R1;
+    double R2;
+
+    // check if our x axis is the same
+    if (c.x == b.x)
+    {
+      // just choose either
+      R1 = b.z;
+      R2 = a.z;
+    }
+    else
+    {
+      R1 = ((c.x - point.x)/(c.x - b.x))*b.z + ((point.x - b.x)/(c.x - b.x))*c.z;
+      R2 = ((c.x - point.x)/(c.x - b.x))*a.z + ((point.x - b.x)/(c.x - b.x))*d.z;
+    }
+
+    //std::cout << "R1: " << R1 << std::endl;
+    //std::cout << "R2: " << R2 << std::endl;
+
+    // After the two R values are calculated, the value of P can finally be calculated by a weighted average of R1 and R2.  
+    double val;
+
+    // check if y axis is the same
+    if ( a.y - b.y == 0) // division by zero
+      val = R1;
+    else
+      val = ((a.y - point.y)/(a.y - b.y))*R1 + ((point.y - b.y)/(a.y - b.y))*R2;
+
+    //std::cout << "val: " << val << std::endl;
+    return val + COST_HEIGHT_OFFSET;
   }
 
   /**
@@ -303,8 +342,8 @@ public:
     point_a.z = getCostHeight(point_a, cost);
     point_b.z = getCostHeight(point_b, cost);
 
-    ROS_INFO_STREAM("a is: " << point_a);
-    ROS_INFO_STREAM("b is: " << point_b);
+    //ROS_INFO_STREAM("a is: " << point_a);
+    //ROS_INFO_STREAM("b is: " << point_b);
 
     // Switch the coordinates such that x1 < x2
     if( point_a.x > point_b.x )
@@ -346,16 +385,16 @@ public:
     double b = point_a.y - m * point_a.x;
 
     // Define the interpolation interval
-    double interval = 0.25; //0.5;
+    double interval = 0.1; //0.5;
 
     // Make new locations
     geometry_msgs::Point temp_a = point_a; // remember the last point
     geometry_msgs::Point temp_b = point_a; // move along this point
 
     // Loop through the line adding segements along the cost map
-    for( temp_b.x = point_a.x + interval; temp_b.x < point_b.x; temp_b.x += interval )
+    for( temp_b.x = point_a.x + interval; temp_b.x <= point_b.x; temp_b.x += interval )
     {
-      publishSphere(temp_a, color2);
+      //publishSphere(temp_b, color2);
 
       // Find the y coordinate
       temp_b.y = m*temp_b.x + b;
@@ -367,7 +406,6 @@ public:
       // Add the point pair to the line message
       marker->points.push_back( temp_a );
       marker->points.push_back( temp_b );
-
       // Add colors
       marker->colors.push_back( color );
       marker->colors.push_back( color );
@@ -379,7 +417,6 @@ public:
     // Finish the line for non-even interval lengths
     marker->points.push_back( temp_a );
     marker->points.push_back( point_b );
-
     // Add colors
     marker->colors.push_back( color );
     marker->colors.push_back( color );
@@ -424,8 +461,8 @@ public:
     marker.color.b = 0.0;
     marker.color.a = 1.0;
 
-    std::pair<double, double> this_vertex;
-    std::pair<double, double> next_vertex;
+    geometry_msgs::Point this_vertex;
+    geometry_msgs::Point next_vertex;
 
     // Make line color
     std_msgs::ColorRGBA color;
@@ -436,17 +473,6 @@ public:
 
     ROS_INFO("Publishing Graph");
 
-
-    // TEMP
-    geometry_msgs::Point p1;
-    p1.x = 0;
-    p1.y = 0;
-    geometry_msgs::Point p2;
-    p2.x = 6;
-    p2.y = 0;
-    interpolateLine( p1, p2, &marker, color, cost );
-
-    /*
     // Loop through all verticies
     for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
     {
@@ -464,11 +490,10 @@ public:
         // Convert vertex id to next coordinates
         next_vertex = getCoordinates( *edge_it, planner_data );
 
-        interpolateLine( this_vertex.first, this_vertex.second, next_vertex.first, next_vertex.second, &marker, &color, cost );
+        interpolateLine( this_vertex, next_vertex, &marker, color, cost );
       }
 
     }
-    */
 
     // Publish the marker
     marker_pub_.publish( marker );
@@ -494,9 +519,9 @@ public:
     marker.action = visualization_msgs::Marker::ADD;
     marker.id = 0;
 
-    marker.pose.position.x = 1.0;
-    marker.pose.position.y = 1.0;
-    marker.pose.position.z = 1.0;
+    marker.pose.position.x = 0.0;
+    marker.pose.position.y = 0.0;
+    marker.pose.position.z = 0.0;
 
     marker.pose.orientation.x = 0.0;
     marker.pose.orientation.y = 0.0;
@@ -512,13 +537,11 @@ public:
     marker.color.b = 0.0;
     marker.color.a = 1.0;
 
-    std::pair<double, double> this_vertex;
-
     // Make line color
     std_msgs::ColorRGBA color;
     color.r = 0.8;
-    color.g = 0.1;
-    color.b = 0.1;
+    color.g = 0.3;
+    color.b = 0.3;
     color.a = 1.0;
 
     // Point
@@ -529,12 +552,8 @@ public:
     // Loop through all verticies
     for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
     {
-
-      this_vertex = getCoordinates( vertex_id, planner_data );
-
       // First point
-      point_a.x = this_vertex.first;
-      point_a.y = this_vertex.second;
+      point_a = getCoordinates( vertex_id, planner_data );
       point_a.z = getCostHeight(point_a, cost); 
 
       // Add the point pair to the line message
@@ -546,7 +565,7 @@ public:
     marker_pub_.publish( marker );
   }
 
-  void publishSphere(const geometry_msgs::Point &point, const std_msgs::ColorRGBA &color)
+  void publishSphere(const geometry_msgs::Point &point, const std_msgs::ColorRGBA &color, double scale = 0.3)
   {
     visualization_msgs::Marker sphere_marker;
 
@@ -579,9 +598,9 @@ public:
     static int sphere_id_ = 0;
     sphere_marker.id = ++sphere_id_;
     sphere_marker.color = color;
-    sphere_marker.scale.x = 0.3;
-    sphere_marker.scale.y = 0.3;
-    sphere_marker.scale.z = 0.3;
+    sphere_marker.scale.x = scale;
+    sphere_marker.scale.y = scale;
+    sphere_marker.scale.z = scale;
 
     // Update the single point with new pose
     sphere_marker.points[0] = point;
@@ -593,10 +612,10 @@ public:
   }
 
   
-  // *********************************************************************************************************
-  // Display Result Path
-  // *********************************************************************************************************
-  void displayResult( og::PathGeometric& path, std_msgs::ColorRGBA* color, bnu::matrix<int> &cost )
+  /**
+   * \brief Display Result Path
+  */
+  void displayResult( og::PathGeometric& path, const std_msgs::ColorRGBA& color, const bnu::matrix<int>& cost )
   {
     const std::vector<std::pair<double, double> > coordinates = convertSolutionToVector(path);
 
@@ -618,9 +637,9 @@ public:
     static int result_id = 0;
     marker.id = result_id++;
 
-    marker.pose.position.x = 1.0;
-    marker.pose.position.y = 1.0;
-    marker.pose.position.z = 1.0;
+    marker.pose.position.x = 0.0;
+    marker.pose.position.y = 0.0;
+    marker.pose.position.z = 0.0;
 
     marker.pose.orientation.x = 0.0;
     marker.pose.orientation.y = 0.0;
@@ -668,8 +687,8 @@ public:
       // Add the point pair to the line message
       marker.points.push_back( point_a );
       marker.points.push_back( point_b );
-      marker.colors.push_back( *color );
-      marker.colors.push_back( *color );
+      marker.colors.push_back( color );
+      marker.colors.push_back( color );
 
       // Save these coordinates for next line
       x1 = x2;
@@ -680,10 +699,13 @@ public:
     marker_pub_.publish( marker );
   }
 
-  // *********************************************************************************************************
-  // Helper Function: gets the x,y coordinates for a given vertex id
-  // *********************************************************************************************************
-  std::pair<double, double> getCoordinates( int vertex_id, ob::PlannerDataPtr planner_data )
+  /**
+   * \brief Helper Function: gets the x,y coordinates for a given vertex id
+   * \param id of a vertex
+   * \param result from an OMPL planner
+   * \return geometry point msg with no z value filled in
+   */
+  geometry_msgs::Point getCoordinates( int vertex_id, ob::PlannerDataPtr planner_data )
   {
     ob::PlannerDataVertex vertex = planner_data->getVertex( vertex_id );
 
@@ -700,7 +722,11 @@ public:
     const ob::RealVectorStateSpace::StateType *real_state =
       static_cast<const ob::RealVectorStateSpace::StateType*>(state);
 
-    return std::pair<double, double>( real_state->values[0], real_state->values[1] );
+    // Create point
+    geometry_msgs::Point point;
+    point.x = real_state->values[0];
+    point.y = real_state->values[1];
+    return point;
   }
   
 

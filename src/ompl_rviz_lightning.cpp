@@ -159,7 +159,6 @@ class OmplRvizLightning
 
     ROS_INFO_STREAM( "OMPL version: " << OMPL_VERSION );
 
-
     /*
     ROS_DEBUG_STREAM_NAMED("temp","TEMP TESTING ------------------------------");
 
@@ -200,7 +199,7 @@ class OmplRvizLightning
         color.r = 1.0;
         color.g = 0.0;
         color.b = 0.0;
-        viewer_->displayResult( experience_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( experience_setup_->getSolutionPath(), color, cost_ );
         ros::Duration(0.25).sleep();
       }
 
@@ -213,7 +212,7 @@ class OmplRvizLightning
         color.r = 0.0;
         color.g = 1.0;
         color.b = 0.0;
-        viewer_->displayResult( experience_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( experience_setup_->getSolutionPath(), color, cost_ );
         //      ros::Duration(0.25).sleep();
       }
 
@@ -226,7 +225,7 @@ class OmplRvizLightning
         color.r = 0.0;
         color.g = 0.5;
         color.b = 0.5;
-        viewer_->displayResult( experience_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( experience_setup_->getSolutionPath(), color, cost_ );
         ros::Duration(0.25).sleep();
       }
     }
@@ -304,14 +303,27 @@ class OmplRvizLightning
    */
   void showStartGoal(ob::ScopedState<> start, ob::ScopedState<> goal)
   {
+    geometry_msgs::Point start_pt;
+    start_pt.x = start[0];
+    start_pt.y = start[1];
+    start_pt.z = viewer_->getCostHeight(start_pt, cost_);
+    viewer_->publishSphere(start_pt, viewer_->green_, 0.5);
+
+    geometry_msgs::Point goal_pt;
+    goal_pt.x = start[0];
+    goal_pt.y = start[1];
+    goal_pt.z = viewer_->getCostHeight(goal_pt, cost_);
+    viewer_->publishSphere(goal_pt, viewer_->red_, 0.5);
+
     // Modify the map to show start and end locations
-    image_->data[ image_->getID( start[0], start[1] ) ].red = 50;
+    /*image_->data[ image_->getID( start[0], start[1] ) ].red = 50;
     image_->data[ image_->getID( start[0], start[1] ) ].blue = 50;
     image_->data[ image_->getID( start[0], start[1] ) ].green = 255;
 
     image_->data[ image_->getID( goal[0], goal[1] ) ].red = 255;
     image_->data[ image_->getID( goal[0], goal[1] ) ].blue = 255;
     image_->data[ image_->getID( goal[0], goal[1] ) ].green = 10;
+    */
   }
 
   /**

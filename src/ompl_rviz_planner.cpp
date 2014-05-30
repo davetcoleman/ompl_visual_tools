@@ -184,7 +184,7 @@ class OmplRvizPlanner
         color.r = 1.0;
         color.g = 0.0;
         color.b = 0.0;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( simple_setup_->getSolutionPath(), color, cost_ );
         ros::Duration(0.25).sleep();
       }
 
@@ -197,7 +197,7 @@ class OmplRvizPlanner
         color.r = 0.0;
         color.g = 1.0;
         color.b = 0.0;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( simple_setup_->getSolutionPath(), color, cost_ );
         //      ros::Duration(0.25).sleep();
       }
 
@@ -210,7 +210,7 @@ class OmplRvizPlanner
         color.r = 0.0;
         color.g = 0.5;
         color.b = 0.5;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( simple_setup_->getSolutionPath(), color, cost_ );
         ros::Duration(0.25).sleep();
       }
     }
