@@ -36,9 +36,15 @@
    Desc:   Tools for displaying OMPL components in Rviz
 */
 
+#ifndef OMPL_RVIZ_VIEWER__OMPL_RVIZ_VIEWER_
+#define OMPL_RVIZ_VIEWER__OMPL_RVIZ_VIEWER_
+
 // ROS
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+
+// For reading image files
+#include <ompl_rviz_viewer/utilities/ppm.h>
 
 // Boost
 #include <boost/numeric/ublas/matrix.hpp>
@@ -57,6 +63,9 @@ namespace bnu = boost::numeric::ublas;
 
 namespace ompl_rviz_viewer
 {
+
+typedef boost::numeric::ublas::matrix<int> intMatrix;
+typedef boost::shared_ptr<intMatrix> intMatrixPtr;
 
 static const std::string BASE_FRAME = "/world";
 static const double COST_HEIGHT_OFFSET = 0.5;
@@ -108,12 +117,10 @@ public:
     green_.a = 1;
 
     red_.r = 255;
-    red_.b = 255;
-    red_.g = 10;
+    red_.b = 50;
+    red_.g = 50;
     red_.a = 1;
 
-
-    ROS_INFO_STREAM_NAMED("ompl_rviz_viewer","OmplRvizViewer Ready.");
   }
 
   /**
@@ -127,7 +134,7 @@ public:
   /**
    * \brief Helper function for converting a point to the correct cost
    */
-  double getCost(const geometry_msgs::Point &point, const bnu::matrix<int> &cost)
+  double getCost(const geometry_msgs::Point &point, const intMatrix &cost)
   {
     return double(cost( nat_round(point.y), nat_round(point.x) )) / 2.0;
   }
@@ -136,7 +143,7 @@ public:
    * \brief Use bilinear interpolation, if necessary, to find the cost of a point between whole numbers
    *        From http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
    */
-  double getCostHeight(const geometry_msgs::Point &point, const bnu::matrix<int> &cost)
+  double getCostHeight(const geometry_msgs::Point &point, const intMatrix &cost)
   {
     // TODO make faster
 
@@ -245,7 +252,7 @@ public:
   /**
    * \brief Visualize Results
    */
-  void displayTriangles(PPMImage *image, bnu::matrix<int> &cost)
+  void displayTriangles(PPMImage *image, intMatrix &cost)
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -310,7 +317,7 @@ public:
   // *********************************************************************************************************
   // Helper Function to display triangles
   // *********************************************************************************************************
-  void addPoint( int x, int y, visualization_msgs::Marker* marker, PPMImage *image, bnu::matrix<int> &cost )
+  void addPoint( int x, int y, visualization_msgs::Marker* marker, PPMImage *image, intMatrix &cost )
   {
     // Point
     geometry_msgs::Point point;
@@ -332,7 +339,7 @@ public:
   // Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
   // *********************************************************************************************************
   void interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker, 
-    std_msgs::ColorRGBA &color, bnu::matrix<int> &cost )
+    std_msgs::ColorRGBA &color, intMatrix &cost )
   {
     // Copy to non-const
     geometry_msgs::Point point_a = p1;
@@ -426,7 +433,7 @@ public:
   // *********************************************************************************************************
   // Display Explored Space
   // *********************************************************************************************************
-  void displayGraph(bnu::matrix<int> &cost, ob::PlannerDataPtr planner_data)
+  void displayGraph(intMatrix &cost, ob::PlannerDataPtr planner_data)
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -502,7 +509,7 @@ public:
   // *********************************************************************************************************
   // Display Sample Points
   // *********************************************************************************************************
-  void displaySamples(bnu::matrix<int> &cost, ob::PlannerDataPtr planner_data)
+  void displaySamples(intMatrix &cost, ob::PlannerDataPtr planner_data)
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.
@@ -615,7 +622,7 @@ public:
   /**
    * \brief Display Result Path
   */
-  void displayResult( og::PathGeometric& path, const std_msgs::ColorRGBA& color, const bnu::matrix<int>& cost )
+  void displayResult( og::PathGeometric& path, const std_msgs::ColorRGBA& color, const intMatrix& cost )
   {
     const std::vector<std::pair<double, double> > coordinates = convertSolutionToVector(path);
 
@@ -736,3 +743,5 @@ typedef boost::shared_ptr<OmplRvizViewer> OmplRvizViewerPtr;
 typedef boost::shared_ptr<const OmplRvizViewer> OmplRvizViewerConstPtr;
 
 } // end namespace
+
+#endif

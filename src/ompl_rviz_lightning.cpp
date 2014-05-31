@@ -42,14 +42,11 @@
 #include <ros/ros.h>
 #include <ros/package.h> // for getting file path for loading images
 
-// For reading image files
-#include <ompl_rviz_viewer/utilities/ppm.h>
-
 // Display in Rviz tool
 #include <ompl_rviz_viewer/ompl_rviz_viewer.h>
 
 // Custom validity checker that accounts for cost
-#include <ompl_rviz_viewer/two_dimensional_validity_checker.h>
+#include <ompl_rviz_viewer/cost_map_optimization_objective.h>
 
 // OMPL planner
 #include <ompl/tools/lightning/Lightning.h>
@@ -75,7 +72,7 @@ class OmplRvizLightning
   PPMImage *image_;
 
   // The cost for each x,y - which is derived from the RGB data
-  boost::numeric::ublas::matrix<int> cost_;
+  intMatrix cost_;
 
   // The resulting graph that was searched
   ob::PlannerDataPtr planner_data_;
@@ -307,13 +304,13 @@ class OmplRvizLightning
     start_pt.x = start[0];
     start_pt.y = start[1];
     start_pt.z = viewer_->getCostHeight(start_pt, cost_);
-    viewer_->publishSphere(start_pt, viewer_->green_, 0.5);
+    viewer_->publishSphere(start_pt, viewer_->green_, 1.5);
 
     geometry_msgs::Point goal_pt;
-    goal_pt.x = start[0];
-    goal_pt.y = start[1];
+    goal_pt.x = goal[0];
+    goal_pt.y = goal[1];
     goal_pt.z = viewer_->getCostHeight(goal_pt, cost_);
-    viewer_->publishSphere(goal_pt, viewer_->red_, 0.5);
+    viewer_->publishSphere(goal_pt, viewer_->red_, 1.5);
 
     // Modify the map to show start and end locations
     /*image_->data[ image_->getID( start[0], start[1] ) ].red = 50;
@@ -353,9 +350,10 @@ class OmplRvizLightning
 
     experience_setup_->setPlanner(ob::PlannerPtr(trrt));
 
-    // Set state validity checking for this space
-    experience_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( experience_setup_->getSpaceInformation(),
-                cost_, max_threshold_ ) ) );
+    // Setup the optimization objective to use the 2d cost map
+    ompl::base::OptimizationObjectivePtr opt;    
+    opt.reset(new ompl::base::CostMapOptimizationObjective( experience_setup_->getSpaceInformation(), cost_ ));
+    experience_setup_->setOptimizationObjective(opt);
 
     // Start and Goal State ---------------------------------------------
 
@@ -436,7 +434,7 @@ class OmplRvizLightning
 int main( int argc, char** argv )
 {
   ros::init(argc, argv, "ompl_rviz_viewer");
-  ROS_INFO( "OMPL RViz Viewer with Lightning ----------------------------------------- " );
+  ROS_INFO( "OMPL RViz Viewer with Lightning Framework ----------------------------------------- " );
 
   // Allow the action server to recieve and send ros messages
   ros::AsyncSpinner spinner(1);

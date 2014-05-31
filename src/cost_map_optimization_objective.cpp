@@ -1,8 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2014, University of Colorado, Boulder
- *  Copyright (c) 2012, Willow Garage, Inc.
+ *  Copyright (c) 2013, University of Colorado, Boulder
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -15,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of the Willow Garage nor the names of its
+ *   * Neither the name of the Univ of CO, Boulder nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -33,61 +32,30 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* 
-   Author: Dave Coleman <dave@dav.ee>
-   Desc:   Validity checker that supports cost
+/* Author: Dave Coleman
+   Desc:   Optimization objective that simply reads a value from a 2D cost map
 */
 
-// Boost
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
+#include <ompl_rviz_viewer/cost_map_optimization_objective.h>
 
-// OMPL
-#include <ompl/base/SpaceInformation.h>
-
-namespace ob = ompl::base;
-namespace og = ompl::geometric;
-namespace bnu = boost::numeric::ublas;
-
-namespace ompl_rviz_viewer
+ompl::base::CostMapOptimizationObjective::
+CostMapOptimizationObjective(const SpaceInformationPtr &si,
+                                    double pathLengthWeight) :
+    OptimizationObjective(si),
+    pathLengthWeight_(pathLengthWeight)
 {
+    description_ = "Cost Map";
+}
 
-/**
- * \brief Custom State Validity Checker with cost function
- */
-class TwoDimensionalValidityChecker : public ob::StateValidityChecker
+double ompl::base::CostMapOptimizationObjective::getPathLengthWeight(void) const
 {
-private:
-  bnu::matrix<int> cost_;
-  double max_threshold_;
+    return pathLengthWeight_;
+}
 
-public:
-
-  /** \brief Constructor */
-  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, const bnu::matrix<int>& cost,
-    double max_threshold ) :
-    StateValidityChecker(si)
-  {
-    cost_ = cost;
-    max_threshold_ = max_threshold;
-  }
-
-  /** \brief Obstacle checker */
-  virtual bool isValid(const ob::State * state ) const
-  {
-    return cost(state) < max_threshold_;
-  }
-
-  virtual double cost(const ob::State *state) const
-  {
-    const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
-
-    // Return the cost from the matrix at the current dimensions
-    double cost = cost_( nat_round(coords[1]), nat_round(coords[0]) );
-
-    return cost;
-  }
-
-};
-
-} // namespace
+ompl::base::Cost ompl::base::CostMapOptimizationObjective::motionCost(const State *s1,
+                                                                             const State *s2) const
+{
+    // Only accrue positive changes in cost
+    double positiveCostAccrued = std::max(stateCost(s2).v - stateCost(s1).v, 0.0);
+    return Cost(positiveCostAccrued + pathLengthWeight_*si_->distance(s1,s2));
+}
