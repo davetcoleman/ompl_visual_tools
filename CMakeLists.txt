@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(OMPL REQUIRED)
+find_package(Boost REQUIRED COMPONENTS serialization)
 
 include_directories(${Boost_INCLUDE_DIRS} ${OMPL_INCLUDE_DIRS})
 
