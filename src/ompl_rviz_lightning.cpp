@@ -109,6 +109,7 @@ class OmplRvizLightning
   {
     image_ = NULL;
 
+    // Load the tool for displaying in Rviz
     bool verbose = true;
     viewer_.reset(new ompl_rviz_viewer::OmplRvizViewer(verbose));
   }
@@ -396,7 +397,7 @@ class OmplRvizLightning
     // experience_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
 
     // Debug - this call is optional, but we put it in to get more output information
-    experience_setup_->print();
+    //experience_setup_->print();
 
     // Solve -----------------------------------------------------------
     ROS_INFO( "Starting OMPL motion planner..." );

@@ -57,6 +57,10 @@ convert cost_map.png cost_map.ppm
 
 In general, a 100x100 pixel image is a decent space size, and larger dimensions will require much more computational resources or may hang your computer. GIMP is a good editor for scaling images down.
 
+## TODO
+
+- Remove PPM library and instead depend on OMPL's version
+
 ## Develop
 
 You are encouraged to fork this package on GitHub and test your own cost-based planning algorithms using this visualizer!

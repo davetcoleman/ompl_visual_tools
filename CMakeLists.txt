@@ -62,6 +62,17 @@ target_link_libraries(ompl_rviz_lightning
   ${PROJECT_NAME}_ppm
 )
 
+# Executable for ExperienceDatabaseTest
+add_executable(experience_database_test
+  src/experience_database_test.cpp 
+)
+target_link_libraries(experience_database_test 
+  ${OMPL_LIBRARIES} 
+  ${catkin_LIBRARIES} 
+  ${Boost_LIBRARIES}
+  ${PROJECT_NAME}_ppm
+)
+
 # Install
 install(TARGETS ${PROJECT_NAME}_ppm
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
@@ -73,6 +84,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 # Mark executables for installation
-install(TARGETS ompl_rviz_planner ompl_rviz_lightning
+install(TARGETS ompl_rviz_planner ompl_rviz_lightning experience_database_test
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

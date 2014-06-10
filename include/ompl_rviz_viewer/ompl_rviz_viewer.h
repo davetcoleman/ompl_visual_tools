@@ -572,6 +572,71 @@ public:
     marker_pub_.publish( marker );
   }
 
+  // *********************************************************************************************************
+  // Display States
+  // *********************************************************************************************************
+  void displayStates(std::vector<const ompl::base::State*> states)
+  {
+    visualization_msgs::Marker marker;
+    // Set the frame ID and timestamp.
+    marker.header.frame_id = BASE_FRAME;
+    marker.header.stamp = ros::Time();
+
+    // Set the namespace and id for this marker.  This serves to create a unique ID
+    marker.ns = "states";
+
+    // Set the marker type.
+    marker.type = visualization_msgs::Marker::SPHERE_LIST;
+
+    // Set the marker action.  Options are ADD and DELETE
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.id = 0;
+
+    marker.pose.position.x = 0.0;
+    marker.pose.position.y = 0.0;
+    marker.pose.position.z = 0.0;
+
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+
+    marker.scale.x = 0.4;
+    marker.scale.y = 0.4;
+    marker.scale.z = 0.4;
+
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+    marker.color.a = 1.0;
+
+    // Make line color
+    std_msgs::ColorRGBA color;
+    color.r = 0.8;
+    color.g = 0.3;
+    color.b = 0.3;
+    color.a = 1.0;
+
+    // Point
+    geometry_msgs::Point point_a;
+
+    ROS_INFO("Publishing Spheres");
+
+    // Loop through all verticies
+    for( int vertex_id = 0; vertex_id < int( states.size() ); ++vertex_id )
+    {
+      // First point
+      point_a = getCoordinates( states[vertex_id] );
+
+      // Add the point pair to the line message
+      marker.points.push_back( point_a );
+      marker.colors.push_back( color );
+    }
+
+    // Publish the marker
+    marker_pub_.publish( marker );
+  }
+
   void publishSphere(const geometry_msgs::Point &point, const std_msgs::ColorRGBA &color, double scale = 0.3)
   {
     visualization_msgs::Marker sphere_marker;
@@ -684,12 +749,17 @@ public:
       // First point
       point_a.x = x1;
       point_a.y = y1;
-      point_a.z = getCostHeight(point_a, cost); 
 
       // Create a second point
       point_b.x = x2;
       point_b.y = y2;
-      point_b.z = getCostHeight(point_b, cost);
+
+      // Add cost if available
+      if ( cost.size1() > 0 && cost.size2() > 0 )
+      {
+          point_a.z = getCostHeight(point_a, cost);
+          point_b.z = getCostHeight(point_b, cost);
+      }
 
       // Add the point pair to the line message
       marker.points.push_back( point_a );
@@ -719,6 +789,12 @@ public:
     // Get this vertex's coordinates
     const ob::State *state = vertex.getState();
 
+    return getCoordinates(state);
+  }
+
+  geometry_msgs::Point getCoordinates( const ob::State *state )
+  {
+
     if (!state)
     {
       ROS_ERROR("No state found for a vertex");
@@ -733,6 +809,7 @@ public:
     geometry_msgs::Point point;
     point.x = real_state->values[0];
     point.y = real_state->values[1];
+    point.z = 0; // dummy value
     return point;
   }
   
