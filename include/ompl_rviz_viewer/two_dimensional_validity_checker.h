@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2013, University of Colorado, Boulder
+ *  Copyright (c) 2014, JSK, The University of Tokyo.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of the Univ of CO, Boulder nor the names of its
+ *   * Neither the name of the JSK, The University of Tokyo nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -33,19 +33,20 @@
  *********************************************************************/
 
 /* Author: Dave Coleman
- * Desc:   Optimization objective that simply reads a value from a 2D cost map
- */
+   Desc:   Custom State Validity Checker with cost function
+*/
 
-
-#ifndef OMPL_RVIZ_VIEWER__COST_MAP_OPTIMIZATION_OBJECTIVE_
-#define OMPL_RVIZ_VIEWER__COST_MAP_OPTIMIZATION_OBJECTIVE_
-
-#include <ompl/base/OptimizationObjective.h>
+#ifndef OMPL_RVIZ_VIEWER__TWO_DIMENSIONAL_VALIDITY_CHECKER_
+#define OMPL_RVIZ_VIEWER__TWO_DIMENSIONAL_VALIDITY_CHECKER_
 
 // Boost
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
+// OMPL
+#include <ompl/base/StateValidityChecker.h>
+
+namespace ob = ompl::base;
 
 namespace ompl_rviz_viewer
 {
@@ -55,63 +56,50 @@ namespace ompl_rviz_viewer
 
 namespace ompl
 {
-  namespace base
-  {
-    /** \brief An optimization objective which defines path cost using the idea of mechanical work. To be used in conjunction with TRRT. */
-    class CostMapOptimizationObjective : public OptimizationObjective
+namespace base
+{
+
+// Nat_Rounding helper function to make readings from cost map more accurate
+int nat_round(double x)
+{
+    return static_cast<int>(floor(x + 0.5f));
+}
+
+class TwoDimensionalValidityChecker : public ob::StateValidityChecker
+{
+private:
+    ompl_rviz_viewer::intMatrix cost_;
+    double max_threshold_;
+
+public:
+
+    /** \brief Constructor */
+    TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, const bnu::matrix<int>& cost,
+        double max_threshold ) :
+        StateValidityChecker(si)
     {
-    public:
-      /** \brief The mechanical work formulation requires a weighing factor to use for the length of a path in order to disambiguate optimal paths.
-          This weighing factor should be small. The default value for this weight is 0.00001. */
-      CostMapOptimizationObjective(const SpaceInformationPtr &si, ompl_rviz_viewer::intMatrix cost)
-        : OptimizationObjective(si),
-          cost_(cost)
-      {
-        description_ = "Cost Map";
-      };
+        cost_ = cost;
+        max_threshold_ = max_threshold;
+    }
 
-      /** \brief Defines motion cost */
-      virtual Cost motionCost(const State *s1, const State *s2) const
-      {
-        // Only accrue positive changes in cost
-        double positiveCostAccrued = std::max(stateCost(s2).v - stateCost(s1).v, 0.0);
-        return Cost(positiveCostAccrued); // + pathLengthWeight_*si_->distance(s1,s2));
-      };
+    /** \brief Obstacle checker */
+    virtual bool isValid(const ob::State * state ) const
+    {
+        return cost(state) < max_threshold_;
+    }
 
-      ompl::base::Cost stateCost(const State *state) const
-      {
+    virtual double cost(const ob::State *state) const
+    {
         const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
 
         // Return the cost from the matrix at the current dimensions
         double cost = cost_( nat_round(coords[1]), nat_round(coords[0]) );
 
-        return Cost(cost);
-      }
+        return cost;
+    }
 
-      /** \brief Passed in a cost matrix loaded from an image file, etc */
-      void setCostMatrix(ompl_rviz_viewer::intMatrix cost)
-      {
-        cost_ = cost;
-      };
-
-      /**
-       * \brief Nat_Rounding helper function to make readings from cost map more accurate
-       * \param double
-       * \return rounded down number
-       */
-      int nat_round(double x) const
-      {
-        return static_cast<int>(floor(x + 0.5f));
-      };
-
-    protected:
-
-      // The cost for each x,y - which is derived from the RGB data
-      ompl_rviz_viewer::intMatrix cost_;
-    };
-
-    typedef boost::shared_ptr< CostMapOptimizationObjective > CostMapOptimizationObjectivePtr;
-  }
+};
+}
 }
 
 #endif

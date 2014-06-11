@@ -120,7 +120,6 @@ public:
     red_.b = 50;
     red_.g = 50;
     red_.a = 1;
-
   }
 
   /**
@@ -812,7 +811,25 @@ public:
     point.z = 0; // dummy value
     return point;
   }
-  
+
+    /**
+     * \brief Get a random color
+     */
+    std_msgs::ColorRGBA randColor()
+    {
+        std_msgs::ColorRGBA color;
+        color.a = 1.0;
+        color.r = fRand(0.0,1.0);
+        color.g = fRand(0.0,1.0);
+        color.b = fRand(0.0,1.0);
+        return color;
+    }
+
+    double fRand(double fMin, double fMax)
+    {
+        double f = (double)rand() / RAND_MAX;
+        return fMin + f * (fMax - fMin);
+    }
 
 }; // end class
 

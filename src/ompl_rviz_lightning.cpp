@@ -47,6 +47,7 @@
 
 // Custom validity checker that accounts for cost
 #include <ompl_rviz_viewer/cost_map_optimization_objective.h>
+#include <ompl_rviz_viewer/two_dimensional_validity_checker.h>
 
 // OMPL planner
 #include <ompl/tools/lightning/Lightning.h>
@@ -350,6 +351,10 @@ class OmplRvizLightning
     //og::RRT *trrt = new og::RRT( experience_setup_->getSpaceInformation() );
 
     experience_setup_->setPlanner(ob::PlannerPtr(trrt));
+
+    // Set state validity checking for this space
+    experience_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new ob::TwoDimensionalValidityChecker( 
+                experience_setup_->getSpaceInformation(), cost_, max_threshold_ ) ) );
 
     // Setup the optimization objective to use the 2d cost map
     ompl::base::OptimizationObjectivePtr opt;    

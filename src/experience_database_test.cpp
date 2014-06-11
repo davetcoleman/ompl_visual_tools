@@ -97,35 +97,19 @@ public:
     experienceDB_.reset(new ompl::tools::ExperienceDB(space));
     experienceDB_->load(OMPL_STORAGE_PATH); // load from file
 
-    // View all of the saved paths
-    std::vector<const ompl::base::State*> states = experienceDB_->getStates();    
+    // Display all of the saved paths
+    std::vector<ompl::geometric::PathGeometric> paths = experienceDB_->getAllPaths();    
 
-    // Check for no states
-    if (states.empty())
-    {
-        ROS_ERROR_STREAM_NAMED("test","No states found in experience database, unable to display");
-        return;
+    // Show all paths
+    for (std::size_t i = 0; i < paths.size(); ++i)
+    {        
+        viewer_->displayResult( paths[i], viewer_->randColor(), cost_ );
+        ROS_INFO_STREAM_NAMED("temp","Sleeping after path " << i);
+        ros::Duration(0.1).sleep();
     }
-
-    // Visualize the sample locations
-    //viewer_->displayStates(states);
-
-    // Create the solution path
-    ompl::geometric::PathGeometric path(si_);
-    for (int i = states.size() - 1 ; i >= 0 ; --i)
-    {
-        path.append(states[i]);
-    }
-
-    // Make line color
-    std_msgs::ColorRGBA color;
-    color.a = 1.0;
-    color.r = 1.0;
-    color.g = 0.0;
-    color.b = 0.0;
-    viewer_->displayResult( path, color, cost_ );
 
     ROS_INFO_STREAM_NAMED("experience_database_test","ExperienceDatabaseTest Ready.");
+
   }
 
   /**
