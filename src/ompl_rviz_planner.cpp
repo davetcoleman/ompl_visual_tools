@@ -89,8 +89,8 @@ class OmplRvizPlanner
   double max_threshold_;
 
   // The percentage of the top min/max cost value that is considered an obstacle, e.g. 10 is top 10% of peaks
-  //  static const double MAX_THRESHOLD_PERCENTAGE_ = 40;
-  static const double MAX_THRESHOLD_PERCENTAGE_ = 1;
+  static const double MAX_THRESHOLD_PERCENTAGE_ = 40;
+    //static const double MAX_THRESHOLD_PERCENTAGE_ = 1;
 
   // The number of dimensions - always 2 for images
   static const unsigned int DIMENSIONS = 2;

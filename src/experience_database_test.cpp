@@ -106,8 +106,8 @@ public:
     // Show all paths
     for (std::size_t i = 0; i < paths.size(); ++i)
     {        
-        viewer_->displayResult( paths[i], viewer_->randColor(), cost_ );
-        ROS_INFO_STREAM_NAMED("temp","Sleeping after path " << i);
+        viewer_->displayResult( paths[i], RAND, cost_ );
+        //ROS_INFO_STREAM_NAMED("temp","Sleeping after path " << i);
         ros::Duration(0.1).sleep();
     }
 

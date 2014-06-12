@@ -44,12 +44,9 @@
 
 // Display in Rviz tool
 #include <ompl_rviz_viewer/ompl_rviz_viewer.h>
-
-// Custom validity checker that accounts for cost
-#include <ompl_rviz_viewer/cost_map_optimization_objective.h>
 #include <ompl_rviz_viewer/two_dimensional_validity_checker.h>
 
-// OMPL planner
+// OMPL
 #include <ompl/tools/lightning/Lightning.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
@@ -69,34 +66,21 @@ class OmplRvizLightning
 {
 
 private:
-    // The RGB image data
-    PPMImage *image_;
-
-    // The cost for each x,y - which is derived from the RGB data
-    intMatrix cost_;
 
     // Save the experience setup until the program ends so that the planner data is not lost
     ot::LightningPtr lightning_setup_;
 
+    // Cost in 2D
+    ompl::base::CostMap2DOptimizationObjectivePtr cost_map_;
+
     // The visual tools for interfacing with Rviz
     ompl_rviz_viewer::OmplRvizViewerPtr viewer_;
-
-    // Remember the min and max cost from the cost_ matrix for color visualization
-    int max_cost_;
-    int min_cost_;
-
-    // The cost at which it becomes an obstacle
-    double max_threshold_;
-
-    // The percentage of the top min/max cost value that is considered an obstacle, e.g. 10 is top 10% of peaks
-    //  static const double MAX_THRESHOLD_PERCENTAGE_ = 40;
-    static const double MAX_THRESHOLD_PERCENTAGE_ = 1;
 
     // The number of dimensions - always 2 for images
     static const unsigned int DIMENSIONS = 2;
 
-    // Use random goal and start locations
-    static const bool USE_RANDOM_STATES = true;
+    // The state space we plan in
+    ob::StateSpacePtr space_;
 
     // Flag for determining amount of debug output to show
     bool verbose_;
@@ -107,13 +91,21 @@ public:
      * \brief Constructor
      */
     OmplRvizLightning(bool verbose)
-        : verbose_(verbose),
-          image_(NULL)
+        : verbose_(verbose)
     {
         ROS_INFO_STREAM( "OMPL version: " << OMPL_VERSION );
 
         // Load the tool for displaying in Rviz
         viewer_.reset(new ompl_rviz_viewer::OmplRvizViewer(verbose_));
+
+        // Construct the state space we are planning in
+        space_.reset( new ob::RealVectorStateSpace( DIMENSIONS ));
+
+        // Define an experience setup class
+        lightning_setup_ = ot::LightningPtr( new ot::Lightning(space_) );
+
+        // Load the cost map
+        cost_map_.reset(new ompl::base::CostMap2DOptimizationObjective( lightning_setup_->getSpaceInformation() ));
     }
 
     /**
@@ -121,69 +113,26 @@ public:
      */
     ~OmplRvizLightning()
     {
-        delete image_;
     }
 
-    /**
-     * \brief Main Function
-     */
-    void loadImage( std::string image_path )
+    void loadCostMapImage( std::string image_path )
     {
-        // Load cost map from image file
-        image_ = readPPM( image_path.c_str() );
-
-        // Error check
-        if( !image_ )
-        {
-            ROS_ERROR( "No image data loaded " );
-            return;
-        }
-
-        // Disallow non-square
-        if( image_->x != image_->y )
-        {
-            ROS_ERROR( "Does not currently support non-square images because of some weird bug. Feel free to fork and fix!" );
-            return;
-        }
-
-        if (verbose_)
-            ROS_INFO_STREAM( "Map Height: " << image_->y << " Map Width: " << image_->x );
-
-        // Create an array of ints that represent the cost of every pixel
-        cost_.resize( image_->x, image_->y );
-
-        // gets the min and max values of the cost map
-        getMinMaxCost();
-
-        // Generate the cost map
-        createCostMap();
-
-        // Render the map ---------------------------------------------------
-        viewer_->displayTriangles(image_, cost_);
-        ros::Duration(0.1).sleep();
-    }
-
-    bool plan(int runs)
-    {
-        // OMPL Processing -------------------------------------------------------------------------------------------------
-        // Run OMPL and display
-
-        // Construct the state space we are planning in
-        ob::StateSpacePtr space( new ob::RealVectorStateSpace( DIMENSIONS ));
+        cost_map_->loadImage(image_path);
 
         // Set the bounds for the R^2
         ob::RealVectorBounds bounds( DIMENSIONS );
         bounds.setLow( 0 ); // both dimensions start at 0
-        bounds.setHigh( 0, image_->x - 1 ); // allow for non-square images
-        bounds.setHigh( 1, image_->y - 1 ); // allow for non-square images
-        space->as<ob::RealVectorStateSpace>()->setBounds( bounds );
+        bounds.setHigh( 0, cost_map_->image_->x - 1 ); // allow for non-square images
+        bounds.setHigh( 1, cost_map_->image_->y - 1 ); // allow for non-square images
+        space_->as<ob::RealVectorStateSpace>()->setBounds( bounds );
 
-        // Define a experience setup class ---------------------------------------
-        //lightning_ = ompl::
+        // Render the map ---------------------------------------------------
+        viewer_->displayTriangles(cost_map_->image_, cost_map_->cost_);
+        ros::Duration(0.1).sleep();
+    }
 
-
-        lightning_setup_ = ot::LightningPtr( new ot::Lightning(space) );
-
+    bool plan(int runs, bool use_recall)
+    {
         // Set the setup planner (TRRT)
         og::TRRT *trrt = new og::TRRT( lightning_setup_->getSpaceInformation() );
         //og::RRT *trrt = new og::RRT( lightning_setup_->getSpaceInformation() );
@@ -198,11 +147,11 @@ public:
             // Check if user wants to shutdown
             if (!ros::ok())
             {
-                ROS_WARN_STREAM_NAMED("planWithLightning","Terminating early");
+                ROS_WARN_STREAM_NAMED("plan","Terminating early");
                 break;
             }
 
-            ROS_INFO_STREAM_NAMED("planWithLightning","Planning #" << i << " out of " << runs << " ------------------------------------");
+            ROS_INFO_STREAM_NAMED("plan","Planning #" << i << " out of " << runs << " ------------------------------------");
 
             // Clear all planning data. This only includes data generated by motion plan computation.
             // Planner settings, start & goal states are not affected.
@@ -211,42 +160,22 @@ public:
 
             // Set state validity checking for this space
             lightning_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new ob::TwoDimensionalValidityChecker(
-                        lightning_setup_->getSpaceInformation(), cost_, max_threshold_ ) ) );
+                        lightning_setup_->getSpaceInformation(), cost_map_->cost_, cost_map_->max_cost_threshold_ ) ) );
 
             // Setup the optimization objective to use the 2d cost map
-            ompl::base::OptimizationObjectivePtr opt;
-            opt.reset(new ompl::base::CostMapOptimizationObjective( lightning_setup_->getSpaceInformation(), cost_ ));
-            lightning_setup_->setOptimizationObjective(opt);
+            lightning_setup_->setOptimizationObjective(cost_map_);
 
             // Create the termination condition
             ob::PlannerTerminationCondition ptc = ob::timedPlannerTerminationCondition( 10.0, 0.1 );
 
-            // Create start space
-            ob::ScopedState<> start(space);
-            if( USE_RANDOM_STATES )
-            {
-                start.random();
-            }
-            else // Manually set the start location
-            {
-                start[0] = 95;
-                start[1] = 10;
-            }
-
-            // Create a goal state
-            ob::ScopedState<> goal(space);
-            if( USE_RANDOM_STATES )
-            {
-                goal.random();
-            }
-            else // Manually set the start location
-            {
-                goal[0] = 40;
-                goal[1] = 300;
-            }
+            // Create start and goal space
+            ob::ScopedState<> start(space_);
+            ob::ScopedState<> goal(space_);
+            chooseStartGoal(start, goal);
 
             // Visualize on map
-            showStartGoal(start, goal);
+            viewer_->showState(start, cost_map_->cost_, GREEN);
+            viewer_->showState(goal,  cost_map_->cost_, RED);
 
             // set the start and goal states
             lightning_setup_->setStartAndGoalStates(start, goal);
@@ -255,6 +184,7 @@ public:
 
             // Auto setup parameters (optional actually)
             lightning_setup_->setup();
+            lightning_setup_->enableRecall(use_recall);
 
             // The interval in which obstacles are checked for between states
             // lightning_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
@@ -263,13 +193,12 @@ public:
             //lightning_setup_->print();
 
             // Solve -----------------------------------------------------------
-            ROS_INFO( "Starting OMPL motion planner..." );
 
             // attempt to solve the problem within x seconds of planning time
             solved = lightning_setup_->solve( ptc );
 
             if (solved)
-            {                
+            {
                 ROS_INFO("Solution Found");
                 if (runs == 1)
                 {
@@ -288,10 +217,65 @@ public:
             }
         }
 
-        if (!lightning_setup_->save())
+        if (!lightning_setup_->saveIfChanged())
             ROS_ERROR("Unable to save experience database");
 
         return solved;
+    }
+
+    void chooseStartGoal(ob::ScopedState<>& start, ob::ScopedState<>& goal)
+    {
+        if( false ) // choose completely random state
+        {
+            start.random();
+            goal.random();            
+        }
+        else if (false) // Manually set the start location
+        {
+            start[0] = 95;
+            start[1] = 10;
+            goal[0] = 40;
+            goal[1] = 300;
+        }
+        else // Randomly sample around two states
+        {
+            ROS_INFO_STREAM_NAMED("temp","Sampling start and goal around two center points");
+
+            ob::ScopedState<> start_area(space_);
+            start_area[0] = 95;
+            start_area[1] = 90;
+
+            ob::ScopedState<> goal_area(space_);
+            goal_area[0] = 40;
+            goal_area[1] = 14;
+
+            // Check these hard coded values against varying image sizes
+            if (!space_->satisfiesBounds(start_area.get()) || !space_->satisfiesBounds(goal_area.get()))
+            {
+                ROS_ERROR_STREAM_NAMED("chooseStartGoal:","State does not satisfy bounds");
+                exit(-1);
+                return;
+            }
+            
+            // Choose the distance to sample around
+            double maxExtent = lightning_setup_->getSpaceInformation()->getMaximumExtent();            
+            double distance = maxExtent * 0.05;
+            ROS_INFO_STREAM_NAMED("temp","Distance is " << distance << " from max extent " << maxExtent);
+
+            // Create sampler
+            ob::StateSamplerPtr sampler = lightning_setup_->getSpaceInformation()->allocStateSampler();
+
+            std::cout << "debug " << start_area << std::endl;
+
+            sampler->sampleUniformNear(start.get(), start_area.get(), distance); // samples (near + distance, near - distance)
+            sampler->sampleUniformNear(goal.get(), goal_area.get(), distance);
+
+            std::cout << "debug after " << start << std::endl;
+
+            // Show the new sampled points
+            viewer_->displaySampleRegion(start_area, distance, cost_map_->cost_);
+            viewer_->displaySampleRegion(goal_area, distance, cost_map_->cost_);
+        }
     }
 
     /**
@@ -305,18 +289,15 @@ public:
         const ob::PlannerDataPtr planner_data( new ob::PlannerData( lightning_setup_->getSpaceInformation() ) );
         lightning_setup_->getPlannerData( *planner_data );
 
-        std_msgs::ColorRGBA color;
-        color.a = 1.0;
-        
         // Optionally display the search tree/graph or the samples
         if (!just_path)
         {
             // Visualize the explored space ---------------------------------------
-            viewer_->displayGraph(cost_, planner_data);
+            viewer_->displayGraph(cost_map_->cost_, planner_data);
             ros::Duration(0.1).sleep();
 
             // Visualize the sample locations -----------------------------------
-            viewer_->displaySamples(cost_, planner_data);
+            viewer_->displaySamples(cost_map_->cost_, planner_data);
             ros::Duration(0.1).sleep();
         }
 
@@ -324,10 +305,7 @@ public:
         if( false )
         {
             // Visualize the chosen path
-            color.r = 1.0;
-            color.g = 0.0;
-            color.b = 0.0;
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), color, cost_ );
+            viewer_->displayResult( lightning_setup_->getSolutionPath(), RED, cost_map_->cost_ );
             ros::Duration(0.25).sleep();
         }
 
@@ -337,10 +315,7 @@ public:
             lightning_setup_->getSolutionPath().interpolate();
 
             // Visualize the chosen path
-            color.r = 0.0;
-            color.g = 1.0;
-            color.b = 0.0;
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), color, cost_ );
+            viewer_->displayResult( lightning_setup_->getSolutionPath(), GREEN, cost_map_->cost_ );
             //      ros::Duration(0.25).sleep();
         }
 
@@ -350,101 +325,31 @@ public:
             lightning_setup_->simplifySolution();
 
             // Visualize the chosen path
-            color.r = 0.0;
-            color.g = 0.5;
-            color.b = 0.5;
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), color, cost_ );
+            viewer_->displayResult( lightning_setup_->getSolutionPath(), GREEN, cost_map_->cost_ );
             ros::Duration(0.25).sleep();
         }
     }
 
-private:
-
     /**
-     * \brief Helper Function: calculate cost map
+     * \brief Dump the entire database contents to Rviz
      */
-    void createCostMap()
+    void displayDatabase()
     {
-        // This factor is the author's visual preference for scaling a cost map in Rviz
-        const double artistic_scale = 2.0;
+        // Display all of the saved paths
+        std::vector<ompl::geometric::PathGeometric> paths;
+        lightning_setup_->getAllPaths(paths);
 
-        // This scale adapts that factor depending on the cost map min max
-        const double scale = (max_cost_ - min_cost_ ) / ( image_->x / artistic_scale );
+        ROS_INFO_STREAM_NAMED("experience_database_test","Number of paths: " << paths.size());
 
-        // Dynamically calculate the obstacle threshold
-        max_threshold_ = max_cost_ - ( MAX_THRESHOLD_PERCENTAGE_ / 100 * (max_cost_ - min_cost_) );
-
-        // Preprocess the pixel data for cost and give it a nice colored tint
-        for( size_t i = 0; i < image_->getSize(); ++i )
-        {
-            // Calculate cost
-            cost_.data()[i]  = ( image_->data[ i ].red ) / scale;
-
-            // Prevent cost from being zero
-            if( !cost_.data()[i] )
-                cost_.data()[i] = 1;
-
-            // Color different if it is an obstacle
-            if( cost_.data()[i] > max_threshold_ )
-            {
-                image_->data[ i ].red = 255; //image_->data[ i ].red;
-                image_->data[ i ].green = image_->data[ i ].green;
-                image_->data[ i ].blue = image_->data[ i ].blue;
-            }
-
-        }
-
+        // Show all paths
+        for (std::size_t i = 0; i < paths.size(); ++i)
+        {        
+            viewer_->displayResult( paths[i], RAND, cost_map_->cost_ );
+            //ROS_INFO_STREAM_NAMED("temp","Sleeping after path " << i);
+            ros::Duration(0.1).sleep();
+        }        
     }
 
-    /**
-     * \brief Helper Function: gets the min and max values of the cost map
-     */
-    void getMinMaxCost()
-    {
-        // Find the min and max cost from the image
-        min_cost_ = image_->data[ 0 ].red;
-        max_cost_ = image_->data[ 0 ].red;
-
-        for( size_t i = 0; i < image_->getSize(); ++i )
-        {
-            // Max
-            if( image_->data[ i ].red > max_cost_ )
-                max_cost_ = image_->data[ i ].red;
-            // Min
-            else if( image_->data[ i ].red < min_cost_ )
-                min_cost_ = image_->data[ i ].red;
-        }
-    }
-
-    /**
-     * \brief Display the start and goal states on the image map
-     * \param start state
-     * \param goal state
-     */
-    void showStartGoal(ob::ScopedState<> start, ob::ScopedState<> goal)
-    {
-        geometry_msgs::Point start_pt;
-        start_pt.x = start[0];
-        start_pt.y = start[1];
-        start_pt.z = viewer_->getCostHeight(start_pt, cost_);
-        viewer_->publishSphere(start_pt, viewer_->green_, 1.5);
-
-        geometry_msgs::Point goal_pt;
-        goal_pt.x = goal[0];
-        goal_pt.y = goal[1];
-        goal_pt.z = viewer_->getCostHeight(goal_pt, cost_);
-        viewer_->publishSphere(goal_pt, viewer_->red_, 1.5);
-
-        // Modify the map to show start and end locations
-        /*image_->data[ image_->getID( start[0], start[1] ) ].red = 50;
-          image_->data[ image_->getID( start[0], start[1] ) ].blue = 50;
-          image_->data[ image_->getID( start[0], start[1] ) ].green = 255;
-
-          image_->data[ image_->getID( goal[0], goal[1] ) ].red = 255;
-          image_->data[ image_->getID( goal[0], goal[1] ) ].blue = 255;
-          image_->data[ image_->getID( goal[0], goal[1] ) ].green = 10;
-        */
-    }
 
 }; // end of class
 
@@ -465,6 +370,8 @@ int main( int argc, char** argv )
 
     // Default argument values
     bool verbose = false;
+    bool display_database = false;
+    bool use_recall = true;
     std::string image_path;
     int runs = 1;
 
@@ -472,11 +379,32 @@ int main( int argc, char** argv )
     {
         for (std::size_t i = 0; i < argc; ++i)
         {
+            // Help mode
+            if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
+            {
+                ROS_INFO_STREAM_NAMED("main","Usage: " << argv[0] << " --verbose --noRecall --image [image_file] --runs [num plans] --displayDatabase");
+                return 0;
+            }
+
+            // Show all available plans
+            if (strcmp(argv[i], "--displayDatabase") == 0)
+            {
+                ROS_INFO_STREAM_NAMED("main","Visualizing entire database");
+                display_database = true;
+            }
+
             // Check for verbose flag
             if (strcmp(argv[i], "--verbose") == 0)
             {
                 ROS_INFO_STREAM_NAMED("main","Running in VERBOSE mode (slower)");
                 verbose = true;
+            }
+
+            // Check if we should ignore the recall mechanism
+            if (strcmp(argv[i], "--noRecall") == 0)
+            {                
+                ROS_INFO_STREAM_NAMED("main","NOT using recall for planning");
+                use_recall = false;
             }
 
             // Check if user has passed in an image to read
@@ -530,9 +458,19 @@ int main( int argc, char** argv )
     // Create the planner
     ompl_rviz_viewer::OmplRvizLightning planner(verbose);
 
-    // Load an image and run the planner
+    // Load an image 
     ROS_INFO_STREAM_NAMED("main","Loading image " << image_path);
-    planner.loadImage( image_path );
+    planner.loadCostMapImage( image_path );
+
+    // Display Contents of database if desires
+    if (display_database)
+    {
+        planner.displayDatabase();
+        return 0;
+    }
+
+    // Run the planner
+    planner.plan( runs, use_recall );
 
     // Wait to let anything still being published finish
     ros::Duration(0.1).sleep();
