@@ -85,7 +85,7 @@ public:
     /** \brief Obstacle checker */
     virtual bool isValid(const ob::State * state ) const
     {
-        return cost(state) < max_threshold_;
+        return cost(state) < max_threshold_ && cost(state) > 1;
     }
 
     virtual double cost(const ob::State *state) const

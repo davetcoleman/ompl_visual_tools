@@ -84,6 +84,8 @@ int nat_round(double x)
     return static_cast<int>(floor(x + 0.5f));
 }
 
+typedef std::map< std::string, std::list<std::size_t> > MarkerList;
+
 class OmplRvizViewer
 {
 private:
@@ -96,6 +98,10 @@ private:
 
     // A shared ROS publisher
     ros::Publisher marker_pub_;
+
+    // Track what markers have been published so that we can delete them
+    MarkerList marker_tracker_;
+
 
 public:
 
@@ -118,6 +124,47 @@ public:
     ~OmplRvizViewer()
     {
 
+    }
+
+    void markerPublisher(const visualization_msgs::Marker& marker)
+    {
+        // Save this marker id and namespacee
+        marker_tracker_[marker.ns].push_back( marker.id ); 
+
+        // Publish normal
+        marker_pub_.publish( marker );        
+
+        // Process
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+    }
+
+    void deleteAllMarkers()
+    {
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = BASE_FRAME;
+        marker.header.stamp = ros::Time();
+        marker.action = visualization_msgs::Marker::DELETE;
+
+        for(MarkerList::iterator iterator = marker_tracker_.begin(); iterator != marker_tracker_.end(); iterator++) 
+        {
+            for (std::list<std::size_t>::iterator id = iterator->second.begin(); id != iterator->second.end(); id++)
+            {
+                // Set the namespace and id for this marker.  This serves to create a unique ID
+                marker.ns = iterator->first; // key
+                marker.id = *id; // value
+
+                //ROS_INFO_STREAM_NAMED("temp","Deleting marker: \n" << marker);
+
+                // Publish normal
+                marker_pub_.publish( marker );        
+
+                // Process
+                ros::spinOnce();
+                ros::Duration(0.01).sleep();        
+
+            }
+        }
     }
 
     /**
@@ -297,7 +344,7 @@ public:
 
         }
 
-        marker_pub_.publish( marker );
+        markerPublisher(marker);
     }
 
     // *********************************************************************************************************
@@ -475,7 +522,7 @@ public:
         }
 
         // Publish the marker
-        marker_pub_.publish( marker );
+        markerPublisher(marker);
     }
 
     // *********************************************************************************************************
@@ -535,7 +582,7 @@ public:
         }
 
         // Publish the marker
-        marker_pub_.publish( marker );
+        markerPublisher(marker);
     }
 
     // *********************************************************************************************************
@@ -594,7 +641,7 @@ public:
         }
 
         // Publish the marker
-        marker_pub_.publish( marker );
+        markerPublisher(marker);
     }
 
     void publishSphere(const geometry_msgs::Point &point, const rviz_colors color, double scale = 0.3)
@@ -604,7 +651,7 @@ public:
         sphere_marker.header.frame_id = BASE_FRAME;
 
         // Set the namespace and id for this marker.  This serves to create a unique ID
-        sphere_marker.ns = "Sphere";
+        sphere_marker.ns = "sphere";
         // Set the marker type.
         sphere_marker.type = visualization_msgs::Marker::SPHERE_LIST;
         // Set the marker action.  Options are ADD and DELETE
@@ -639,10 +686,7 @@ public:
         sphere_marker.colors[0] = getColor(color);
 
         // Publish
-        marker_pub_.publish( sphere_marker );
-
-        ros::Duration(0.05).sleep();
-        ros::spinOnce();
+        markerPublisher(sphere_marker);
     }
 
 
@@ -735,7 +779,7 @@ public:
         }
 
         // Publish the marker
-        marker_pub_.publish( marker );
+        markerPublisher(marker);
     }
 
     /**

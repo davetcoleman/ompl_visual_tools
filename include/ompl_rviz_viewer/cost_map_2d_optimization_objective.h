@@ -69,6 +69,7 @@ public:
     /** \brief Constructor */
     CostMap2DOptimizationObjective(const SpaceInformationPtr &si)
         : OptimizationObjective(si),
+          max_cost_threshold_percent_(0.4),
           image_(NULL)
     {
         description_ = "Cost Map";
@@ -151,7 +152,7 @@ public:
         getMinMaxPixels();
 
         // This factor is the author's visual preference for scaling a cost map in Rviz
-        const double artistic_scale = 2.0;
+        const double artistic_scale = 4.0; // smaller is taller
 
         const double pixel_diff = max_pixel_ - min_pixel_;
 
@@ -159,7 +160,7 @@ public:
         const double scale = pixel_diff / ( image_->x / artistic_scale ); //image->x is width
 
         // Dynamically calculate the obstacle threshold
-        max_cost_threshold_ = (max_pixel_ - ( MAX_COST_THRESHOLD_PERCENT_ * pixel_diff )) / scale;
+        max_cost_threshold_ = (max_pixel_ - ( max_cost_threshold_percent_ * pixel_diff )) / scale;
 
         // Preprocess the pixel data for cost and give it a nice colored tint
         for( size_t i = 0; i < image_->getSize(); ++i )
@@ -171,11 +172,11 @@ public:
             if( !cost_.data()[i] )
                 cost_.data()[i] = 1;
 
-            std::cout << "cost is " <<  cost_.data()[i] << " threshold is " <<  max_cost_threshold_ << std::endl;
-
             // Color different if it is an obstacle
-            if( cost_.data()[i] > max_cost_threshold_ )
+            if( cost_.data()[i] > max_cost_threshold_ || cost_.data()[i] <= 1)
             {
+                //std::cout << "cost is " <<  cost_.data()[i] << " threshold is " <<  max_cost_threshold_ << std::endl;
+
                 image_->data[ i ].red = 255; //image_->data[ i ].red;
                 image_->data[ i ].green = image_->data[ i ].green;
                 image_->data[ i ].blue = image_->data[ i ].blue;
@@ -214,15 +215,14 @@ public:
     // The cost at which it becomes an obstacle
     double max_cost_threshold_;
 
+    // The percentage of the top min/max cost value that is considered an obstacle, e.g. 0.1 is top 10% of peaks
+    double max_cost_threshold_percent_;
+
 protected:
 
     // Remember the min and max cost from the image
     int max_pixel_;
     int min_pixel_;
-
-    // The percentage of the top min/max cost value that is considered an obstacle, e.g. 0.1 is top 10% of peaks
-    static const double MAX_COST_THRESHOLD_PERCENT_ = 0.4;
-
 
 };
 
