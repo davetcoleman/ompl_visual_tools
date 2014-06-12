@@ -98,7 +98,10 @@ public:
     experienceDB_->load(OMPL_STORAGE_PATH); // load from file
 
     // Display all of the saved paths
-    std::vector<ompl::geometric::PathGeometric> paths = experienceDB_->getAllPaths();    
+    std::vector<ompl::geometric::PathGeometric> paths;
+    experienceDB_->getAllPaths(paths);
+
+    ROS_INFO_STREAM_NAMED("experience_database_test","Number of paths: " << paths.size());
 
     // Show all paths
     for (std::size_t i = 0; i < paths.size(); ++i)

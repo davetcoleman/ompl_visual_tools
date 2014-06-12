@@ -41,15 +41,15 @@ target_link_libraries(${PROJECT_NAME}_ppm
 )
 
 # Executable for SimpleSetup (in our case T-RRT)
-add_executable(ompl_rviz_planner
-  src/ompl_rviz_planner.cpp 
-)
-target_link_libraries(ompl_rviz_planner 
-  ${OMPL_LIBRARIES} 
-  ${catkin_LIBRARIES} 
-  ${Boost_LIBRARIES}
-  ${PROJECT_NAME}_ppm
-)
+# add_executable(ompl_rviz_planner
+#   src/ompl_rviz_planner.cpp 
+# )
+# target_link_libraries(ompl_rviz_planner 
+#   ${OMPL_LIBRARIES} 
+#   ${catkin_LIBRARIES} 
+#   ${Boost_LIBRARIES}
+#   ${PROJECT_NAME}_ppm
+# )
 
 # Executable for ExperienceSetup
 add_executable(ompl_rviz_lightning
@@ -84,6 +84,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 # Mark executables for installation
-install(TARGETS ompl_rviz_planner ompl_rviz_lightning experience_database_test
+install(TARGETS ompl_rviz_lightning experience_database_test #ompl_rviz_planner
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -477,7 +477,8 @@ public:
     color.b = 1.0;
     color.a = 1.0;
 
-    ROS_INFO("Publishing Graph");
+    if (verbose_)
+        ROS_INFO("Publishing Graph");
 
     // Loop through all verticies
     for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
@@ -553,7 +554,8 @@ public:
     // Point
     geometry_msgs::Point point_a;
 
-    ROS_INFO("Publishing Spheres");
+    if (verbose_)
+        ROS_INFO("Publishing Spheres");
 
     // Loop through all verticies
     for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
@@ -619,7 +621,8 @@ public:
     // Point
     geometry_msgs::Point point_a;
 
-    ROS_INFO("Publishing Spheres");
+    if (verbose_)
+        ROS_INFO("Publishing Spheres");
 
     // Loop through all verticies
     for( int vertex_id = 0; vertex_id < int( states.size() ); ++vertex_id )
@@ -726,7 +729,8 @@ public:
     marker.color.b = 0.0;
     marker.color.a = 1.0;
 
-    ROS_INFO("Publishing result");
+    if (verbose_)
+        ROS_INFO("Publishing result");
 
     // Get the initial points
     double x1 = coordinates[0].first;
