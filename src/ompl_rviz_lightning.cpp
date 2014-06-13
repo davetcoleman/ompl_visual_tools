@@ -126,6 +126,11 @@ public:
         viewer_->deleteAllMarkers();
     }
 
+    /**
+     * \brief Load cost map from file
+     * \param file path
+     * \param how much of the peaks of the mountains are considered obstacles
+     */
     void loadCostMapImage( std::string image_path, double max_cost_threshold_percent = 0.4 )
     {
         cost_map_->max_cost_threshold_percent_ = max_cost_threshold_percent;
@@ -180,8 +185,11 @@ public:
         lightning_setup_->setup();
         lightning_setup_->enableRecall(use_recall);
 
+        //ROS_ERROR_STREAM_NAMED("temp","out of curiosity: coll check resolution: " << lightning_setup_->getSpaceInformation()->getStateValidityCheckingResolution());            
+
         // The interval in which obstacles are checked for between states
-        lightning_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
+        // seems that it default to 0.01 but doesn't do a good job at that level
+        lightning_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005); 
 
         // Debug - this call is optional, but we put it in to get more output information
         //lightning_setup_->print();
@@ -199,7 +207,7 @@ public:
             }
             else
             {
-                ROS_INFO_STREAM_NAMED("plan","Exact solution found");
+                ROS_DEBUG_STREAM_NAMED("plan","Exact solution found");
             }
 
             if (runs == 1)
@@ -358,6 +366,12 @@ public:
         }
     }
 
+    /** \brief Allow access to lightning framework */       
+    ot::LightningPtr getLightning()
+    {
+        return lightning_setup_;
+    }
+    
 
 }; // end of class
 
@@ -470,6 +484,10 @@ int main( int argc, char** argv )
 
     // Create the planner
     ompl_rviz_viewer::OmplRvizLightning planner(verbose);
+    ROS_DEBUG_STREAM_NAMED("main","Loaded " << planner.getLightning()->getExperiencesCount() << " experiences from file");
+
+    // Clear Rviz
+    planner.resetMarkers();
 
     // Load an image
     ROS_INFO_STREAM_NAMED("main","Loading image " << image_path);
@@ -507,8 +525,8 @@ int main( int argc, char** argv )
         ros::spinOnce();
         ros::Duration(3.0).sleep();
 
-        //if (i < runs - 1)
-        planner.resetMarkers();
+        if (i < runs - 1)
+            planner.resetMarkers();
     }
 
     // Save the database at the end

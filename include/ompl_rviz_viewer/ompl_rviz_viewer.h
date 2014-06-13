@@ -100,7 +100,7 @@ private:
     ros::Publisher marker_pub_;
 
     // Track what markers have been published so that we can delete them
-    MarkerList marker_tracker_;
+    //MarkerList marker_tracker_;
 
 
 public:
@@ -129,10 +129,10 @@ public:
     void markerPublisher(const visualization_msgs::Marker& marker)
     {
         // Save this marker id and namespacee
-        marker_tracker_[marker.ns].push_back( marker.id ); 
+        //marker_tracker_[marker.ns].push_back( marker.id );
 
         // Publish normal
-        marker_pub_.publish( marker );        
+        marker_pub_.publish( marker );
 
         // Process
         ros::spinOnce();
@@ -146,25 +146,37 @@ public:
         marker.header.stamp = ros::Time();
         marker.action = visualization_msgs::Marker::DELETE;
 
-        for(MarkerList::iterator iterator = marker_tracker_.begin(); iterator != marker_tracker_.end(); iterator++) 
-        {
-            for (std::list<std::size_t>::iterator id = iterator->second.begin(); id != iterator->second.end(); id++)
-            {
-                // Set the namespace and id for this marker.  This serves to create a unique ID
-                marker.ns = iterator->first; // key
-                marker.id = *id; // value
+        // Set the namespace and id for this marker.  This serves to create a unique ID
+        marker.ns = "";
+        marker.id = 0;
 
-                //ROS_INFO_STREAM_NAMED("temp","Deleting marker: \n" << marker);
+        // Publish normal
+        marker_pub_.publish( marker );
 
-                // Publish normal
-                marker_pub_.publish( marker );        
+        // Process
+        ros::spinOnce();
+        ros::Duration(0.1).sleep();
 
-                // Process
-                ros::spinOnce();
-                ros::Duration(0.01).sleep();        
+        /*
+          for(MarkerList::iterator iterator = marker_tracker_.begin(); iterator != marker_tracker_.end(); iterator++)
+          {
+          for (std::list<std::size_t>::iterator id = iterator->second.begin(); id != iterator->second.end(); id++)
+          {
+          // Set the namespace and id for this marker.  This serves to create a unique ID
+          marker.ns = iterator->first; // key
+          marker.id = *id; // value
 
-            }
-        }
+          //ROS_INFO_STREAM_NAMED("temp","Deleting marker: \n" << marker);
+
+          // Publish normal
+          marker_pub_.publish( marker );
+
+          // Process
+          ros::spinOnce();
+          ros::Duration(0.01).sleep();
+          }
+          }
+        */
     }
 
     /**
@@ -893,7 +905,7 @@ public:
                 result.g = 0.1;
                 result.b = 0.8;
                 result.a = 0.3;
-                break;                
+                break;
             case BLACK:
                 result.r = 0.0;
                 result.g = 0.0;
