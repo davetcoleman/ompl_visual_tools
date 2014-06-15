@@ -144,11 +144,7 @@ public:
         visualization_msgs::Marker marker;
         marker.header.frame_id = BASE_FRAME;
         marker.header.stamp = ros::Time();
-        marker.action = visualization_msgs::Marker::DELETE;
-
-        // Set the namespace and id for this marker.  This serves to create a unique ID
-        marker.ns = "";
-        marker.id = 0;
+        marker.action = 3; // In ROS-J: visualization_msgs::Marker::DELETEALL;
 
         // Publish normal
         marker_pub_.publish( marker );
