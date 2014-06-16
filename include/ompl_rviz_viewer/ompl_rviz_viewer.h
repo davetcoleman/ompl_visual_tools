@@ -102,6 +102,8 @@ private:
     // Track what markers have been published so that we can delete them
     //MarkerList marker_tracker_;
 
+    // Keep a pointer to an optional cost map
+    intMatrixPtr cost_;
 
 public:
 
@@ -124,6 +126,11 @@ public:
     ~OmplRvizViewer()
     {
 
+    }
+
+    void setCostMap(intMatrixPtr cost)
+    {
+        cost_ = cost;
     }
 
     void markerPublisher(const visualization_msgs::Marker& marker)
@@ -178,16 +185,16 @@ public:
     /**
      * \brief Helper function for converting a point to the correct cost
      */
-    double getCost(const geometry_msgs::Point &point, const intMatrix &cost)
+    double getCost(const geometry_msgs::Point &point)
     {
-        return double(cost( nat_round(point.y), nat_round(point.x) )) / 2.0;
+        return double((*cost_)( nat_round(point.y), nat_round(point.x) )) / 2.0;
     }
 
     /**
      * \brief Use bilinear interpolation, if necessary, to find the cost of a point between whole numbers
      *        From http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
      */
-    double getCostHeight(const geometry_msgs::Point &point, const intMatrix &cost)
+    double getCostHeight(const geometry_msgs::Point &point)
     {
         // TODO make faster
 
@@ -195,7 +202,7 @@ public:
 
         // check if whole number
         if (floor(point.x) == point.x && floor(point.y) == point.y)
-            return getCost(point, cost) + COST_HEIGHT_OFFSET;
+            return getCost(point) + COST_HEIGHT_OFFSET;
 
         // else do Bilinear Interpolation
 
@@ -203,25 +210,25 @@ public:
         geometry_msgs::Point a;
         a.x = floor(point.x);
         a.y = ceil(point.y);
-        a.z = getCost(a, cost);
+        a.z = getCost(a);
 
         // bottom left
         geometry_msgs::Point b;
         b.x = floor(point.x);
         b.y = floor(point.y);
-        b.z = getCost(b, cost);
+        b.z = getCost(b);
 
         // bottom right
         geometry_msgs::Point c;
         c.x = ceil(point.x);
         c.y = floor(point.y);
-        c.z = getCost(c, cost);
+        c.z = getCost(c);
 
         // top right
         geometry_msgs::Point d;
         d.x = ceil(point.x);
         d.y = ceil(point.y);
-        d.z = getCost(d, cost);
+        d.z = getCost(d);
 
         //std::cout << "point: \n" << point << std::endl;
         //std::cout << "a: \n" << a << std::endl;
@@ -296,7 +303,7 @@ public:
     /**
      * \brief Visualize Results
      */
-    void displayTriangles(PPMImage *image, intMatrix &cost)
+    void displayTriangles(PPMImage *image)
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -336,18 +343,18 @@ public:
             // Check that we are not on the far right or bottom
             if( ! (x + 1 >= image->x ||  y + 1 >= image->y ) )
             {
-                addPoint( x,   y, &marker, image, cost );
-                addPoint( x+1, y, &marker, image, cost );
-                addPoint( x,   y+1, &marker, image, cost );
+                addPoint( x,   y, &marker, image);
+                addPoint( x+1, y, &marker, image);
+                addPoint( x,   y+1, &marker, image);
             }
 
             // Make back and down triangle
             // Check that we are not on the far left or bottom
             if( ! ( int(x) - 1 < 0 ||  y + 1 >= image->y ) )
             {
-                addPoint( x,   y, &marker, image, cost );
-                addPoint( x,   y+1, &marker, image, cost );
-                addPoint( x-1, y+1, &marker, image, cost );
+                addPoint( x,   y, &marker, image );
+                addPoint( x,   y+1, &marker, image );
+                addPoint( x-1, y+1, &marker, image );
             }
 
         }
@@ -358,13 +365,13 @@ public:
     // *********************************************************************************************************
     // Helper Function to display triangles
     // *********************************************************************************************************
-    void addPoint( int x, int y, visualization_msgs::Marker* marker, PPMImage *image, intMatrix &cost  )
+    void addPoint( int x, int y, visualization_msgs::Marker* marker, PPMImage *image )
     {
         // Point
         geometry_msgs::Point point;
         point.x = x;
         point.y = y;
-        point.z = getCost(point, cost); // to speed things up, we know is always whole number
+        point.z = getCost(point); // to speed things up, we know is always whole number
         marker->points.push_back( point );
 
         std_msgs::ColorRGBA color;
@@ -380,15 +387,15 @@ public:
     // Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
     // *********************************************************************************************************
     void interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker,
-        const rviz_colors& color, intMatrix &cost )
+        const rviz_colors& color )
     {
         // Copy to non-const
         geometry_msgs::Point point_a = p1;
         geometry_msgs::Point point_b = p2;
 
         // Get the heights
-        point_a.z = getCostHeight(point_a, cost);
-        point_b.z = getCostHeight(point_b, cost);
+        point_a.z = getCostHeight(point_a);
+        point_b.z = getCostHeight(point_b);
 
         //ROS_INFO_STREAM("a is: " << point_a);
         //ROS_INFO_STREAM("b is: " << point_b);
@@ -440,8 +447,8 @@ public:
             temp_b.y = m*temp_b.x + b;
 
             // Add the new heights
-            temp_a.z = getCostHeight(temp_a, cost);
-            temp_b.z = getCostHeight(temp_b, cost);
+            temp_a.z = getCostHeight(temp_a);
+            temp_b.z = getCostHeight(temp_b);
 
             // Add the point pair to the line message
             marker->points.push_back( temp_a );
@@ -466,7 +473,7 @@ public:
     // *********************************************************************************************************
     // Display Explored Space
     // *********************************************************************************************************
-    void displayGraph(intMatrix &cost, ob::PlannerDataPtr planner_data)
+    void displayGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color = BLUE)
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -496,13 +503,10 @@ public:
         marker.scale.y = 1.0;
         marker.scale.z = 1.0;
 
-        marker.color = getColor( BLACK );
+        marker.color = getColor( color );
 
         geometry_msgs::Point this_vertex;
         geometry_msgs::Point next_vertex;
-
-        // Make line color
-        std_msgs::ColorRGBA color = getColor( BLUE );
 
         if (verbose_)
             ROS_INFO("Publishing Graph");
@@ -524,7 +528,7 @@ public:
                 // Convert vertex id to next coordinates
                 next_vertex = getCoordinates( *edge_it, planner_data );
 
-                interpolateLine( this_vertex, next_vertex, &marker, BLUE, cost );
+                interpolateLine( this_vertex, next_vertex, &marker, BLUE);
             }
 
         }
@@ -536,7 +540,7 @@ public:
     // *********************************************************************************************************
     // Display Sample Points
     // *********************************************************************************************************
-    void displaySamples(intMatrix &cost, ob::PlannerDataPtr planner_data)
+    void displaySamples(ob::PlannerDataPtr planner_data)
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.
@@ -582,7 +586,7 @@ public:
         {
             // First point
             point_a = getCoordinates( vertex_id, planner_data );
-            point_a.z = getCostHeight(point_a, cost);
+            point_a.z = getCostHeight(point_a);
 
             // Add the point pair to the line message
             marker.points.push_back( point_a );
@@ -699,9 +703,9 @@ public:
 
 
     /**
-     * \brief Display Result Path
+     * \brief Display result path from a solver
      */
-    void displayResult( og::PathGeometric& path, const rviz_colors color, const intMatrix& cost )
+    void displayResult( og::PathGeometric& path, const rviz_colors color )
     {
         const std::vector<std::pair<double, double> > coordinates = convertSolutionToVector(path);
 
@@ -769,10 +773,10 @@ public:
             point_b.y = y2;
 
             // Add cost if available
-            if ( cost.size1() > 0 && cost.size2() > 0 )
+            if ( cost_->size1() > 0 && cost_->size2() > 0 )
             {
-                point_a.z = getCostHeight(point_a, cost);
-                point_b.z = getCostHeight(point_b, cost);
+                point_a.z = getCostHeight(point_a);
+                point_b.z = getCostHeight(point_b);
             }
 
             // Add the point pair to the line message
@@ -836,15 +840,14 @@ public:
     /**
      * \brief Display the start and goal states on the image map
      * \param start state
-     * \param goal state
-     * \param cost map
+     * \param color
      */
-    void showState(ob::ScopedState<> state, const intMatrix &cost, const rviz_colors &color)
+    void showState(ob::ScopedState<> state, const rviz_colors &color)
     {
         geometry_msgs::Point state_pt;
         state_pt.x = state[0];
         state_pt.y = state[1];
-        state_pt.z = getCostHeight(state_pt, cost);
+        state_pt.z = getCostHeight(state_pt);
 
         publishSphere(state_pt, color, 1.5);
     }
@@ -854,12 +857,12 @@ public:
      * \param state_area - the center point of the uniform sampler
      * \param distance - the radius around the center for sampling
      */
-    void displaySampleRegion(const ob::ScopedState<>& state_area, const double& distance, const intMatrix &cost)
+    void displaySampleRegion(const ob::ScopedState<>& state_area, const double& distance)
     {
         geometry_msgs::Point state_pt;
         state_pt.x = state_area[0];
         state_pt.y = state_area[1];
-        state_pt.z = getCostHeight(state_pt, cost);
+        state_pt.z = getCostHeight(state_pt);
 
         publishSphere(state_pt, BLACK, 1.5); // mid point
         publishSphere(state_pt, TRANSLUCENT, 2.1*distance); // outer sphere (x2 b/c its a radius, x0.1 to make it look nicer)

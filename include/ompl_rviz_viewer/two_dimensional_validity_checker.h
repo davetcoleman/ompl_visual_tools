@@ -68,13 +68,13 @@ int nat_round(double x)
 class TwoDimensionalValidityChecker : public ob::StateValidityChecker
 {
 private:
-    ompl_rviz_viewer::intMatrix cost_;
+    ompl_rviz_viewer::intMatrixPtr cost_;
     double max_threshold_;
 
 public:
 
     /** \brief Constructor */
-    TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, const bnu::matrix<int>& cost,
+    TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, ompl_rviz_viewer::intMatrixPtr cost,
         double max_threshold ) :
         StateValidityChecker(si)
     {
@@ -93,7 +93,7 @@ public:
         const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
 
         // Return the cost from the matrix at the current dimensions
-        double cost = cost_( nat_round(coords[1]), nat_round(coords[0]) );
+        double cost = (*cost_)( nat_round(coords[1]), nat_round(coords[0]) );
 
         return cost;
     }

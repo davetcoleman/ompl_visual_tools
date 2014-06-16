@@ -94,13 +94,13 @@ public:
         const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
 
         // Return the cost from the matrix at the current dimensions
-        double cost = cost_( nat_round(coords[1]), nat_round(coords[0]) );
+        double cost = (*cost_)( nat_round(coords[1]), nat_round(coords[0]) );
 
         return Cost(cost);
     }
 
     /** \brief Passed in a cost matrix loaded from an image file, etc */
-    void setCostMatrix(ompl_rviz_viewer::intMatrix cost)
+    void setCostMatrix(ompl_rviz_viewer::intMatrixPtr cost)
     {
         cost_ = cost;
     };
@@ -137,7 +137,7 @@ public:
         ROS_INFO_STREAM( "Map Height: " << image_->y << " Map Width: " << image_->x );
 
         // Create an array of ints that represent the cost of every pixel
-        cost_.resize( image_->x, image_->y );
+        cost_->resize( image_->x, image_->y );
 
         // Generate the cost map
         createCostMap();
@@ -166,16 +166,16 @@ public:
         for( size_t i = 0; i < image_->getSize(); ++i )
         {
             // Calculate cost
-            cost_.data()[i]  = ( image_->data[ i ].red - min_pixel_ ) / scale;
+            cost_->data()[i]  = ( image_->data[ i ].red - min_pixel_ ) / scale;
 
             // Prevent cost from being zero
-            if( !cost_.data()[i] )
-                cost_.data()[i] = 1;
+            if( !cost_->data()[i] )
+                cost_->data()[i] = 1;
 
             // Color different if it is an obstacle
-            if( cost_.data()[i] > max_cost_threshold_ || cost_.data()[i] <= 1)
+            if( cost_->data()[i] > max_cost_threshold_ || cost_->data()[i] <= 1)
             {
-                //std::cout << "cost is " <<  cost_.data()[i] << " threshold is " <<  max_cost_threshold_ << std::endl;
+                //std::cout << "cost is " <<  cost_->data()[i] << " threshold is " <<  max_cost_threshold_ << std::endl;
 
                 image_->data[ i ].red = 255; //image_->data[ i ].red;
                 image_->data[ i ].green = image_->data[ i ].green;
@@ -210,7 +210,7 @@ public:
     ompl_rviz_viewer::PPMImage *image_;
 
     // The cost for each x,y - which is derived from the RGB data
-    ompl_rviz_viewer::intMatrix cost_;
+    ompl_rviz_viewer::intMatrixPtr cost_;
 
     // The cost at which it becomes an obstacle
     double max_cost_threshold_;

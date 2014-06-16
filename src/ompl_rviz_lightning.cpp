@@ -105,9 +105,10 @@ public:
         lightning_setup_ = ot::LightningPtr( new ot::Lightning(space_) );
 
         // Set the planning from scratch planner
-        og::TRRT *trrt = new og::TRRT( lightning_setup_->getSpaceInformation() );
-        //og::RRT *trrt = new og::RRT( lightning_setup_->getSpaceInformation() );
-        lightning_setup_->setPlanner(ob::PlannerPtr(trrt));
+        lightning_setup_->setPlanner(ob::PlannerPtr(new og::TRRT( lightning_setup_->getSpaceInformation() )));
+
+        // Set the repair planner
+        lightning_setup_->setRepairPlanner(ob::PlannerPtr( new og::TRRT( lightning_setup_->getSpaceInformation() ) ) );
 
         // Load the cost map
         cost_map_.reset(new ompl::base::CostMap2DOptimizationObjective( lightning_setup_->getSpaceInformation() ));
@@ -143,8 +144,11 @@ public:
         bounds.setHigh( 1, cost_map_->image_->y - 1 ); // allow for non-square images
         space_->as<ob::RealVectorStateSpace>()->setBounds( bounds );
 
+        // Pass cost to viewer
+        viewer_->setCostMap(cost_map_->cost_);
+
         // Render the map ---------------------------------------------------
-        viewer_->displayTriangles(cost_map_->image_, cost_map_->cost_);
+        viewer_->displayTriangles(cost_map_->image_);
     }
 
     bool plan(bool use_recall, int run_id, int runs)
@@ -173,8 +177,8 @@ public:
         chooseStartGoal(start, goal);
 
         // Visualize on map
-        viewer_->showState(start, cost_map_->cost_, GREEN);
-        viewer_->showState(goal,  cost_map_->cost_, RED);
+        viewer_->showState(start, GREEN);
+        viewer_->showState(goal,  RED);
 
         // set the start and goal states
         lightning_setup_->setStartAndGoalStates(start, goal);
@@ -277,8 +281,8 @@ public:
             findValidState(goal.get(), goal_area.get(), distance);
 
             // Show the new sampled points
-            viewer_->displaySampleRegion(start_area, distance, cost_map_->cost_);
-            viewer_->displaySampleRegion(goal_area, distance, cost_map_->cost_);
+            //viewer_->displaySampleRegion(start_area, distance);
+            //viewer_->displaySampleRegion(goal_area, distance);
         }
     }
 
@@ -303,7 +307,6 @@ public:
 
     /**
      * \brief Show the planner data in Rviz
-     * \param planner_data
      * \param just_path - if true, do not display the search tree/graph or the samples
      */
     void displayPlannerData(bool just_path)
@@ -313,20 +316,20 @@ public:
         lightning_setup_->getPlannerData( *planner_data );
 
         // Optionally display the search tree/graph or the samples
-        if (!just_path)
+        if (!just_path && false)
         {
             // Visualize the explored space ---------------------------------------
-            viewer_->displayGraph(cost_map_->cost_, planner_data);
+            viewer_->displayGraph(planner_data);
 
             // Visualize the sample locations -----------------------------------
-            viewer_->displaySamples(cost_map_->cost_, planner_data);
+            viewer_->displaySamples(planner_data);
         }
 
         // Show basic solution ----------------------------------------
         if( false )
         {
             // Visualize the chosen path
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), RED, cost_map_->cost_ );
+            viewer_->displayResult( lightning_setup_->getSolutionPath(), RED);
         }
 
         // Interpolate -------------------------------------------------------
@@ -335,7 +338,7 @@ public:
             lightning_setup_->getSolutionPath().interpolate();
 
             // Visualize the chosen path
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), GREEN, cost_map_->cost_ );
+            viewer_->displayResult( lightning_setup_->getSolutionPath(), GREEN);
         }
 
         // Simplify solution ------------------------------------------------------
@@ -344,7 +347,15 @@ public:
             lightning_setup_->simplifySolution();
 
             // Visualize the chosen path
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), GREEN, cost_map_->cost_ );
+            viewer_->displayResult( lightning_setup_->getSolutionPath(), GREEN );
+        }
+
+        // Show repair planner data
+        std::vector<ob::PlannerDataPtr> repairPlannerDatas;
+        lightning_setup_->getRepairPlannerDatas( repairPlannerDatas );
+        for (std::size_t i = 0; i < repairPlannerDatas.size(); ++i)
+        {
+            viewer_->displayGraph(repairPlannerDatas[i], RAND);
         }
     }
 
@@ -362,7 +373,7 @@ public:
         // Show all paths
         for (std::size_t i = 0; i < paths.size(); ++i)
         {
-            viewer_->displayResult( paths[i], RAND, cost_map_->cost_ );
+            viewer_->displayResult( paths[i], RAND);
         }
     }
 
