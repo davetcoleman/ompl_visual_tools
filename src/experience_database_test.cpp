@@ -98,7 +98,7 @@ public:
     experienceDB_->load(OMPL_STORAGE_PATH); // load from file
 
     // Display all of the saved paths
-    std::vector<ompl::geometric::PathGeometric> paths;
+    std::vector<ob::PlannerDataPtr> paths;
     experienceDB_->getAllPaths(paths);
 
     ROS_INFO_STREAM_NAMED("experience_database_test","Number of paths: " << paths.size());
@@ -106,8 +106,7 @@ public:
     // Show all paths
     for (std::size_t i = 0; i < paths.size(); ++i)
     {        
-        viewer_->displayResult( paths[i], RAND);
-        //ROS_INFO_STREAM_NAMED("temp","Sleeping after path " << i);
+        viewer_->publishResult( paths[i], si_, RAND);
         ros::Duration(0.1).sleep();
     }
 

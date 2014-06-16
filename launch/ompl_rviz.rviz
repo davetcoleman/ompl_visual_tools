@@ -6,7 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /OMPL Rviz Viewer1
-      Splitter Ratio: 0.5
+        - /OMPL Rviz Viewer1/Namespaces1
+      Splitter Ratio: 0.784387
     Tree Height: 1286
   - Class: rviz/Help
     Name: Help
@@ -23,10 +24,15 @@ Visualization Manager:
       Marker Topic: /ompl_rviz_markers
       Name: OMPL Rviz Viewer
       Namespaces:
-        cost_map: true
-        result_path: true
-        sample_locations: true
-        space_exploration: true
+        chosen_path: false
+        cost_map: false
+        filtered_paths: false
+        final_solution: false
+        plan_from_scratch: true
+        repair_tree_0: true
+        repair_tree_1: true
+        sample_locations: false
+        sphere: false
       Queue Size: 10000
       Value: true
   Enabled: true
@@ -43,34 +49,34 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1553.13
+      Distance: 362.528
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 221.534
-        Y: 190.242
-        Z: -231.938
+        X: 87.4658
+        Y: 83.2906
+        Z: -96.4786
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.985398
+      Pitch: 0.759797
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.0704
+      Yaw: 4.4835
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: true
+    collapsed: false
   Height: 1524
   Help:
     collapsed: false
-  Hide Left Dock: true
+  Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000001b100000595fc0200000003fb000000100044006900730070006c006100790073000000004100000595000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff000005000000059500000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000010f00000595fc0200000003fb000000100044006900730070006c006100790073010000004100000595000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff000003eb0000059500000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1280
-  X: 1277
+  X: 1265
   Y: 24

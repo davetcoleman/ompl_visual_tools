@@ -50,6 +50,7 @@
 #include <ompl/tools/lightning/Lightning.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
+#include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/base/PlannerTerminationCondition.h>
 
 namespace ob = ompl::base;
@@ -105,10 +106,12 @@ public:
         lightning_setup_ = ot::LightningPtr( new ot::Lightning(space_) );
 
         // Set the planning from scratch planner
-        lightning_setup_->setPlanner(ob::PlannerPtr(new og::TRRT( lightning_setup_->getSpaceInformation() )));
+        lightning_setup_->setPlanner(ob::PlannerPtr(new og::RRTstar( lightning_setup_->getSpaceInformation() )));
 
         // Set the repair planner
-        lightning_setup_->setRepairPlanner(ob::PlannerPtr( new og::TRRT( lightning_setup_->getSpaceInformation() ) ) );
+        boost::shared_ptr<og::RRTstar> rrtstar( new og::RRTstar( lightning_setup_->getSpaceInformation() ) );
+        rrtstar->setGoalBias(0.5);
+        lightning_setup_->setRepairPlanner(ob::PlannerPtr( rrtstar ));
 
         // Load the cost map
         cost_map_.reset(new ompl::base::CostMap2DOptimizationObjective( lightning_setup_->getSpaceInformation() ));
@@ -121,6 +124,9 @@ public:
     {
     }
 
+    /**
+     * \brief Clear all markers displayed in Rviz
+     */
     void resetMarkers()
     {
         // Reset rviz markers cause we can
@@ -148,10 +154,18 @@ public:
         viewer_->setCostMap(cost_map_->cost_);
 
         // Render the map ---------------------------------------------------
-        viewer_->displayTriangles(cost_map_->image_);
+        viewer_->publishTriangles(cost_map_->image_);
     }
 
-    bool plan(bool use_recall, int run_id, int runs)
+    /**
+     * \brief Solve a planning proble that we randomly make up
+     * \param use_recall - use an expereince database or not
+     * \param use_scratch - plan from scratch or not
+     * \param run_id - which run this is
+     * \param runs - how many total runs we will do
+     * \return true on success
+     */
+    bool plan(bool use_recall, bool use_scratch, const int& run_id, const int& runs)
     {
         // Start and Goal State ---------------------------------------------
         ob::PlannerStatus solved;
@@ -176,9 +190,9 @@ public:
         ob::ScopedState<> goal(space_);
         chooseStartGoal(start, goal);
 
-        // Visualize on map
-        viewer_->showState(start, GREEN);
-        viewer_->showState(goal,  RED);
+        // Show start and goal
+        viewer_->publishState(start, GREEN, 4, "plan_start_goal");
+        viewer_->publishState(goal,  RED,   4, "plan_start_goal");
 
         // set the start and goal states
         lightning_setup_->setStartAndGoalStates(start, goal);
@@ -188,12 +202,14 @@ public:
         // Auto setup parameters (optional actually)
         lightning_setup_->setup();
         lightning_setup_->enableRecall(use_recall);
+        lightning_setup_->enableScratch(use_scratch);
 
-        //ROS_ERROR_STREAM_NAMED("temp","out of curiosity: coll check resolution: " << lightning_setup_->getSpaceInformation()->getStateValidityCheckingResolution());            
+        //ROS_ERROR_STREAM_NAMED("temp","out of curiosity: coll check resolution: "
+        //   << lightning_setup_->getSpaceInformation()->getStateValidityCheckingResolution());
 
         // The interval in which obstacles are checked for between states
         // seems that it default to 0.01 but doesn't do a good job at that level
-        lightning_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005); 
+        lightning_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
 
         // Debug - this call is optional, but we put it in to get more output information
         //lightning_setup_->print();
@@ -207,22 +223,22 @@ public:
         {
             if (!lightning_setup_->haveExactSolutionPath())
             {
-                ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found");
+                ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found from planner " << lightning_setup_->getSolutionPlannerName());
             }
             else
             {
-                ROS_DEBUG_STREAM_NAMED("plan","Exact solution found");
+                ROS_DEBUG_STREAM_NAMED("plan","Exact solution found from planner " << lightning_setup_->getSolutionPlannerName());
             }
 
             if (runs == 1)
             {
                 // display all the aspects of the solution
-                displayPlannerData(false);
+                publishPlannerData(false);
             }
             else
             {
                 // only display the paths
-                displayPlannerData(true);
+                publishPlannerData(true);
             }
         }
         else
@@ -257,12 +273,12 @@ public:
             ROS_INFO_STREAM_NAMED("temp","Sampling start and goal around two center points");
 
             ob::ScopedState<> start_area(space_);
-            start_area[0] = 45;
+            start_area[0] = 145;
             start_area[1] = 145;
 
             ob::ScopedState<> goal_area(space_);
-            goal_area[0] = 30;
-            goal_area[1] = 30;
+            goal_area[0] = 800;
+            goal_area[1] = 880;
 
             // Check these hard coded values against varying image sizes
             if (!space_->satisfiesBounds(start_area.get()) || !space_->satisfiesBounds(goal_area.get()))
@@ -277,18 +293,18 @@ public:
             double distance = maxExtent * 0.1;
             ROS_INFO_STREAM_NAMED("temp","Distance is " << distance << " from max extent " << maxExtent);
 
-            findValidState(start.get(), start_area.get(), distance); 
+            findValidState(start.get(), start_area.get(), distance);
             findValidState(goal.get(), goal_area.get(), distance);
 
             // Show the new sampled points
-            //viewer_->displaySampleRegion(start_area, distance);
-            //viewer_->displaySampleRegion(goal_area, distance);
+            viewer_->publishSampleRegion(start_area, distance);
+            viewer_->publishSampleRegion(goal_area, distance);
         }
     }
 
     void findValidState(ob::State *state, const ob::State *near, const double distance)
     {
-        // Create sampler        
+        // Create sampler
         ob::StateSamplerPtr sampler = lightning_setup_->getSpaceInformation()->allocStateSampler();
 
         while (true)
@@ -309,63 +325,95 @@ public:
      * \brief Show the planner data in Rviz
      * \param just_path - if true, do not display the search tree/graph or the samples
      */
-    void displayPlannerData(bool just_path)
+    void publishPlannerData(bool just_path)
     {
-        // Get information about the exploration data structure the motion planner used. Used later in visualizing
-        const ob::PlannerDataPtr planner_data( new ob::PlannerData( lightning_setup_->getSpaceInformation() ) );
-        lightning_setup_->getPlannerData( *planner_data );
+        // Final Solution  ----------------------------------------------------------------
 
-        // Optionally display the search tree/graph or the samples
-        if (!just_path && false)
+        if (true)
         {
-            // Visualize the explored space ---------------------------------------
-            viewer_->displayGraph(planner_data);
+            // Show basic solution
+            //viewer_->publishResult( lightning_setup_->getSolutionPath(), RED);
 
-            // Visualize the sample locations -----------------------------------
-            viewer_->displaySamples(planner_data);
-        }
+            // Simplify solution
+            //lightning_setup_->simplifySolution();
 
-        // Show basic solution ----------------------------------------
-        if( false )
-        {
-            // Visualize the chosen path
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), RED);
-        }
-
-        // Interpolate -------------------------------------------------------
-        if( true )
-        {
+            // Interpolate solution
             lightning_setup_->getSolutionPath().interpolate();
-
-            // Visualize the chosen path
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), GREEN);
+            viewer_->publishResult( lightning_setup_->getSolutionPath(), GREEN, 1.0, "final_solution");
         }
 
-        // Simplify solution ------------------------------------------------------
-        if( false )
+        // Print the states to screen -----------------------------------------------------
+        if (false)
         {
-            lightning_setup_->simplifySolution();
-
-            // Visualize the chosen path
-            viewer_->displayResult( lightning_setup_->getSolutionPath(), GREEN );
+            ROS_DEBUG_STREAM_NAMED("temp","showing path");
+            lightning_setup_->getSolutionPath().print(std::cout);
         }
 
-        // Show repair planner data
-        std::vector<ob::PlannerDataPtr> repairPlannerDatas;
-        lightning_setup_->getRepairPlannerDatas( repairPlannerDatas );
-        for (std::size_t i = 0; i < repairPlannerDatas.size(); ++i)
+        // Planning From Scratch -----------------------------------------------------------
+        if (true)
         {
-            viewer_->displayGraph(repairPlannerDatas[i], RAND);
+            // Get information about the exploration data structure the motion planner used in planning from scratch
+            const ob::PlannerDataPtr planner_data( new ob::PlannerData( lightning_setup_->getSpaceInformation() ) );
+            lightning_setup_->getPlannerData( *planner_data );
+
+            // Optionally display the search tree/graph or the samples
+            if (!just_path)
+            {
+                // Visualize the explored space
+                viewer_->publishGraph(planner_data, ORANGE, 0.2, "plan_from_scratch");
+
+                // Visualize the sample locations
+                //viewer_->publishSamples(planner_data);
+            }
+        }
+
+        // Retrieve Planner - show filtered paths ------------------------------------------------
+        if (true)
+        {
+            std::vector<ob::PlannerDataPtr> recallPlannerDatas;
+            std::size_t chosenID;
+            lightning_setup_->getRetrieveRepairPlanner().getRecalledPlannerDatas( recallPlannerDatas, chosenID);
+            for (std::size_t i = 0; i < recallPlannerDatas.size(); ++i)
+            {
+                //ROS_DEBUG_STREAM_NAMED("temp","Displaying planner data " << i << " and chosen ID was " << chosenID);
+                
+                // Make the chosen path a different color and thickness
+                rviz_colors color = BLACK;
+                double thickness = 0.2;
+                std::string ns = "repair_filtered_paths";
+                if (chosenID == i)
+                {
+                    color = RED;
+                    thickness = 0.6;
+                    ns = "repair_chosen_path";
+                }
+
+                viewer_->publishResult(recallPlannerDatas[i], lightning_setup_->getSpaceInformation(), color, thickness, ns);
+            }
+        }
+
+        // Repair Planner - search trees of repair solvers ------------------------------------------------
+        if (true)
+        {
+            std::vector<ob::PlannerDataPtr> repairPlannerDatas;
+            lightning_setup_->getRetrieveRepairPlanner().getRepairPlannerDatas( repairPlannerDatas );
+            for (std::size_t i = 0; i < repairPlannerDatas.size(); ++i)
+            {
+                ROS_DEBUG_STREAM_NAMED("temp","Displaying planner data " << i);
+                viewer_->publishGraph(repairPlannerDatas[i], RAND, 0.2, std::string("repair_tree_"+boost::lexical_cast<std::string>(i)));
+
+                viewer_->publishStartGoalSpheres(repairPlannerDatas[i], std::string("repair_tree_"+boost::lexical_cast<std::string>(i)));
+            }
         }
     }
 
     /**
      * \brief Dump the entire database contents to Rviz
      */
-    void displayDatabase()
+    void publishDatabase()
     {
         // Display all of the saved paths
-        std::vector<ompl::geometric::PathGeometric> paths;
+        std::vector<ob::PlannerDataPtr> paths;
         lightning_setup_->getAllPaths(paths);
 
         ROS_INFO_STREAM_NAMED("experience_database_test","Number of paths: " << paths.size());
@@ -373,16 +421,16 @@ public:
         // Show all paths
         for (std::size_t i = 0; i < paths.size(); ++i)
         {
-            viewer_->displayResult( paths[i], RAND);
+            viewer_->publishResult( paths[i], lightning_setup_->getSpaceInformation(), RAND );
         }
     }
 
-    /** \brief Allow access to lightning framework */       
+    /** \brief Allow access to lightning framework */
     ot::LightningPtr getLightning()
     {
         return lightning_setup_;
     }
-    
+
 
 }; // end of class
 
@@ -410,6 +458,7 @@ int main( int argc, char** argv )
     bool verbose = false;
     bool display_database = false;
     bool use_recall = true;
+    bool use_scratch = true;
     std::string image_path;
     int runs = 1;
 
@@ -420,7 +469,8 @@ int main( int argc, char** argv )
             // Help mode
             if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
             {
-                ROS_INFO_STREAM_NAMED("main","Usage: " << argv[0] << " --verbose --noRecall --image [image_file] --runs [num plans] --displayDatabase");
+                ROS_INFO_STREAM_NAMED("main","Usage: " << argv[0] 
+                    << " --verbose --noRecall --noScratch --image [image_file] --runs [num plans] --displayDatabase -h");
                 return 0;
             }
 
@@ -443,6 +493,13 @@ int main( int argc, char** argv )
             {
                 ROS_INFO_STREAM_NAMED("main","NOT using recall for planning");
                 use_recall = false;
+            }
+
+            // Check if we should ignore the plan from scratch mechanism
+            if (strcmp(argv[i], "--noScratch") == 0)
+            {
+                ROS_INFO_STREAM_NAMED("main","NOT using planning from scratch");
+                use_scratch = false;
             }
 
             // Check if user has passed in an image to read
@@ -507,7 +564,7 @@ int main( int argc, char** argv )
     // Display Contents of database if desires
     if (display_database)
     {
-        planner.displayDatabase();
+        planner.publishDatabase();
         return 0;
     }
 
@@ -523,7 +580,7 @@ int main( int argc, char** argv )
         ROS_INFO_STREAM_NAMED("plan","Planning #" << i << " out of " << runs << " ------------------------------------");
 
         // Allow variable cost threshold (changing obstacle size)
-        if (true)
+        if (false)
         {
             planner.loadCostMapImage( image_path, fRand(0.2,0.5) );
             // Display before planning
@@ -531,11 +588,16 @@ int main( int argc, char** argv )
         }
 
         // Run the planner
-        planner.plan( use_recall, i, runs );
-        
-        ros::spinOnce();
-        ros::Duration(3.0).sleep();
+        planner.plan( use_recall, use_scratch, i, runs );
 
+        // Let publisher publish
+        ros::spinOnce();
+
+        // Create a pause if we are doing more runs and this is not the last run
+        if (runs > 1 && i < runs - 1)
+            ros::Duration(3.0).sleep();
+
+        // Reset marker if this is not our last run
         if (i < runs - 1)
             planner.resetMarkers();
     }

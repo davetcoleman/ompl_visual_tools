@@ -67,26 +67,34 @@ class CostMap2DOptimizationObjective : public OptimizationObjective
 {
 public:
     /** \brief Constructor */
-    CostMap2DOptimizationObjective(const SpaceInformationPtr &si)
+    CostMap2DOptimizationObjective(const SpaceInformationPtr &si, double pathLengthWeight = 0.0001)
         : OptimizationObjective(si),
           max_cost_threshold_percent_(0.4),
-          image_(NULL)
+          image_(NULL),
+          pathLengthWeight_(pathLengthWeight)
     {
         description_ = "Cost Map";
+
+        cost_.reset(new ompl_rviz_viewer::intMatrix());
     };
 
-    /** \brief Deconstructor */     
+    /** \brief Deconstructor */
     ~CostMap2DOptimizationObjective()
     {
         delete image_;
     };
+
+    double getPathLengthWeight() const
+    {
+        return pathLengthWeight_;
+    }
 
     /** \brief Defines motion cost */
     virtual Cost motionCost(const State *s1, const State *s2) const
     {
         // Only accrue positive changes in cost
         double positiveCostAccrued = std::max(stateCost(s2).v - stateCost(s1).v, 0.0);
-        return Cost(positiveCostAccrued);
+        return Cost(positiveCostAccrued + pathLengthWeight_*si_->distance(s1,s2));
     };
 
     ompl::base::Cost stateCost(const State *state) const
@@ -94,7 +102,7 @@ public:
         const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
 
         // Return the cost from the matrix at the current dimensions
-        double cost = (*cost_)( nat_round(coords[1]), nat_round(coords[0]) );
+        double cost = (*cost_)( natRound(coords[1]), natRound(coords[0]) );
 
         return Cost(cost);
     }
@@ -105,12 +113,12 @@ public:
         cost_ = cost;
     };
 
-      /**
-       * \brief Nat_Rounding helper function to make readings from cost map more accurate
-       * \param double
-       * \return rounded down number
-       */
-    int nat_round(double x) const
+    /**
+     * \brief NatRounding helper function to make readings from cost map more accurate
+     * \param double
+     * \return rounded down number
+     */
+    int natRound(double x) const
     {
         return static_cast<int>(floor(x + 0.5f));
     };
@@ -152,7 +160,7 @@ public:
         getMinMaxPixels();
 
         // This factor is the author's visual preference for scaling a cost map in Rviz
-        const double artistic_scale = 4.0; // smaller is taller
+        const double artistic_scale = 6.0; // smaller is taller
 
         const double pixel_diff = max_pixel_ - min_pixel_;
 
@@ -219,6 +227,9 @@ public:
     double max_cost_threshold_percent_;
 
 protected:
+
+    /** \brief The weighing factor for the path length in the mechanical work objective formulation. */
+    double pathLengthWeight_;
 
     // Remember the min and max cost from the image
     int max_pixel_;

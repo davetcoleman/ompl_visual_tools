@@ -303,7 +303,7 @@ public:
     /**
      * \brief Visualize Results
      */
-    void displayTriangles(PPMImage *image)
+    void publishTriangles(PPMImage *image)
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -387,7 +387,7 @@ public:
     // Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
     // *********************************************************************************************************
     void interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker,
-        const rviz_colors& color )
+        const std_msgs::ColorRGBA color )
     {
         // Copy to non-const
         geometry_msgs::Point point_a = p1;
@@ -415,8 +415,8 @@ public:
             // Add the point pair to the line message
             marker->points.push_back( point_a );
             marker->points.push_back( point_b );
-            marker->colors.push_back( getColor( color ) );
-            marker->colors.push_back( getColor( color ) );
+            marker->colors.push_back( color );
+            marker->colors.push_back( color );
 
             // Show start and end point
             publishSphere(point_a, GREEN);
@@ -454,8 +454,8 @@ public:
             marker->points.push_back( temp_a );
             marker->points.push_back( temp_b );
             // Add colors
-            marker->colors.push_back( getColor( color ) );
-            marker->colors.push_back( getColor( color ) );
+            marker->colors.push_back( color );
+            marker->colors.push_back( color );
 
             // Remember the last coordiante for next iteration
             temp_a = temp_b;
@@ -465,15 +465,34 @@ public:
         marker->points.push_back( temp_a );
         marker->points.push_back( point_b );
         // Add colors
-        marker->colors.push_back( getColor( color )  );
-        marker->colors.push_back( getColor( color ) );
+        marker->colors.push_back( color );
+        marker->colors.push_back( color );
 
+    }
+
+    // *********************************************************************************************************
+    // Display Start Goal
+    // *********************************************************************************************************
+    void publishStartGoalSpheres(ob::PlannerDataPtr planner_data, const std::string& ns)
+    {
+        ROS_ERROR_STREAM_NAMED("temp","publishStartGoalSpheres");
+        for (std::size_t i = 0; i < planner_data->numStartVertices(); ++i)
+        {
+            ROS_DEBUG_STREAM_NAMED("temp","start");
+            publishSphere( getCoordinates( planner_data->getStartVertex(i).getState() ), GREEN, 3.0, ns);
+        }
+        for (std::size_t i = 0; i < planner_data->numGoalVertices(); ++i)
+        {
+            ROS_DEBUG_STREAM_NAMED("temp","goal");
+            publishSphere( getCoordinates( planner_data->getGoalVertex(i).getState() ), RED, 3.0, ns );
+        }
     }
 
     // *********************************************************************************************************
     // Display Explored Space
     // *********************************************************************************************************
-    void displayGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color = BLUE)
+    void publishGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color = BLUE, const double thickness = 0.2, 
+        const std::string& ns = "space_exploration")
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -481,7 +500,7 @@ public:
         marker.header.stamp = ros::Time();
 
         // Set the namespace and id for this marker.  This serves to create a unique ID
-        marker.ns = "space_exploration";
+        marker.ns = ns;
 
         // Set the marker type.
         marker.type = visualization_msgs::Marker::LINE_LIST;
@@ -499,7 +518,7 @@ public:
         marker.pose.orientation.z = 0.0;
         marker.pose.orientation.w = 1.0;
 
-        marker.scale.x = 0.2;
+        marker.scale.x = thickness;
         marker.scale.y = 1.0;
         marker.scale.z = 1.0;
 
@@ -528,7 +547,7 @@ public:
                 // Convert vertex id to next coordinates
                 next_vertex = getCoordinates( *edge_it, planner_data );
 
-                interpolateLine( this_vertex, next_vertex, &marker, BLUE);
+                interpolateLine( this_vertex, next_vertex, &marker, marker.color );
             }
 
         }
@@ -540,7 +559,7 @@ public:
     // *********************************************************************************************************
     // Display Sample Points
     // *********************************************************************************************************
-    void displaySamples(ob::PlannerDataPtr planner_data)
+    void publishSamples(ob::PlannerDataPtr planner_data)
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.
@@ -600,7 +619,7 @@ public:
     // *********************************************************************************************************
     // Display States
     // *********************************************************************************************************
-    void displayStates(std::vector<const ompl::base::State*> states)
+    void publishStates(std::vector<const ompl::base::State*> states)
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.
@@ -656,14 +675,14 @@ public:
         markerPublisher(marker);
     }
 
-    void publishSphere(const geometry_msgs::Point &point, const rviz_colors color, double scale = 0.3)
+    void publishSphere(const geometry_msgs::Point &point, const rviz_colors color, double scale = 0.3, const std::string& ns = "sphere")
     {
         visualization_msgs::Marker sphere_marker;
 
         sphere_marker.header.frame_id = BASE_FRAME;
 
         // Set the namespace and id for this marker.  This serves to create a unique ID
-        sphere_marker.ns = "sphere";
+        sphere_marker.ns = ns;
         // Set the marker type.
         sphere_marker.type = visualization_msgs::Marker::SPHERE_LIST;
         // Set the marker action.  Options are ADD and DELETE
@@ -701,11 +720,29 @@ public:
         markerPublisher(sphere_marker);
     }
 
+    /**
+     * \brief Display result path from a solver, in the form of a plannerData 
+     * where the list of states is also the order of the path
+     */
+    void publishResult( ob::PlannerDataPtr& plannerData, ob::SpaceInformationPtr si, const rviz_colors color, 
+        const double thickness = 0.4, const std::string& ns = "result_path"  )
+    {
+        og::PathGeometric path(si);
+
+        // Convert the planner data verticies into a vector of states
+        for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
+        {
+            path.append(plannerData->getVertex(i).getState());
+        }
+        path.interpolate();
+
+        publishResult(path, color, thickness, ns);
+    }
 
     /**
      * \brief Display result path from a solver
      */
-    void displayResult( og::PathGeometric& path, const rviz_colors color )
+    void publishResult( og::PathGeometric& path, const rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" )
     {
         const std::vector<std::pair<double, double> > coordinates = convertSolutionToVector(path);
 
@@ -715,7 +752,7 @@ public:
         marker.header.stamp = ros::Time();
 
         // Set the namespace and id for this marker.  This serves to create a unique ID
-        marker.ns = "result_path";
+        marker.ns = ns;
 
         std_msgs::ColorRGBA this_color = getColor( color );
 
@@ -738,7 +775,7 @@ public:
         marker.pose.orientation.z = 0.0;
         marker.pose.orientation.w = 1.0;
 
-        marker.scale.x = 0.4;
+        marker.scale.x = thickness;
         marker.scale.y = 1.0;
         marker.scale.z = 1.0;
 
@@ -827,7 +864,7 @@ public:
         geometry_msgs::Point point;
         point.x = real_state->values[0];
         point.y = real_state->values[1];
-        point.z = 0; // dummy value
+        point.z = getCostHeight(point);
         return point;
     }
 
@@ -842,14 +879,16 @@ public:
      * \param start state
      * \param color
      */
-    void showState(ob::ScopedState<> state, const rviz_colors &color)
+    void publishState(ob::ScopedState<> state, const rviz_colors &color, double thickness = 1.5, const std::string& ns = "state_sphere")
     {
+        // TODO merge this with getCoordinates?
+
         geometry_msgs::Point state_pt;
         state_pt.x = state[0];
         state_pt.y = state[1];
         state_pt.z = getCostHeight(state_pt);
 
-        publishSphere(state_pt, color, 1.5);
+        publishSphere(state_pt, color, thickness, ns);
     }
 
     /**
@@ -857,15 +896,16 @@ public:
      * \param state_area - the center point of the uniform sampler
      * \param distance - the radius around the center for sampling
      */
-    void displaySampleRegion(const ob::ScopedState<>& state_area, const double& distance)
+    void publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance)
     {
         geometry_msgs::Point state_pt;
         state_pt.x = state_area[0];
         state_pt.y = state_area[1];
         state_pt.z = getCostHeight(state_pt);
 
-        publishSphere(state_pt, BLACK, 1.5); // mid point
-        publishSphere(state_pt, TRANSLUCENT, 2.1*distance); // outer sphere (x2 b/c its a radius, x0.1 to make it look nicer)
+        publishSphere(state_pt, BLACK, 1.5, "sample_region"); // mid point
+        // outer sphere (x2 b/c its a radius, x0.1 to make it look nicer)
+        publishSphere(state_pt, TRANSLUCENT, 2.1*distance, "sample_region"); 
     }
 
     std_msgs::ColorRGBA getColor(const rviz_colors &color)
