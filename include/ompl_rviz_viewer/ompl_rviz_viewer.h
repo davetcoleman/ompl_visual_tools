@@ -556,10 +556,23 @@ public:
         markerPublisher(marker);
     }
 
+    void publishSamples(const ob::PlannerDataPtr& plannerData, ob::SpaceInformationPtr si)
+    {
+        og::PathGeometric path(si);
+        convertPlannerData(plannerData, path);
+
+        std::size_t beforeInterpolateCount = path.getStateCount();
+        path.interpolate();
+        //ROS_INFO_STREAM_NAMED("publishResult","Interpolation of path increased states count from " 
+        //    << beforeInterpolateCount << " to " << path.getStateCount());
+
+        publishSamples(path);
+    }
+
     // *********************************************************************************************************
     // Display Sample Points
     // *********************************************************************************************************
-    void publishSamples(ob::PlannerDataPtr planner_data)
+    void publishSamples( og::PathGeometric& path )
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.
@@ -574,7 +587,9 @@ public:
 
         // Set the marker action.  Options are ADD and DELETE
         marker.action = visualization_msgs::Marker::ADD;
-        marker.id = 0;
+
+        static std::size_t id = 0;
+        marker.id = ++id;
 
         marker.pose.position.x = 0.0;
         marker.pose.position.y = 0.0;
@@ -597,15 +612,11 @@ public:
         // Point
         geometry_msgs::Point point_a;
 
-        if (verbose_)
-            ROS_INFO("Publishing Spheres");
-
         // Loop through all verticies
-        for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
+        for (std::size_t i = 0; i < path.getStateCount(); ++i)
         {
-            // First point
-            point_a = getCoordinates( vertex_id, planner_data );
-            point_a.z = getCostHeight(point_a);
+            point_a = getCoordinates( path.getState(i) );
+            point_a.z = getCostHeight( point_a );
 
             // Add the point pair to the line message
             marker.points.push_back( point_a );
@@ -614,6 +625,20 @@ public:
 
         // Publish the marker
         markerPublisher(marker);
+    }
+
+    /**
+     * \brief Convert PlannerData to PathGeometric. Assume ordering of verticies is order of path
+     * \param PlannerData
+     * \param PathGeometric
+     */
+    void convertPlannerData(const ob::PlannerDataPtr plannerData, og::PathGeometric &path)
+    {
+        // Convert the planner data verticies into a vector of states
+        for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
+        {
+            path.append(plannerData->getVertex(i).getState());
+        }        
     }
 
     // *********************************************************************************************************
@@ -699,8 +724,6 @@ public:
         // Add the point pair to the line message
         sphere_marker.points.push_back( point );
         sphere_marker.colors.push_back( getColor(color) );
-        // Lifetime
-        //sphere_marker.lifetime = ros
 
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
         sphere_marker.header.stamp = ros::Time::now();
@@ -728,13 +751,12 @@ public:
         const double thickness = 0.4, const std::string& ns = "result_path"  )
     {
         og::PathGeometric path(si);
+        convertPlannerData(plannerData, path);
 
-        // Convert the planner data verticies into a vector of states
-        for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
-        {
-            path.append(plannerData->getVertex(i).getState());
-        }
+        std::size_t beforeInterpolateCount = path.getStateCount();
         path.interpolate();
+        //ROS_INFO_STREAM_NAMED("publishResult","Interpolation of path increased states count from " 
+        //    << beforeInterpolateCount << " to " << path.getStateCount());
 
         publishResult(path, color, thickness, ns);
     }
@@ -908,6 +930,29 @@ public:
         publishSphere(state_pt, TRANSLUCENT, 2.1*distance, "sample_region"); 
     }
 
+    bool publishText(const geometry_msgs::Pose &pose, const std::string &text, const rviz_colors &color)
+    {
+        visualization_msgs::Marker text_marker;
+        text_marker.header.frame_id = BASE_FRAME;
+        // Set the namespace and id for this marker.  This serves to create a unique ID
+        text_marker.ns = "text";
+        // Set the marker action.  Options are ADD and DELETE
+        text_marker.action = visualization_msgs::Marker::ADD;
+        // Set the marker type.
+        text_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+
+        text_marker.id = 0;
+
+        text_marker.header.stamp = ros::Time::now();
+        text_marker.text = text;
+        text_marker.pose = pose;
+        text_marker.color = getColor( color );
+        text_marker.scale.z = ceil(cost_->size1() / 20.0);    // only z is required (size of an "A")
+
+        markerPublisher( text_marker );
+
+        return true;
+    }
     std_msgs::ColorRGBA getColor(const rviz_colors &color)
     {
         std_msgs::ColorRGBA result;

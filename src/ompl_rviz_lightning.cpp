@@ -86,13 +86,17 @@ private:
     // Flag for determining amount of debug output to show
     bool verbose_;
 
+    // Display graphics in Rviz
+    bool use_visuals_;
+
 public:
 
     /**
      * \brief Constructor
      */
-    OmplRvizLightning(bool verbose)
-        : verbose_(verbose)
+    OmplRvizLightning(bool verbose, bool use_visuals)
+        : verbose_(verbose),
+          use_visuals_(use_visuals)
     {
         ROS_INFO_STREAM( "OMPL version: " << OMPL_VERSION );
 
@@ -109,8 +113,8 @@ public:
         lightning_setup_->setPlanner(ob::PlannerPtr(new og::RRTstar( lightning_setup_->getSpaceInformation() )));
 
         // Set the repair planner
-        boost::shared_ptr<og::RRTstar> rrtstar( new og::RRTstar( lightning_setup_->getSpaceInformation() ) );
-        rrtstar->setGoalBias(0.5);
+        boost::shared_ptr<og::RRT> rrtstar( new og::RRT( lightning_setup_->getSpaceInformation() ) );
+        rrtstar->setGoalBias(0.2);
         lightning_setup_->setRepairPlanner(ob::PlannerPtr( rrtstar ));
 
         // Load the cost map
@@ -149,12 +153,19 @@ public:
         bounds.setHigh( 0, cost_map_->image_->x - 1 ); // allow for non-square images
         bounds.setHigh( 1, cost_map_->image_->y - 1 ); // allow for non-square images
         space_->as<ob::RealVectorStateSpace>()->setBounds( bounds );
+        space_->setup();
 
         // Pass cost to viewer
         viewer_->setCostMap(cost_map_->cost_);
 
-        // Render the map ---------------------------------------------------
-        viewer_->publishTriangles(cost_map_->image_);
+        // Render the map
+        publishCostMapImage();
+    }
+
+    void publishCostMapImage()
+    {
+        if (use_visuals_)
+            viewer_->publishTriangles(cost_map_->image_);
     }
 
     /**
@@ -183,7 +194,8 @@ public:
         lightning_setup_->setOptimizationObjective(cost_map_);
 
         // Create the termination condition
-        ob::PlannerTerminationCondition ptc = ob::timedPlannerTerminationCondition( 10.0, 0.1 );
+        double seconds = 1;
+        ob::PlannerTerminationCondition ptc = ob::timedPlannerTerminationCondition( seconds, 0.1 );
 
         // Create start and goal space
         ob::ScopedState<> start(space_);
@@ -191,8 +203,11 @@ public:
         chooseStartGoal(start, goal);
 
         // Show start and goal
-        viewer_->publishState(start, GREEN, 4, "plan_start_goal");
-        viewer_->publishState(goal,  RED,   4, "plan_start_goal");
+        if (use_visuals_)
+        {
+            viewer_->publishState(start, GREEN, 4, "plan_start_goal");
+            viewer_->publishState(goal,  RED,   4, "plan_start_goal");
+        }
 
         // set the start and goal states
         lightning_setup_->setStartAndGoalStates(start, goal);
@@ -221,24 +236,36 @@ public:
 
         if (solved)
         {
+            geometry_msgs::Pose pose;
+            pose.position.x = cost_map_->cost_->size1()/2.0;
+            pose.position.y = cost_map_->cost_->size1()/-10.0;
+            pose.position.z = cost_map_->cost_->size1()/10.0;
+
             if (!lightning_setup_->haveExactSolutionPath())
             {
                 ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found from planner " << lightning_setup_->getSolutionPlannerName());
+                if (use_visuals_)
+                    viewer_->publishText(pose, "APPROXIMATE solution found from planner " + lightning_setup_->getSolutionPlannerName(), BLACK);
             }
             else
             {
                 ROS_DEBUG_STREAM_NAMED("plan","Exact solution found from planner " << lightning_setup_->getSolutionPlannerName());
+                if (use_visuals_)
+                    viewer_->publishText(pose, "Exact solution found from planner " + lightning_setup_->getSolutionPlannerName(), BLACK);
             }
 
-            if (runs == 1)
+            if (use_visuals_)
             {
-                // display all the aspects of the solution
-                publishPlannerData(false);
-            }
-            else
-            {
-                // only display the paths
-                publishPlannerData(true);
+                if (runs == 1)
+                {
+                    // display all the aspects of the solution
+                    publishPlannerData(false);
+                }
+                else
+                {
+                    // only display the paths
+                    publishPlannerData(false);
+                }
             }
         }
         else
@@ -256,17 +283,19 @@ public:
 
     void chooseStartGoal(ob::ScopedState<>& start, ob::ScopedState<>& goal)
     {
-        if( false ) // choose completely random state
+        if( true ) // choose completely random state
         {
-            start.random();
-            goal.random();
+            findValidState(start);
+            findValidState(goal);
         }
-        else if (false) // Manually set the start location
+        else if (true) // Manually set the start location
         {
-            start[0] = 95;
-            start[1] = 10;
-            goal[0] = 40;
-            goal[1] = 300;
+            // Plan from scrach location
+            start[0] = 5;  start[1] = 5;
+            goal[0] = 5;  goal[1] = 45;
+            // Recall location
+            start[0] = 45;  start[1] = 5;
+            goal[0] = 45;  goal[1] = 45;
         }
         else // Randomly sample around two states
         {
@@ -293,13 +322,43 @@ public:
             double distance = maxExtent * 0.1;
             ROS_INFO_STREAM_NAMED("temp","Distance is " << distance << " from max extent " << maxExtent);
 
-            findValidState(start.get(), start_area.get(), distance);
-            findValidState(goal.get(), goal_area.get(), distance);
+            // Publish the same points
+            if (false)
+            {
+                findValidState(start.get(), start_area.get(), distance);
+                findValidState(goal.get(), goal_area.get(), distance);
+            }
+            else
+            {
+                //                start[0] = 277.33;  start[1] = 168.491;
+                //                 goal[0] = 843.296;  goal[1] = 854.184;
+            }
 
-            // Show the new sampled points
+            // Show the sample regions
             viewer_->publishSampleRegion(start_area, distance);
             viewer_->publishSampleRegion(goal_area, distance);
         }
+
+        // Print the start and goal
+        std::cout << "Start " << start;
+        std::cout << "Goal "  << goal;
+    }
+
+    void findValidState(ob::ScopedState<>& state)
+    {
+        std::size_t rounds = 0;
+        while (rounds < 100)
+        {
+            state.random();
+
+            // Check if the sampled points are valid
+            if( lightning_setup_->getSpaceInformation()->isValid(state.get()) )
+            {
+                return;
+            }
+            ++rounds;
+        }
+        ROS_ERROR_STREAM_NAMED("findValidState","Unable to find valid start/goal state after " << rounds << " rounds");
     }
 
     void findValidState(ob::State *state, const ob::State *near, const double distance)
@@ -459,6 +518,7 @@ int main( int argc, char** argv )
     bool display_database = false;
     bool use_recall = true;
     bool use_scratch = true;
+    bool use_visuals = true;
     std::string image_path;
     int runs = 1;
 
@@ -470,7 +530,7 @@ int main( int argc, char** argv )
             if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
             {
                 ROS_INFO_STREAM_NAMED("main","Usage: " << argv[0] 
-                    << " --verbose --noRecall --noScratch --image [image_file] --runs [num plans] --displayDatabase -h");
+                    << " --verbose --noRecall --noScratch --noVisuals --image [image_file] --runs [num plans] --displayDatabase -h");
                 return 0;
             }
 
@@ -500,6 +560,13 @@ int main( int argc, char** argv )
             {
                 ROS_INFO_STREAM_NAMED("main","NOT using planning from scratch");
                 use_scratch = false;
+            }
+
+            // Check if we should publish markers
+            if (strcmp(argv[i], "--noVisuals") == 0)
+            {
+                ROS_INFO_STREAM_NAMED("main","NOT displaying graphics");
+                use_visuals = false;
             }
 
             // Check if user has passed in an image to read
@@ -551,7 +618,7 @@ int main( int argc, char** argv )
     }
 
     // Create the planner
-    ompl_rviz_viewer::OmplRvizLightning planner(verbose);
+    ompl_rviz_viewer::OmplRvizLightning planner(verbose, use_visuals);
     ROS_DEBUG_STREAM_NAMED("main","Loaded " << planner.getLightning()->getExperiencesCount() << " experiences from file");
 
     // Clear Rviz
@@ -559,7 +626,7 @@ int main( int argc, char** argv )
 
     // Load an image
     ROS_INFO_STREAM_NAMED("main","Loading image " << image_path);
-    planner.loadCostMapImage( image_path );
+    planner.loadCostMapImage( image_path, 0.4 );
 
     // Display Contents of database if desires
     if (display_database)
@@ -579,10 +646,11 @@ int main( int argc, char** argv )
         }
         ROS_INFO_STREAM_NAMED("plan","Planning #" << i << " out of " << runs << " ------------------------------------");
 
-        // Allow variable cost threshold (changing obstacle size)
-        if (false)
+        // Refresh visuals
+        if (use_visuals && i > 0)
         {
-            planner.loadCostMapImage( image_path, fRand(0.2,0.5) );
+            planner.publishCostMapImage();
+            //planner.loadCostMapImage( image_path, 0 ); //fRand(0.2,0.5) );
             // Display before planning
             ros::spinOnce();
         }
@@ -590,12 +658,13 @@ int main( int argc, char** argv )
         // Run the planner
         planner.plan( use_recall, use_scratch, i, runs );
 
-        // Let publisher publish
-        ros::spinOnce();
-
         // Create a pause if we are doing more runs and this is not the last run
-        if (runs > 1 && i < runs - 1)
-            ros::Duration(3.0).sleep();
+        if (runs > 1 && i < runs - 1 && use_visuals)
+        {
+            // Let publisher publish
+            ros::spinOnce();
+            ros::Duration(1.0).sleep();
+        }
 
         // Reset marker if this is not our last run
         if (i < runs - 1)
