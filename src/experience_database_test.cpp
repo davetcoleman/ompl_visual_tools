@@ -106,7 +106,7 @@ public:
     // Show all paths
     for (std::size_t i = 0; i < paths.size(); ++i)
     {        
-        viewer_->publishResult( paths[i], si_, RAND);
+        viewer_->publishPath( paths[i], si_, RAND);
         ros::Duration(0.1).sleep();
     }
 

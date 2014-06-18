@@ -51,6 +51,7 @@
 #include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/geometric/planners/rrt/TRRT.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/base/PlannerTerminationCondition.h>
 
 namespace ob = ompl::base;
@@ -113,9 +114,9 @@ public:
         lightning_setup_->setPlanner(ob::PlannerPtr(new og::RRTstar( lightning_setup_->getSpaceInformation() )));
 
         // Set the repair planner
-        boost::shared_ptr<og::RRT> rrtstar( new og::RRT( lightning_setup_->getSpaceInformation() ) );
-        rrtstar->setGoalBias(0.2);
-        lightning_setup_->setRepairPlanner(ob::PlannerPtr( rrtstar ));
+        boost::shared_ptr<og::RRTConnect> repair_planner( new og::RRTConnect( lightning_setup_->getSpaceInformation() ) );
+        //repair_planner->setGoalBias(0.2);
+        lightning_setup_->setRepairPlanner(ob::PlannerPtr( repair_planner ));
 
         // Load the cost map
         cost_map_.reset(new ompl::base::CostMap2DOptimizationObjective( lightning_setup_->getSpaceInformation() ));
@@ -157,9 +158,6 @@ public:
 
         // Pass cost to viewer
         viewer_->setCostMap(cost_map_->cost_);
-
-        // Render the map
-        publishCostMapImage();
     }
 
     void publishCostMapImage()
@@ -234,24 +232,27 @@ public:
         // attempt to solve the problem within x seconds of planning time
         solved = lightning_setup_->solve( ptc );
 
+        geometry_msgs::Pose text_pose;
+        text_pose.position.x = cost_map_->cost_->size1()/2.0;
+        text_pose.position.y = cost_map_->cost_->size1()/-20.0;
+        text_pose.position.z = cost_map_->cost_->size1()/10.0;
+
         if (solved)
         {
-            geometry_msgs::Pose pose;
-            pose.position.x = cost_map_->cost_->size1()/2.0;
-            pose.position.y = cost_map_->cost_->size1()/-10.0;
-            pose.position.z = cost_map_->cost_->size1()/10.0;
-
             if (!lightning_setup_->haveExactSolutionPath())
             {
                 ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found from planner " << lightning_setup_->getSolutionPlannerName());
                 if (use_visuals_)
-                    viewer_->publishText(pose, "APPROXIMATE solution found from planner " + lightning_setup_->getSolutionPlannerName(), BLACK);
+                    viewer_->publishText(text_pose, "APPROXIMATE solution found from planner " + lightning_setup_->getSolutionPlannerName(), BLACK);
             }
             else
             {
                 ROS_DEBUG_STREAM_NAMED("plan","Exact solution found from planner " << lightning_setup_->getSolutionPlannerName());
                 if (use_visuals_)
-                    viewer_->publishText(pose, "Exact solution found from planner " + lightning_setup_->getSolutionPlannerName(), BLACK);
+                    viewer_->publishText(text_pose, "Exact solution found from planner " + lightning_setup_->getSolutionPlannerName(), BLACK);
+
+                // Display states on available solutions
+                lightning_setup_->printResultsInfo();
             }
 
             if (use_visuals_)
@@ -271,6 +272,8 @@ public:
         else
         {
             ROS_ERROR("No Solution Found");
+            if (use_visuals_)
+                viewer_->publishText(text_pose, "No Solution Found");
         }
 
         return solved;
@@ -283,12 +286,12 @@ public:
 
     void chooseStartGoal(ob::ScopedState<>& start, ob::ScopedState<>& goal)
     {
-        if( true ) // choose completely random state
+        if( false ) // choose completely random state
         {
             findValidState(start);
             findValidState(goal);
         }
-        else if (true) // Manually set the start location
+        else if (false) // Manually set the start location
         {
             // Plan from scrach location
             start[0] = 5;  start[1] = 5;
@@ -302,12 +305,12 @@ public:
             ROS_INFO_STREAM_NAMED("temp","Sampling start and goal around two center points");
 
             ob::ScopedState<> start_area(space_);
-            start_area[0] = 145;
-            start_area[1] = 145;
+            start_area[0] = 100;
+            start_area[1] = 80;
 
             ob::ScopedState<> goal_area(space_);
-            goal_area[0] = 800;
-            goal_area[1] = 880;
+            goal_area[0] = 330;
+            goal_area[1] = 350;
 
             // Check these hard coded values against varying image sizes
             if (!space_->satisfiesBounds(start_area.get()) || !space_->satisfiesBounds(goal_area.get()))
@@ -323,7 +326,7 @@ public:
             ROS_INFO_STREAM_NAMED("temp","Distance is " << distance << " from max extent " << maxExtent);
 
             // Publish the same points
-            if (false)
+            if (true)
             {
                 findValidState(start.get(), start_area.get(), distance);
                 findValidState(goal.get(), goal_area.get(), distance);
@@ -335,13 +338,16 @@ public:
             }
 
             // Show the sample regions
-            viewer_->publishSampleRegion(start_area, distance);
-            viewer_->publishSampleRegion(goal_area, distance);
+            if (use_visuals_ && false)
+            {
+                viewer_->publishSampleRegion(start_area, distance);
+                viewer_->publishSampleRegion(goal_area, distance);
+            }
         }
 
         // Print the start and goal
-        std::cout << "Start " << start;
-        std::cout << "Goal "  << goal;
+        //ROS_DEBUG_STREAM_NAMED("chooseStartGoal","Start: " << start);
+        //ROS_DEBUG_STREAM_NAMED("chooseStartGoal","Goal: " << goal);
     }
 
     void findValidState(ob::ScopedState<>& state)
@@ -391,14 +397,14 @@ public:
         if (true)
         {
             // Show basic solution
-            //viewer_->publishResult( lightning_setup_->getSolutionPath(), RED);
+            //viewer_->publishPath( lightning_setup_->getSolutionPath(), RED);
 
             // Simplify solution
             //lightning_setup_->simplifySolution();
 
             // Interpolate solution
             lightning_setup_->getSolutionPath().interpolate();
-            viewer_->publishResult( lightning_setup_->getSolutionPath(), GREEN, 1.0, "final_solution");
+            viewer_->publishPath( lightning_setup_->getSolutionPath(), GREEN, 1.0, "final_solution");
         }
 
         // Print the states to screen -----------------------------------------------------
@@ -447,7 +453,7 @@ public:
                     ns = "repair_chosen_path";
                 }
 
-                viewer_->publishResult(recallPlannerDatas[i], lightning_setup_->getSpaceInformation(), color, thickness, ns);
+                viewer_->publishPath(recallPlannerDatas[i], lightning_setup_->getSpaceInformation(), color, thickness, ns);
             }
         }
 
@@ -458,7 +464,7 @@ public:
             lightning_setup_->getRetrieveRepairPlanner().getRepairPlannerDatas( repairPlannerDatas );
             for (std::size_t i = 0; i < repairPlannerDatas.size(); ++i)
             {
-                ROS_DEBUG_STREAM_NAMED("temp","Displaying planner data " << i);
+                //ROS_DEBUG_STREAM_NAMED("temp","Displaying planner data " << i);
                 viewer_->publishGraph(repairPlannerDatas[i], RAND, 0.2, std::string("repair_tree_"+boost::lexical_cast<std::string>(i)));
 
                 viewer_->publishStartGoalSpheres(repairPlannerDatas[i], std::string("repair_tree_"+boost::lexical_cast<std::string>(i)));
@@ -480,7 +486,26 @@ public:
         // Show all paths
         for (std::size_t i = 0; i < paths.size(); ++i)
         {
-            viewer_->publishResult( paths[i], lightning_setup_->getSpaceInformation(), RAND );
+            // First path
+            og::PathGeometric path1(lightning_setup_->getSpaceInformation());
+            viewer_->convertPlannerData( paths[i], path1 );
+            viewer_->publishPath( path1, RAND );
+
+            // compare this path against all other unseen paths
+            for (std::size_t j = 0; j < paths.size(); ++j)
+            {            
+                // Second path
+                og::PathGeometric path2(lightning_setup_->getSpaceInformation());
+                viewer_->convertPlannerData( paths[j], path2 );
+                viewer_->publishPath( path2, RAND );
+
+                double score = lightning_setup_->getPathsScore(paths[i], paths[j]);
+                ROS_DEBUG_STREAM_NAMED("temp","Score is " << score);
+
+                ros::Duration(10).sleep();
+                exit(1);
+                resetMarkers();
+            }
         }
     }
 
@@ -499,6 +524,12 @@ double fRand(double fMin, double fMax)
 {
     double f = (double)rand() / RAND_MAX;
     return fMin + f * (fMax - fMin);
+}
+
+double dRand(double dMin, double dMax)
+{
+  double d = (double)rand() / RAND_MAX;
+  return dMin + d * (dMax - dMin);
 }
 
 // *********************************************************************************************************
@@ -600,19 +631,18 @@ int main( int argc, char** argv )
         srand ( time(NULL) );
 
         // Choose random image
-        switch( 1 ) //rand() % 4 )
+        int rand_num = dRand(0,2);
+        ROS_ERROR_STREAM_NAMED("temp","random num is " << rand_num);
+        switch( rand_num )
         {
             case 0:
-                image_path.append( "/resources/grand_canyon.ppm" );
+                image_path.append( "/resources/wilbur_medium/wilbur_medium1.ppm" );
                 break;
             case 1:
-                image_path.append( "/resources/height_map0.ppm" );
+                image_path.append( "/resources/wilbur_medium/wilbur_medium2.ppm" );
                 break;
-            case 2:
-                image_path.append( "/resources/height_map1.ppm" );
-                break;
-            case 3:
-                image_path.append( "/resources/height_map2.ppm" );
+            default:
+                ROS_ERROR_STREAM_NAMED("main","Random has no case " << rand_num);
                 break;
         }
     }
@@ -627,10 +657,16 @@ int main( int argc, char** argv )
     // Load an image
     ROS_INFO_STREAM_NAMED("main","Loading image " << image_path);
     planner.loadCostMapImage( image_path, 0.4 );
+    planner.publishCostMapImage();
 
     // Display Contents of database if desires
     if (display_database)
     {
+        if (!use_visuals)
+        {
+            ROS_ERROR_STREAM_NAMED("main","Visuals disabled, cannot display database.");
+            return 0;
+        }
         planner.publishDatabase();
         return 0;
     }
@@ -644,7 +680,7 @@ int main( int argc, char** argv )
             ROS_WARN_STREAM_NAMED("plan","Terminating early");
             break;
         }
-        ROS_INFO_STREAM_NAMED("plan","Planning #" << i << " out of " << runs << " ------------------------------------");
+        ROS_INFO_STREAM_NAMED("plan","Planning " << i+1 << " out of " << runs << " ------------------------------------");
 
         // Refresh visuals
         if (use_visuals && i > 0)

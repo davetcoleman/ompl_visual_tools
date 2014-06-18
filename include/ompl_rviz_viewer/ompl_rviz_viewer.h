@@ -99,9 +99,6 @@ private:
     // A shared ROS publisher
     ros::Publisher marker_pub_;
 
-    // Track what markers have been published so that we can delete them
-    //MarkerList marker_tracker_;
-
     // Keep a pointer to an optional cost map
     intMatrixPtr cost_;
 
@@ -135,9 +132,6 @@ public:
 
     void markerPublisher(const visualization_msgs::Marker& marker)
     {
-        // Save this marker id and namespacee
-        //marker_tracker_[marker.ns].push_back( marker.id );
-
         // Publish normal
         marker_pub_.publish( marker );
 
@@ -159,27 +153,6 @@ public:
         // Process
         ros::spinOnce();
         ros::Duration(0.1).sleep();
-
-        /*
-          for(MarkerList::iterator iterator = marker_tracker_.begin(); iterator != marker_tracker_.end(); iterator++)
-          {
-          for (std::list<std::size_t>::iterator id = iterator->second.begin(); id != iterator->second.end(); id++)
-          {
-          // Set the namespace and id for this marker.  This serves to create a unique ID
-          marker.ns = iterator->first; // key
-          marker.id = *id; // value
-
-          //ROS_INFO_STREAM_NAMED("temp","Deleting marker: \n" << marker);
-
-          // Publish normal
-          marker_pub_.publish( marker );
-
-          // Process
-          ros::spinOnce();
-          ros::Duration(0.01).sleep();
-          }
-          }
-        */
     }
 
     /**
@@ -197,8 +170,6 @@ public:
     double getCostHeight(const geometry_msgs::Point &point)
     {
         // TODO make faster
-
-        //std::cout << "------------------------" << std::endl;
 
         // check if whole number
         if (floor(point.x) == point.x && floor(point.y) == point.y)
@@ -252,9 +223,6 @@ public:
             R2 = ((c.x - point.x)/(c.x - b.x))*a.z + ((point.x - b.x)/(c.x - b.x))*d.z;
         }
 
-        //std::cout << "R1: " << R1 << std::endl;
-        //std::cout << "R2: " << R2 << std::endl;
-
         // After the two R values are calculated, the value of P can finally be calculated by a weighted average of R1 and R2.
         double val;
 
@@ -266,38 +234,6 @@ public:
 
         //std::cout << "val: " << val << std::endl;
         return val + COST_HEIGHT_OFFSET;
-    }
-
-    /**
-     * \brief After running the algorithm, this converts the results to a vector of coordinates
-     */
-    std::vector<std::pair<double, double> > convertSolutionToVector(og::PathGeometric& path)
-    {
-        // The returned result
-        std::vector<std::pair<double, double> > coordinates;
-
-        // Get data
-        const std::vector<ob::State*>& states = path.getStates();
-
-        // Convert solution to coordinate vector
-        //for( std::vector<ob::State*>::const_iterator state_it = states.begin();
-        //         state_it != states.end(); ++state_it )
-        for( size_t state_id = 0; state_id < states.size(); ++state_id )
-        {
-            const ob::State *state = states[ state_id ];
-
-            if (!state)
-                continue; // no data?
-
-            // Convert to RealVectorStateSpace
-            const ob::RealVectorStateSpace::StateType *real_state =
-                static_cast<const ob::RealVectorStateSpace::StateType*>(state);
-
-            // Add to vector of results
-            coordinates.push_back( std::pair<double,double>( real_state->values[0], real_state->values[1] ) );
-        }
-
-        return coordinates;
     }
 
     /**
@@ -343,18 +279,18 @@ public:
             // Check that we are not on the far right or bottom
             if( ! (x + 1 >= image->x ||  y + 1 >= image->y ) )
             {
-                addPoint( x,   y, &marker, image);
-                addPoint( x+1, y, &marker, image);
-                addPoint( x,   y+1, &marker, image);
+                publishTriangle( x,   y, &marker, image);
+                publishTriangle( x+1, y, &marker, image);
+                publishTriangle( x,   y+1, &marker, image);
             }
 
             // Make back and down triangle
             // Check that we are not on the far left or bottom
             if( ! ( int(x) - 1 < 0 ||  y + 1 >= image->y ) )
             {
-                addPoint( x,   y, &marker, image );
-                addPoint( x,   y+1, &marker, image );
-                addPoint( x-1, y+1, &marker, image );
+                publishTriangle( x,   y, &marker, image );
+                publishTriangle( x,   y+1, &marker, image );
+                publishTriangle( x-1, y+1, &marker, image );
             }
 
         }
@@ -362,10 +298,10 @@ public:
         markerPublisher(marker);
     }
 
-    // *********************************************************************************************************
-    // Helper Function to display triangles
-    // *********************************************************************************************************
-    void addPoint( int x, int y, visualization_msgs::Marker* marker, PPMImage *image )
+    /**
+     * \brief Helper Function to display triangles
+     */
+    void publishTriangle( int x, int y, visualization_msgs::Marker* marker, PPMImage *image )
     {
         // Point
         geometry_msgs::Point point;
@@ -383,9 +319,9 @@ public:
         marker->colors.push_back( color );
     }
 
-    // *********************************************************************************************************
-    // Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
-    // *********************************************************************************************************
+    /**
+     * \brief Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
+     */
     void interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker,
         const std_msgs::ColorRGBA color )
     {
@@ -470,27 +406,24 @@ public:
 
     }
 
-    // *********************************************************************************************************
-    // Display Start Goal
-    // *********************************************************************************************************
+    /**
+     * \brief Display Start Goal
+     */
     void publishStartGoalSpheres(ob::PlannerDataPtr planner_data, const std::string& ns)
     {
-        ROS_ERROR_STREAM_NAMED("temp","publishStartGoalSpheres");
         for (std::size_t i = 0; i < planner_data->numStartVertices(); ++i)
         {
-            ROS_DEBUG_STREAM_NAMED("temp","start");
             publishSphere( getCoordinates( planner_data->getStartVertex(i).getState() ), GREEN, 3.0, ns);
         }
         for (std::size_t i = 0; i < planner_data->numGoalVertices(); ++i)
         {
-            ROS_DEBUG_STREAM_NAMED("temp","goal");
             publishSphere( getCoordinates( planner_data->getGoalVertex(i).getState() ), RED, 3.0, ns );
         }
     }
 
-    // *********************************************************************************************************
-    // Display Explored Space
-    // *********************************************************************************************************
+    /**
+     * \brief Display Explored Space
+     */
     void publishGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color = BLUE, const double thickness = 0.2, 
         const std::string& ns = "space_exploration")
     {
@@ -524,16 +457,15 @@ public:
 
         marker.color = getColor( color );
 
-        geometry_msgs::Point this_vertex;
-        geometry_msgs::Point next_vertex;
-
         if (verbose_)
             ROS_INFO("Publishing Graph");
+
+        geometry_msgs::Point this_vertex;
+        geometry_msgs::Point next_vertex;
 
         // Loop through all verticies
         for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
         {
-
             this_vertex = getCoordinates( vertex_id, planner_data );
 
             // Get the out edges from the current vertex
@@ -569,9 +501,9 @@ public:
         publishSamples(path);
     }
 
-    // *********************************************************************************************************
-    // Display Sample Points
-    // *********************************************************************************************************
+    /**
+     * \brief Display Sample Points
+     */
     void publishSamples( og::PathGeometric& path )
     {
         visualization_msgs::Marker marker;
@@ -641,9 +573,9 @@ public:
         }        
     }
 
-    // *********************************************************************************************************
-    // Display States
-    // *********************************************************************************************************
+    /**
+     * \brief Display States
+     */
     void publishStates(std::vector<const ompl::base::State*> states)
     {
         visualization_msgs::Marker marker;
@@ -747,27 +679,20 @@ public:
      * \brief Display result path from a solver, in the form of a plannerData 
      * where the list of states is also the order of the path
      */
-    void publishResult( ob::PlannerDataPtr& plannerData, ob::SpaceInformationPtr si, const rviz_colors color, 
+    void publishPath( ob::PlannerDataPtr& plannerData, ob::SpaceInformationPtr si, const rviz_colors color, 
         const double thickness = 0.4, const std::string& ns = "result_path"  )
     {
         og::PathGeometric path(si);
         convertPlannerData(plannerData, path);
 
-        std::size_t beforeInterpolateCount = path.getStateCount();
-        path.interpolate();
-        //ROS_INFO_STREAM_NAMED("publishResult","Interpolation of path increased states count from " 
-        //    << beforeInterpolateCount << " to " << path.getStateCount());
-
-        publishResult(path, color, thickness, ns);
+        publishPath(path, color, thickness, ns);
     }
 
     /**
      * \brief Display result path from a solver
      */
-    void publishResult( og::PathGeometric& path, const rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" )
+    void publishPath( og::PathGeometric& path, const rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" )
     {
-        const std::vector<std::pair<double, double> > coordinates = convertSolutionToVector(path);
-
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.
         marker.header.frame_id = BASE_FRAME;
@@ -804,49 +729,25 @@ public:
         marker.color = this_color;
 
         if (verbose_)
-            ROS_INFO("Publishing result");
+            ROS_INFO("Publishing Path");
 
-        // Get the initial points
-        double x1 = coordinates[0].first;
-        double y1 = coordinates[0].second;
-        // Declare the second points
-        double x2;
-        double y2;
+        geometry_msgs::Point last_vertex;
+        geometry_msgs::Point this_vertex;
 
-        // Convert path coordinates to red line
-        for( unsigned int i = 1; i < coordinates.size(); ++i )
+        // Initialize first vertex
+        last_vertex = getCoordinates(path.getState(0));
+
+        // Convert path coordinates
+        for( std::size_t i = 1; i < path.getStateCount(); ++i )
         {
-            x2 = coordinates[i].first;
-            y2 = coordinates[i].second;
+            // Get current coordinates
+            this_vertex = getCoordinates(path.getState(i));
 
-            // Points
-            geometry_msgs::Point point_a;
-            geometry_msgs::Point point_b;
-
-            // First point
-            point_a.x = x1;
-            point_a.y = y1;
-
-            // Create a second point
-            point_b.x = x2;
-            point_b.y = y2;
-
-            // Add cost if available
-            if ( cost_->size1() > 0 && cost_->size2() > 0 )
-            {
-                point_a.z = getCostHeight(point_a);
-                point_b.z = getCostHeight(point_b);
-            }
-
-            // Add the point pair to the line message
-            marker.points.push_back( point_a );
-            marker.points.push_back( point_b );
-            marker.colors.push_back( this_color );
-            marker.colors.push_back( this_color );
+            // Publish line with interpolation
+            interpolateLine( last_vertex, this_vertex, &marker, marker.color );
 
             // Save these coordinates for next line
-            x1 = x2;
-            y1 = y2;
+            last_vertex = this_vertex;
         }
 
         // Publish the marker
@@ -930,7 +831,7 @@ public:
         publishSphere(state_pt, TRANSLUCENT, 2.1*distance, "sample_region"); 
     }
 
-    bool publishText(const geometry_msgs::Pose &pose, const std::string &text, const rviz_colors &color)
+    bool publishText(const geometry_msgs::Pose &pose, const std::string &text, const rviz_colors &color = BLACK)
     {
         visualization_msgs::Marker text_marker;
         text_marker.header.frame_id = BASE_FRAME;
@@ -1001,9 +902,13 @@ public:
                 result.b = 0.0;
                 break;
             case RAND:
-                result.r = fRand(0.0,1.0);
-                result.g = fRand(0.0,1.0);
-                result.b = fRand(0.0,1.0);
+                // Make sure color is not *too* light
+                do
+                {
+                    result.r = fRand(0.0,1.0);
+                    result.g = fRand(0.0,1.0);
+                    result.b = fRand(0.0,1.0);
+                } while (result.r + result.g + result.b < 2); // 3 would be white
                 break;
             case BLUE:
             default:
