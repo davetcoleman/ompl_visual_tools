@@ -84,6 +84,9 @@ private:
     // The state space we plan in
     ob::StateSpacePtr space_;
 
+    // Remember what space we are working in
+    ompl::base::SpaceInformationPtr si_;
+
     // Flag for determining amount of debug output to show
     bool verbose_;
 
@@ -101,25 +104,26 @@ public:
     {
         ROS_INFO_STREAM( "OMPL version: " << OMPL_VERSION );
 
-        // Load the tool for displaying in Rviz
-        viewer_.reset(new ompl_rviz_viewer::OmplRvizViewer(verbose_));
-
         // Construct the state space we are planning in
         space_.reset( new ob::RealVectorStateSpace( DIMENSIONS ));
 
         // Define an experience setup class
         lightning_setup_ = ot::LightningPtr( new ot::Lightning(space_) );
+        si_ = lightning_setup_->getSpaceInformation();
+
+        // Load the tool for displaying in Rviz
+        viewer_.reset(new ompl_rviz_viewer::OmplRvizViewer(verbose_, si_));
 
         // Set the planning from scratch planner
-        lightning_setup_->setPlanner(ob::PlannerPtr(new og::RRTstar( lightning_setup_->getSpaceInformation() )));
+        lightning_setup_->setPlanner(ob::PlannerPtr(new og::RRTstar( si_ )));
 
         // Set the repair planner
-        boost::shared_ptr<og::RRTConnect> repair_planner( new og::RRTConnect( lightning_setup_->getSpaceInformation() ) );
+        boost::shared_ptr<og::RRTConnect> repair_planner( new og::RRTConnect( si_ ) );
         //repair_planner->setGoalBias(0.2);
         lightning_setup_->setRepairPlanner(ob::PlannerPtr( repair_planner ));
 
         // Load the cost map
-        cost_map_.reset(new ompl::base::CostMap2DOptimizationObjective( lightning_setup_->getSpaceInformation() ));
+        cost_map_.reset(new ompl::base::CostMap2DOptimizationObjective( si_ ));
     }
 
     /**
@@ -186,7 +190,7 @@ public:
 
         // Set state validity checking for this space
         lightning_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new ob::TwoDimensionalValidityChecker(
-                    lightning_setup_->getSpaceInformation(), cost_map_->cost_, cost_map_->max_cost_threshold_ ) ) );
+                    si_, cost_map_->cost_, cost_map_->max_cost_threshold_ ) ) );
 
         // Setup the optimization objective to use the 2d cost map
         lightning_setup_->setOptimizationObjective(cost_map_);
@@ -218,11 +222,11 @@ public:
         lightning_setup_->enableScratch(use_scratch);
 
         //ROS_ERROR_STREAM_NAMED("temp","out of curiosity: coll check resolution: "
-        //   << lightning_setup_->getSpaceInformation()->getStateValidityCheckingResolution());
+        //   << si_->getStateValidityCheckingResolution());
 
         // The interval in which obstacles are checked for between states
         // seems that it default to 0.01 but doesn't do a good job at that level
-        lightning_setup_->getSpaceInformation()->setStateValidityCheckingResolution(0.005);
+        si_->setStateValidityCheckingResolution(0.005);
 
         // Debug - this call is optional, but we put it in to get more output information
         //lightning_setup_->print();
@@ -243,13 +247,13 @@ public:
             {
                 ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found from planner " << lightning_setup_->getSolutionPlannerName());
                 if (use_visuals_)
-                    viewer_->publishText(text_pose, "APPROXIMATE solution found from planner " + lightning_setup_->getSolutionPlannerName(), BLACK);
+                    viewer_->publishText("APPROXIMATE solution found from planner " + lightning_setup_->getSolutionPlannerName(), text_pose);
             }
             else
             {
                 ROS_DEBUG_STREAM_NAMED("plan","Exact solution found from planner " << lightning_setup_->getSolutionPlannerName());
                 if (use_visuals_)
-                    viewer_->publishText(text_pose, "Exact solution found from planner " + lightning_setup_->getSolutionPlannerName(), BLACK);
+                    viewer_->publishText("Exact solution found from planner " + lightning_setup_->getSolutionPlannerName(), text_pose);
 
                 // Display states on available solutions
                 lightning_setup_->printResultsInfo();
@@ -273,7 +277,7 @@ public:
         {
             ROS_ERROR("No Solution Found");
             if (use_visuals_)
-                viewer_->publishText(text_pose, "No Solution Found");
+                viewer_->publishText("No Solution Found", text_pose);
         }
 
         return solved;
@@ -286,7 +290,7 @@ public:
 
     void chooseStartGoal(ob::ScopedState<>& start, ob::ScopedState<>& goal)
     {
-        if( false ) // choose completely random state
+        if( true ) // choose completely random state
         {
             findValidState(start);
             findValidState(goal);
@@ -321,7 +325,7 @@ public:
             }
 
             // Choose the distance to sample around
-            double maxExtent = lightning_setup_->getSpaceInformation()->getMaximumExtent();
+            double maxExtent = si_->getMaximumExtent();
             double distance = maxExtent * 0.1;
             ROS_INFO_STREAM_NAMED("temp","Distance is " << distance << " from max extent " << maxExtent);
 
@@ -358,7 +362,7 @@ public:
             state.random();
 
             // Check if the sampled points are valid
-            if( lightning_setup_->getSpaceInformation()->isValid(state.get()) )
+            if( si_->isValid(state.get()) )
             {
                 return;
             }
@@ -370,14 +374,14 @@ public:
     void findValidState(ob::State *state, const ob::State *near, const double distance)
     {
         // Create sampler
-        ob::StateSamplerPtr sampler = lightning_setup_->getSpaceInformation()->allocStateSampler();
+        ob::StateSamplerPtr sampler = si_->allocStateSampler();
 
         while (true)
         {
             sampler->sampleUniformNear(state, near, distance); // samples (near + distance, near - distance)
 
             // Check if the sampled points are valid
-            if( lightning_setup_->getSpaceInformation()->isValid(state) )
+            if( si_->isValid(state) )
             {
                 return;
             }
@@ -418,7 +422,7 @@ public:
         if (true)
         {
             // Get information about the exploration data structure the motion planner used in planning from scratch
-            const ob::PlannerDataPtr planner_data( new ob::PlannerData( lightning_setup_->getSpaceInformation() ) );
+            const ob::PlannerDataPtr planner_data( new ob::PlannerData( si_ ) );
             lightning_setup_->getPlannerData( *planner_data );
 
             // Optionally display the search tree/graph or the samples
@@ -441,7 +445,7 @@ public:
             for (std::size_t i = 0; i < recallPlannerDatas.size(); ++i)
             {
                 //ROS_DEBUG_STREAM_NAMED("temp","Displaying planner data " << i << " and chosen ID was " << chosenID);
-                
+
                 // Make the chosen path a different color and thickness
                 rviz_colors color = BLACK;
                 double thickness = 0.2;
@@ -453,7 +457,7 @@ public:
                     ns = "repair_chosen_path";
                 }
 
-                viewer_->publishPath(recallPlannerDatas[i], lightning_setup_->getSpaceInformation(), color, thickness, ns);
+                viewer_->publishPath(recallPlannerDatas[i], color, thickness, ns);
             }
         }
 
@@ -486,26 +490,162 @@ public:
         // Show all paths
         for (std::size_t i = 0; i < paths.size(); ++i)
         {
-            // First path
-            og::PathGeometric path1(lightning_setup_->getSpaceInformation());
-            viewer_->convertPlannerData( paths[i], path1 );
-            viewer_->publishPath( path1, RAND );
+            viewer_->publishPath( paths[i], RAND );
+        }
+    }
 
-            // compare this path against all other unseen paths
-            for (std::size_t j = 0; j < paths.size(); ++j)
-            {            
-                // Second path
-                og::PathGeometric path2(lightning_setup_->getSpaceInformation());
-                viewer_->convertPlannerData( paths[j], path2 );
-                viewer_->publishPath( path2, RAND );
+    /**
+     * \brief Score the paths within the database for similarity
+     */
+    void scoreDatabase()
+    {
+        // Display all of the saved paths
+        std::vector<ob::PlannerDataPtr> paths;
+        lightning_setup_->getAllPaths(paths);
 
-                double score = lightning_setup_->getPathsScore(paths[i], paths[j]);
-                ROS_DEBUG_STREAM_NAMED("temp","Score is " << score);
+        ROS_INFO_STREAM_NAMED("experience_database_test","Number of paths: " << paths.size());
 
-                ros::Duration(10).sleep();
-                exit(1);
+        // Score all paths two at a time
+        if (false)
+        {
+            for (std::size_t i = 0; i < paths.size(); ++i)
+            {
+                // compare this path against all other unseen paths
+                for (std::size_t j = i; j < paths.size(); ++j)
+                {
+                    // detect if needed to exit early
+                    if (!ros::ok())
+                    {
+                        i = paths.size();
+                        break;
+                    }
+
+                    // Create paths
+                    og::PathGeometric path1(si_);
+                    viewer_->convertPlannerData(paths[i], path1);
+                    og::PathGeometric path2(si_);
+                    viewer_->convertPlannerData(paths[j], path2);
+
+                    double score = lightning_setup_->getDynamicTimeWarp()->getPathsScoreNonConst(path1, path2);
+
+                    ROS_DEBUG_STREAM_NAMED("temp","Score is " << score);
+                    viewer_->publishText("Score " + boost::lexical_cast<std::string>(score));
+
+                    viewer_->publishPath( path1, GREEN, 0.8);
+                    viewer_->publishSamples( path1 );
+                    viewer_->publishPath( path2, RAND );
+                    viewer_->publishSamples( path2 );
+
+                    ros::Duration(1).sleep();
+                    resetMarkers();
+                }
+            }
+        }
+        // Test threshold methods for scoring paths
+        else if (true)
+        {
+            for (std::size_t i = 0; i < paths.size(); ++i)
+            {
+                i = OmplRvizViewer::dRand(0, paths.size());
+
+                og::PathGeometric path1(si_);
+                viewer_->convertPlannerData(paths[i], path1);
+                bool found = false;
+
+                // compare this path against all other unseen paths
+                for (std::size_t j = 0; j < paths.size(); ++j)
+                {
+                    // Don't match to self
+                    if (j == i) 
+                        continue;
+
+                    og::PathGeometric path2(si_);
+                    viewer_->convertPlannerData(paths[j], path2);
+
+                    // detect if needed to exit early
+                    if (!ros::ok())
+                    {
+                        i = paths.size();
+                        break;
+                    }
+                    double score = lightning_setup_->getDynamicTimeWarp()->getPathsScoreNonConst(path1, path2);
+
+                    // Display both paths
+                    double maxToDisplay = 20;
+                    if (score < maxToDisplay / 3)
+                    {
+                        viewer_->publishPath( path2, GREEN );
+                        found = true;
+                    }
+                    else if (score < maxToDisplay / 3 * 2)
+                    {
+                        viewer_->publishPath( path2, YELLOW );
+                        found = true;
+                    }
+                    else if (score < maxToDisplay)
+                    {
+                        viewer_->publishPath( path2, RED );
+                        found = true;
+                    }
+
+                    //ROS_DEBUG_STREAM_NAMED("temp","Score is " << score);
+                    //viewer_->publishText("Score " + boost::lexical_cast<std::string>(score));
+
+                }
+                if (found)
+                {
+                    viewer_->publishPath( path1, GREEN, 0.8 );
+                    ros::Duration(2).sleep();
+                }
+                else
+                {
+                    OMPL_DEBUG("Skipped path because no other paths were similar enough");
+                }
                 resetMarkers();
             }
+        }
+        else
+        {
+            for (std::size_t i = 0; i < 50; i += 5)
+            {                
+                // Create first line
+                og::PathGeometric path1(si_);
+                // Create dummy states
+                ob::ScopedState<> start(space_);
+                ob::ScopedState<> goal(space_);            
+                start[0] = 5;  start[1] = 5;
+                goal[0]  = 5;   goal[1] = 45;
+                path1.append(start.get());
+                path1.append(goal.get());
+
+                // Create second line that is slightly moved
+                og::PathGeometric path2(path1);
+                path2.getState(0)->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] += i;
+                path2.getState(1)->as<ompl::base::RealVectorStateSpace::StateType>()->values[0] += i;
+                path2.getState(1)->as<ompl::base::RealVectorStateSpace::StateType>()->values[1] += i;
+                path1.print(std::cout);
+                path2.print(std::cout);
+                path2.interpolate();
+                path2.print(std::cout);
+
+                // Score
+                double score = lightning_setup_->getDynamicTimeWarp()->getPathsScoreNonConst(path1, path2);
+                ROS_DEBUG_STREAM_NAMED("temp","Score is " << score);
+                viewer_->publishText("Score " + boost::lexical_cast<std::string>(score));
+
+                // Display
+                viewer_->publishPath( path1, GREEN, 0.8 );
+                viewer_->publishSamples( path1 );
+                viewer_->publishPath( path2, RAND );
+                viewer_->publishSamples( path2 );
+
+                ros::Duration(4.0).sleep();
+                resetMarkers();
+
+                if (!ros::ok())
+                    break;
+            }
+
         }
     }
 
@@ -520,18 +660,6 @@ public:
 
 } // namespace
 
-double fRand(double fMin, double fMax)
-{
-    double f = (double)rand() / RAND_MAX;
-    return fMin + f * (fMax - fMin);
-}
-
-double dRand(double dMin, double dMax)
-{
-  double d = (double)rand() / RAND_MAX;
-  return dMin + d * (dMax - dMin);
-}
-
 // *********************************************************************************************************
 // Main
 // *********************************************************************************************************
@@ -540,6 +668,9 @@ int main( int argc, char** argv )
     ros::init(argc, argv, "ompl_rviz_viewer");
     ROS_INFO( "OMPL RViz Viewer with Lightning Framework ----------------------------------------- " );
 
+    // Seed random
+    srand ( time(NULL) );
+
     // Allow the action server to recieve and send ros messages
     ros::AsyncSpinner spinner(1);
     spinner.start();
@@ -547,6 +678,7 @@ int main( int argc, char** argv )
     // Default argument values
     bool verbose = false;
     bool display_database = false;
+    bool score_database = false;
     bool use_recall = true;
     bool use_scratch = true;
     bool use_visuals = true;
@@ -560,8 +692,8 @@ int main( int argc, char** argv )
             // Help mode
             if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
             {
-                ROS_INFO_STREAM_NAMED("main","Usage: " << argv[0] 
-                    << " --verbose --noRecall --noScratch --noVisuals --image [image_file] --runs [num plans] --displayDatabase -h");
+                ROS_INFO_STREAM_NAMED("main","Usage: ompl_rviz_lightning"
+                    << " --verbose --noRecall --noScratch --noVisuals --image [image_file] --runs [num plans] --displayDatabase --scoreDatabase -h");
                 return 0;
             }
 
@@ -570,6 +702,13 @@ int main( int argc, char** argv )
             {
                 ROS_INFO_STREAM_NAMED("main","Visualizing entire database");
                 display_database = true;
+            }
+
+            // Show all available plans
+            if (strcmp(argv[i], "--scoreDatabase") == 0)
+            {
+                ROS_INFO_STREAM_NAMED("main","Visualizing entire database");
+                score_database = true;
             }
 
             // Check for verbose flag
@@ -627,11 +766,8 @@ int main( int argc, char** argv )
             return false;
         }
 
-        // Seed random
-        srand ( time(NULL) );
-
         // Choose random image
-        int rand_num = dRand(0,2);
+        int rand_num = ompl_rviz_viewer::OmplRvizViewer::dRand(0,2);
         ROS_ERROR_STREAM_NAMED("temp","random num is " << rand_num);
         switch( rand_num )
         {
@@ -671,6 +807,18 @@ int main( int argc, char** argv )
         return 0;
     }
 
+    // Score the database
+    if (score_database)
+    {
+        if (!use_visuals)
+        {
+            ROS_ERROR_STREAM_NAMED("main","Visuals disabled, cannot display database.");
+            return 0;
+        }
+        planner.scoreDatabase();
+        return 0;
+    }
+
     // Run the planner the desired number of times
     for (std::size_t i = 0; i < runs; ++i)
     {
@@ -686,7 +834,7 @@ int main( int argc, char** argv )
         if (use_visuals && i > 0)
         {
             planner.publishCostMapImage();
-            //planner.loadCostMapImage( image_path, 0 ); //fRand(0.2,0.5) );
+            //planner.loadCostMapImage( image_path, 0 ); //OmplRvizViewer::fRand(0.2,0.5) );
             // Display before planning
             ros::spinOnce();
         }
@@ -703,7 +851,7 @@ int main( int argc, char** argv )
         }
 
         // Reset marker if this is not our last run
-        if (i < runs - 1)
+        if (i < runs - 1 && use_visuals)
             planner.resetMarkers();
     }
 

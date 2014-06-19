@@ -86,12 +86,12 @@ public:
   ExperienceDatabaseTest(bool verbose)
     : verbose_(verbose)
   {
-    // Load the tool for displaying in Rviz
-    viewer_.reset(new ompl_rviz_viewer::OmplRvizViewer(verbose_));
-
     // Construct the state space we are planning in
     ob::StateSpacePtr space( new ob::RealVectorStateSpace( DIMENSIONS ));
     si_.reset(new ompl::base::SpaceInformation(space));
+
+    // Load the tool for displaying in Rviz
+    viewer_.reset(new ompl_rviz_viewer::OmplRvizViewer(verbose_, si_));
 
     // Load the experience database
     experienceDB_.reset(new ompl::tools::ExperienceDB(space));
@@ -106,7 +106,7 @@ public:
     // Show all paths
     for (std::size_t i = 0; i < paths.size(); ++i)
     {        
-        viewer_->publishPath( paths[i], si_, RAND);
+        viewer_->publishPath( paths[i], RAND);
         ros::Duration(0.1).sleep();
     }
 

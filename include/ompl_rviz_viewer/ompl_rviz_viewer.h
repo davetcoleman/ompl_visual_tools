@@ -74,16 +74,6 @@ static const double COST_HEIGHT_OFFSET = 0.5;
 
 enum rviz_colors { RED, GREEN, BLUE, GREY, WHITE, ORANGE, BLACK, YELLOW, TRANSLUCENT, RAND };
 
-/**
- * \brief Nat_Rounding helper function to make readings from cost map more accurate
- * \param double
- * \return rounded down number
- */
-int nat_round(double x)
-{
-    return static_cast<int>(floor(x + 0.5f));
-}
-
 typedef std::map< std::string, std::list<std::size_t> > MarkerList;
 
 class OmplRvizViewer
@@ -102,14 +92,18 @@ private:
     // Keep a pointer to an optional cost map
     intMatrixPtr cost_;
 
+    // Remember what space we are working in
+    ompl::base::SpaceInformationPtr si_;
+
 public:
 
     /**
      * \brief Constructor
      * \param verbose - run in debug mode
      */
-    OmplRvizViewer(bool verbose)
-        : verbose_(verbose)
+    OmplRvizViewer(bool verbose, ompl::base::SpaceInformationPtr si)
+        : verbose_(verbose),
+          si_(si)
     {
         // ROS Publishing stuff
         marker_pub_ = nh_.advertise<visualization_msgs::Marker>("ompl_rviz_markers", 1);
@@ -160,7 +154,7 @@ public:
      */
     double getCost(const geometry_msgs::Point &point)
     {
-        return double((*cost_)( nat_round(point.y), nat_round(point.x) )) / 2.0;
+        return double((*cost_)( natRound(point.y), natRound(point.x) )) / 2.0;
     }
 
     /**
@@ -488,9 +482,9 @@ public:
         markerPublisher(marker);
     }
 
-    void publishSamples(const ob::PlannerDataPtr& plannerData, ob::SpaceInformationPtr si)
+    void publishSamples(const ob::PlannerDataPtr& plannerData)
     {
-        og::PathGeometric path(si);
+        og::PathGeometric path(si_);
         convertPlannerData(plannerData, path);
 
         std::size_t beforeInterpolateCount = path.getStateCount();
@@ -568,9 +562,7 @@ public:
     {
         // Convert the planner data verticies into a vector of states
         for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
-        {
             path.append(plannerData->getVertex(i).getState());
-        }        
     }
 
     /**
@@ -679,10 +671,10 @@ public:
      * \brief Display result path from a solver, in the form of a plannerData 
      * where the list of states is also the order of the path
      */
-    void publishPath( ob::PlannerDataPtr& plannerData, ob::SpaceInformationPtr si, const rviz_colors color, 
+    void publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color, 
         const double thickness = 0.4, const std::string& ns = "result_path"  )
     {
-        og::PathGeometric path(si);
+        og::PathGeometric path(si_);
         convertPlannerData(plannerData, path);
 
         publishPath(path, color, thickness, ns);
@@ -691,7 +683,7 @@ public:
     /**
      * \brief Display result path from a solver
      */
-    void publishPath( og::PathGeometric& path, const rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" )
+    void publishPath( const og::PathGeometric& path, const rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" )
     {
         visualization_msgs::Marker marker;
         // Set the frame ID and timestamp.
@@ -791,10 +783,26 @@ public:
         return point;
     }
 
-    double fRand(double fMin, double fMax)
+    static double fRand(double fMin, double fMax)
     {
         double f = (double)rand() / RAND_MAX;
         return fMin + f * (fMax - fMin);
+    }
+
+    static double dRand(double dMin, double dMax)
+    {
+        double d = (double)rand() / RAND_MAX;
+        return dMin + d * (dMax - dMin);
+    }
+
+    /**
+     * \brief Nat_Rounding helper function to make readings from cost map more accurate
+     * \param double
+     * \return rounded down number
+     */
+    static int natRound(double x)
+    {
+        return static_cast<int>(floor(x + 0.5f));
     }
 
     /**
@@ -831,7 +839,16 @@ public:
         publishSphere(state_pt, TRANSLUCENT, 2.1*distance, "sample_region"); 
     }
 
-    bool publishText(const geometry_msgs::Pose &pose, const std::string &text, const rviz_colors &color = BLACK)
+    bool publishText(const std::string &text, const rviz_colors &color = BLACK)
+    {
+        geometry_msgs::Pose text_pose;
+        text_pose.position.x = 0;
+        text_pose.position.y = 0;
+        text_pose.position.z = 0;
+        publishText(text, text_pose, color);
+    }
+
+    bool publishText(const std::string &text, const geometry_msgs::Pose &pose, const rviz_colors &color = BLACK)
     {
         visualization_msgs::Marker text_marker;
         text_marker.header.frame_id = BASE_FRAME;
@@ -919,6 +936,7 @@ public:
 
         return result;
     }
+
 
 }; // end class
 
