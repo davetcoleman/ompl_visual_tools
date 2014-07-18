@@ -2,6 +2,11 @@
 
 The OMPL Rview Viewer is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
 
+The ompl_rviz_viewer was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
+The space is specified as a grey scale cost map image that can be passed in to the program. 
+The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
+Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
+
 This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more 
 streamlined for considering costs.
 
@@ -21,14 +26,15 @@ roslaunch ompl_rviz_viewer ompl_rviz.launch
 
 ### Cost-based planner with Transition-based RRT:
 
-ompl_rviz_viewer was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
-The space is specified as a grey scale cost map image that can be passed in to the program. 
-The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
-Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
+**Note: I have not been maintaining this aspect of the code very well, so currently to use just this aspect you need to turn off the lightning components using the following command:**
 
 ```
-roslaunch ompl_rviz_viewer ompl_rviz_planner.launch
+rosrun ompl_rviz_viewer ompl_rviz_demos --noRecall
 ```
+
+To see optional parameters, pass in ``--help`` argument. There are many options.
+
+**Note: To change the algorithm being used, manually edit the code**
 
 ### Experienced based-planning with Lightning Framework
 
@@ -43,7 +49,7 @@ Image of multiple paths in a experience database:
 To run:
 
 ```
-rosrun ompl_rviz_viewer ompl_rviz_lightning
+rosrun ompl_rviz_viewer ompl_rviz_demos
 ```
 
 To see optional parameters, pass in ``--help`` argument. There are many options.
