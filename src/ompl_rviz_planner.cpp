@@ -47,9 +47,6 @@
 // Display in Rviz tool
 #include <ompl_rviz_viewer/ompl_rviz_viewer.h>
 
-// Custom validity checker that accounts for cost
-#include <ompl_rviz_viewer/two_dimensional_validity_checker.h>
-
 // OMPL planner
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
@@ -92,8 +89,8 @@ class OmplRvizPlanner
   double max_threshold_;
 
   // The percentage of the top min/max cost value that is considered an obstacle, e.g. 10 is top 10% of peaks
-  //  static const double MAX_THRESHOLD_PERCENTAGE_ = 40;
-  static const double MAX_THRESHOLD_PERCENTAGE_ = 1;
+  static const double MAX_THRESHOLD_PERCENTAGE_ = 40;
+    //static const double MAX_THRESHOLD_PERCENTAGE_ = 1;
 
   // The number of dimensions - always 2 for images
   static const unsigned int DIMENSIONS = 2;
@@ -184,7 +181,7 @@ class OmplRvizPlanner
         color.r = 1.0;
         color.g = 0.0;
         color.b = 0.0;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( simple_setup_->getSolutionPath(), color, cost_ );
         ros::Duration(0.25).sleep();
       }
 
@@ -197,7 +194,7 @@ class OmplRvizPlanner
         color.r = 0.0;
         color.g = 1.0;
         color.b = 0.0;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( simple_setup_->getSolutionPath(), color, cost_ );
         //      ros::Duration(0.25).sleep();
       }
 
@@ -210,7 +207,7 @@ class OmplRvizPlanner
         color.r = 0.0;
         color.g = 0.5;
         color.b = 0.5;
-        viewer_->displayResult( simple_setup_->getSolutionPath(), &color, cost_ );
+        viewer_->displayResult( simple_setup_->getSolutionPath(), color, cost_ );
         ros::Duration(0.25).sleep();
       }
     }
@@ -321,9 +318,6 @@ class OmplRvizPlanner
     //og::RRT *trrt = new og::RRT( simple_setup_->getSpaceInformation() );
 
     simple_setup_->setPlanner(ob::PlannerPtr(trrt));
-
-    // Set state validity checking for this space
-    simple_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new TwoDimensionalValidityChecker( simple_setup_->getSpaceInformation(), cost_, max_threshold_ ) ) );
 
     // Start and Goal State ---------------------------------------------
 

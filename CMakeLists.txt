@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(OMPL REQUIRED)
+find_package(Boost REQUIRED COMPONENTS serialization)
 
 include_directories(${Boost_INCLUDE_DIRS} ${OMPL_INCLUDE_DIRS})
 
@@ -39,14 +40,46 @@ target_link_libraries(${PROJECT_NAME}_ppm
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
-# Executable for SimpleSetup (in our case T-RRT)
-add_executable(ompl_rviz_planner
-  src/ompl_rviz_planner.cpp 
+# Rviz Viewer Library
+add_library(${PROJECT_NAME}
+  src/ompl_rviz_viewer.cpp
 )
-target_link_libraries(ompl_rviz_planner 
+target_link_libraries(${PROJECT_NAME} 
+  ${PROJECT_NAME}_ppm ${catkin_LIBRARIES} ${Boost_LIBRARIES}  
+)
+
+# Executable for SimpleSetup (in our case T-RRT)
+# add_executable(ompl_rviz_planner
+#   src/ompl_rviz_planner.cpp 
+# )
+# target_link_libraries(ompl_rviz_planner 
+#   ${OMPL_LIBRARIES} 
+#   ${catkin_LIBRARIES} 
+#   ${Boost_LIBRARIES}
+#   ${PROJECT_NAME}_ppm
+# )
+
+# Executable for ExperienceSetup
+add_executable(ompl_rviz_lightning
+  src/ompl_rviz_lightning.cpp 
+)
+target_link_libraries(ompl_rviz_lightning 
   ${OMPL_LIBRARIES} 
   ${catkin_LIBRARIES} 
   ${Boost_LIBRARIES}
+  ${PROJECT_NAME} 
+  ${PROJECT_NAME}_ppm
+)
+
+# Executable for ExperienceDatabaseTest
+add_executable(experience_database_test
+  src/experience_database_test.cpp 
+)
+target_link_libraries(experience_database_test 
+  ${OMPL_LIBRARIES} 
+  ${catkin_LIBRARIES} 
+  ${Boost_LIBRARIES}
+  ${PROJECT_NAME} 
   ${PROJECT_NAME}_ppm
 )
 
@@ -61,6 +94,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 # Mark executables for installation
-install(TARGETS ompl_rviz_planner 
+install(TARGETS ompl_rviz_lightning experience_database_test #ompl_rviz_planner
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -1,8 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2014, University of Colorado, Boulder
- *  Copyright (c) 2012, Willow Garage, Inc.
+ *  Copyright (c) 2014, JSK, The University of Tokyo.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -15,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of the Willow Garage nor the names of its
+ *   * Neither the name of the JSK, The University of Tokyo nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -33,61 +32,74 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* 
-   Author: Dave Coleman <dave@dav.ee>
-   Desc:   Validity checker that supports cost
+/* Author: Dave Coleman
+   Desc:   Custom State Validity Checker with cost function
 */
+
+#ifndef OMPL_RVIZ_VIEWER__TWO_DIMENSIONAL_VALIDITY_CHECKER_
+#define OMPL_RVIZ_VIEWER__TWO_DIMENSIONAL_VALIDITY_CHECKER_
 
 // Boost
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
 // OMPL
-#include <ompl/base/SpaceInformation.h>
+#include <ompl/base/StateValidityChecker.h>
 
 namespace ob = ompl::base;
-namespace og = ompl::geometric;
-namespace bnu = boost::numeric::ublas;
 
 namespace ompl_rviz_viewer
 {
+  typedef boost::numeric::ublas::matrix<int> intMatrix;
+  typedef boost::shared_ptr<intMatrix> intMatrixPtr;
+}
 
-/**
- * \brief Custom State Validity Checker with cost function
- */
+namespace ompl
+{
+namespace base
+{
+
+// Nat_Rounding helper function to make readings from cost map more accurate
+int nat_round(double x)
+{
+    return static_cast<int>(floor(x + 0.5f));
+}
+
 class TwoDimensionalValidityChecker : public ob::StateValidityChecker
 {
 private:
-  bnu::matrix<int> cost_;
-  double max_threshold_;
+    ompl_rviz_viewer::intMatrixPtr cost_;
+    double max_threshold_;
 
 public:
 
-  /** \brief Constructor */
-  TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, const bnu::matrix<int>& cost,
-    double max_threshold ) :
-    StateValidityChecker(si)
-  {
-    cost_ = cost;
-    max_threshold_ = max_threshold;
-  }
+    /** \brief Constructor */
+    TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, ompl_rviz_viewer::intMatrixPtr cost,
+        double max_threshold ) :
+        StateValidityChecker(si)
+    {
+        cost_ = cost;
+        max_threshold_ = max_threshold;
+    }
 
-  /** \brief Obstacle checker */
-  virtual bool isValid(const ob::State * state ) const
-  {
-    return cost(state) < max_threshold_;
-  }
+    /** \brief Obstacle checker */
+    virtual bool isValid(const ob::State * state ) const
+    {
+        return cost(state) < max_threshold_ && cost(state) > 1;
+    }
 
-  virtual double cost(const ob::State *state) const
-  {
-    const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
+    virtual double cost(const ob::State *state) const
+    {
+        const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
 
-    // Return the cost from the matrix at the current dimensions
-    double cost = cost_( nat_round(coords[1]), nat_round(coords[0]) );
+        // Return the cost from the matrix at the current dimensions
+        double cost = (*cost_)( nat_round(coords[1]), nat_round(coords[0]) );
 
-    return cost;
-  }
+        return cost;
+    }
 
 };
+}
+}
 
-} // namespace
+#endif

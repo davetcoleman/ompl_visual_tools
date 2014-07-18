@@ -33,9 +33,10 @@ Then run one of the OMPL RViz planner:
 roslaunch ompl_rviz_viewer ompl_rviz_planner.launch
 ```
 
-### Experience-based planner:
+### Experienced based-planning with Lightning Framework
+
 ```
-roslaunch ompl_rviz_viewer ompl_rviz_eplanner.launch
+roslaunch ompl_rviz_viewer ompl_rviz_lightning.launch
 ```
 
 ## Cost Map Usage
@@ -55,6 +56,10 @@ convert cost_map.png cost_map.ppm
 ```
 
 In general, a 100x100 pixel image is a decent space size, and larger dimensions will require much more computational resources or may hang your computer. GIMP is a good editor for scaling images down.
+
+## TODO
+
+- Remove PPM library and instead depend on OMPL's version
 
 ## Develop
 
