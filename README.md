@@ -1,7 +1,4 @@
-OMPL RViz Viewer
-==========
-
-## What does the OMPL RViz Viewer do?
+# OMPL RViz Viewer
 
 The OMPL Rview Viewer is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
 
@@ -15,13 +12,13 @@ It can also help debug experience-based planning like the lightning framework, a
 This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more 
 streamlined for considering costs.
 
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/resources/ompl_rviz_viewer.png" />
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/ompl_rviz_viewer.png" />
 
 ## How to Build
 
 Clone into your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) and rebuild.
 
-## How to Run
+## Usage
 
 Start Rviz using the included launch file:
 
@@ -29,14 +26,17 @@ Start Rviz using the included launch file:
 roslaunch ompl_rviz_viewer ompl_rviz.launch
 ```
 
-Then run one of the OMPL RViz planner:
-
 ### Cost-based planner with Transition-based RRT:
+
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/repaired_path.png" />
+
 ```
 roslaunch ompl_rviz_viewer ompl_rviz_planner.launch
 ```
 
 ### Experienced based-planning with Lightning Framework
+
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/similar_paths.png" />
 
 ```
 roslaunch ompl_rviz_viewer ompl_rviz_lightning.launch
