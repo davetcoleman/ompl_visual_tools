@@ -2,13 +2,6 @@
 
 The OMPL Rview Viewer is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
 
-It was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
-The space is specified as a grey scale cost map image that can be passed in to the program. 
-The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
-Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
-
-It can also help debug experience-based planning like the lightning framework, as well as debugging full-degree of freedom robots using MoveIt!
-
 This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more 
 streamlined for considering costs.
 
@@ -28,7 +21,10 @@ roslaunch ompl_rviz_viewer ompl_rviz.launch
 
 ### Cost-based planner with Transition-based RRT:
 
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/repaired_path.png" />
+ompl_rviz_viewer was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
+The space is specified as a grey scale cost map image that can be passed in to the program. 
+The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
+Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
 
 ```
 roslaunch ompl_rviz_viewer ompl_rviz_planner.launch
@@ -36,7 +32,15 @@ roslaunch ompl_rviz_viewer ompl_rviz_planner.launch
 
 ### Experienced based-planning with Lightning Framework
 
+ompl_rviz_viewer can also help debug experience-based planning like the lightning framework. Examples:
+
+Image of an old path (red line) being repaired into feasible path (green line)
 <img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/similar_paths.png" />
+
+Image of multiple paths in a experience database:
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/repaired_path.png" />
+
+To run:
 
 ```
 roslaunch ompl_rviz_viewer ompl_rviz_lightning.launch
