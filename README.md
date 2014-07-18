@@ -3,11 +3,14 @@ OMPL RViz Viewer
 
 ## What does the OMPL RViz Viewer do?
 
-It is a tool for developing cost-based algorithms for the [Open Motion Planning Library](http://ompl.kavrakilab.org/) 
-that allows you to easily visualize the 
-algorithm in a two dimensional space. The space is specified as a grey scale image that can be passed in to the program. 
+The OMPL Rview Viewer is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
+
+It was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
+The space is specified as a grey scale cost map image that can be passed in to the program. 
 The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
 Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
+
+It can also help debug experience-based planning like the lightning framework, as well as debugging full-degree of freedom robots using MoveIt!
 
 This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more 
 streamlined for considering costs.
