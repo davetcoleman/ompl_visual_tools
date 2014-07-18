@@ -43,8 +43,10 @@ Image of multiple paths in a experience database:
 To run:
 
 ```
-roslaunch ompl_rviz_viewer ompl_rviz_lightning.launch
+rosrun ompl_rviz_viewer ompl_rviz_lightning
 ```
+
+To see optional parameters, pass in ``--help`` argument. There are many options.
 
 ## Cost Map Usage
 

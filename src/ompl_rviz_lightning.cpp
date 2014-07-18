@@ -107,6 +107,7 @@ public:
 
     // Define an experience setup class
     lightning_setup_ = ot::LightningPtr( new ot::Lightning(space_) );
+    lightning_setup_->load("two_dimension_world", "ompl_storage");
     si_ = lightning_setup_->getSpaceInformation();
 
     // Load the tool for displaying in Rviz
@@ -691,7 +692,8 @@ int main( int argc, char** argv )
       if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
       {
         ROS_INFO_STREAM_NAMED("main","Usage: ompl_rviz_lightning"
-                              << " --verbose --noRecall --noScratch --noVisuals --image [image_file] --runs [num plans] --displayDatabase --scoreDatabase -h");
+                              << " --verbose --noRecall --noScratch --noVisuals --image [image_file] --runs [num plans] "
+                              << "--displayDatabase --scoreDatabase -h");
         return 0;
       }
 
