@@ -8,9 +8,9 @@ The lighter (closer to white) each pixel of the image is, the "higher the cost" 
 Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
 
 This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more 
-streamlined for considering costs.
+streamlined for considering costs and experience-based planning.
 
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/ompl_rviz_viewer.png" />
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/hydro-devel/screenshots/ompl_rviz_viewer.png" />
 
 ## How to Build
 
@@ -26,7 +26,7 @@ roslaunch ompl_rviz_viewer ompl_rviz.launch
 
 ### Cost-based planner with Transition-based RRT:
 
-**Note: I have not been maintaining this aspect of the code very well, so currently to use just this aspect you need to turn off the lightning components using the following command:**
+**Note:** *I have not been maintaining this aspect of the code very well, so currently to use just this aspect you need to turn off the lightning components using the following command:*
 
 ```
 rosrun ompl_rviz_viewer ompl_rviz_demos --noRecall
@@ -34,17 +34,17 @@ rosrun ompl_rviz_viewer ompl_rviz_demos --noRecall
 
 To see optional parameters, pass in ``--help`` argument. There are many options.
 
-**Note: To change the algorithm being used, manually edit the code**
+**Note:** *To change the algorithm being used, manually edit the code*
 
 ### Experienced based-planning with Lightning Framework
 
 ompl_rviz_viewer can also help debug experience-based planning like the lightning framework. Examples:
 
 Image of an old path (red line) being repaired into feasible path (green line)
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/similar_paths.png" />
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/hydro-devel/screenshots/similar_paths.png" />
 
 Image of multiple paths in a experience database:
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/master/screenshots/repaired_path.png" />
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/hydro-devel/screenshots/repaired_path.png" />
 
 To run:
 

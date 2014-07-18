@@ -48,7 +48,7 @@ target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_ppm ${catkin_LIBRARIES} ${Boost_LIBRARIES}  
 )
 
-# Executable for ExperienceSetup
+# Executable for Demos and Testing
 add_executable(ompl_rviz_demos
   src/demos/ompl_rviz_demos.cpp 
 )
@@ -60,20 +60,8 @@ target_link_libraries(ompl_rviz_demos
   ${PROJECT_NAME}_ppm
 )
 
-# Executable for ExperienceDatabaseTest
-add_executable(experience_database_test
-  src/experience_database_test.cpp 
-)
-target_link_libraries(experience_database_test 
-  ${OMPL_LIBRARIES} 
-  ${catkin_LIBRARIES} 
-  ${Boost_LIBRARIES}
-  ${PROJECT_NAME} 
-  ${PROJECT_NAME}_ppm
-)
-
 # Install
-install(TARGETS ${PROJECT_NAME}_ppm
+install(TARGETS ${PROJECT_NAME}_ppm ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
 # Mark cpp header files for installation
@@ -83,6 +71,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 # Mark executables for installation
-install(TARGETS ompl_rviz_demos experience_database_test
+install(TARGETS ompl_rviz_demos
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
