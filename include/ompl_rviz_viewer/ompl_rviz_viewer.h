@@ -52,6 +52,12 @@
 // Custom validity checker that accounts for cost
 #include <ompl_rviz_viewer/costs/cost_map_2d_optimization_objective.h>
 
+// MoveIt
+#include <moveit/robot_model/link_model.h>
+
+// Visualization
+#include <moveit_visual_tools/visual_tools.h>
+
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 namespace bnu = boost::numeric::ublas;
@@ -65,21 +71,29 @@ class PlannerData;
 typedef boost::shared_ptr<PlannerData> PlannerDataPtr;
 }}
 
+namespace ompl_interface
+{
+class ModelBasedPlanningContext;
+typedef boost::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPtr;
+}
+
+//namespace moveit
+//{
+//namespace core
+//{
+//class LinkModel;
+//{
+//}
 
 namespace ompl_rviz_viewer
 {
 
-//typedef boost::numeric::ublas::matrix<int> intMatrix;
-//typedef boost::shared_ptr<intMatrix> intMatrixPtr;
-
 static const std::string BASE_FRAME = "/world";
 static const double COST_HEIGHT_OFFSET = 0.5;
 
-enum rviz_colors { RED, GREEN, BLUE, GREY, WHITE, ORANGE, BLACK, YELLOW, TRANSLUCENT, RAND };
-
 typedef std::map< std::string, std::list<std::size_t> > MarkerList;
 
-class OmplRvizViewer
+class OmplRvizViewer : public moveit_visual_tools::VisualTools
 {
 private:
 
@@ -102,14 +116,12 @@ public:
 
   /**
    * \brief Constructor
-   * \param verbose - run in debug mode
    */
-  OmplRvizViewer(bool verbose, ompl::base::SpaceInformationPtr si);
+  OmplRvizViewer(const std::string& base_link,
+                 const std::string& marker_topic = moveit_visual_tools::RVIZ_MARKER_TOPIC,
+                 robot_model::RobotModelConstPtr robot_model = robot_model::RobotModelConstPtr());
 
-  /**
-   * \brief Destructor
-   */
-  ~OmplRvizViewer();
+  void setSpaceInformation(ompl::base::SpaceInformationPtr si);
 
   void setCostMap(intMatrixPtr cost);
 
@@ -152,7 +164,7 @@ public:
   /**
    * \brief Display Explored Space
    */
-  void publishGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color = BLUE, const double thickness = 0.2,
+  void publishGraph(ob::PlannerDataPtr planner_data, const moveit_visual_tools::rviz_colors& color = moveit_visual_tools::BLUE, const double thickness = 0.2,
                     const std::string& ns = "space_exploration");
 
   void publishSamples(const ob::PlannerDataPtr& plannerData);
@@ -174,19 +186,28 @@ public:
    */
   void publishStates(std::vector<const ompl::base::State*> states);
 
-  void publishSphere(const geometry_msgs::Point &point, const rviz_colors color, double scale = 0.3, const std::string& ns = "sphere");
+  void publishSphere(const geometry_msgs::Point &point, const moveit_visual_tools::rviz_colors color, double scale = 0.3, const std::string& ns = "sphere");
+
+  /**
+   * \brief Display resulting path from a solver, in the form of a plannerData
+   *        where the list of states is also the order of the path. This uses MoveIt's robot state for inverse kinematics
+   */
+  void publishRobotPath( const ompl_interface::ModelBasedPlanningContextPtr &mbp_context,
+                         const moveit::core::LinkModel *tip_link,
+                         const ob::PlannerDataPtr& plannerData, const moveit_visual_tools::rviz_colors color,
+                         const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
    * \brief Display result path from a solver, in the form of a plannerData
    * where the list of states is also the order of the path
    */
-  void publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color,
-                    const double thickness = 0.4, const std::string& ns = "result_path"  );
+  void publishPath( const ob::PlannerDataPtr& plannerData, const moveit_visual_tools::rviz_colors color,
+                    const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
    * \brief Display result path from a solver
    */
-  void publishPath( const og::PathGeometric& path, const rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" );
+  void publishPath( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
    * \brief Helper Function: gets the x,y coordinates for a given vertex id
@@ -197,10 +218,6 @@ public:
   geometry_msgs::Point getCoordinates( int vertex_id, ob::PlannerDataPtr planner_data );
 
   geometry_msgs::Point getCoordinates( const ob::State *state );
-
-  static double fRand(double fMin, double fMax);
-
-  static double dRand(double dMin, double dMax);
 
   /**
    * \brief Nat_Rounding helper function to make readings from cost map more accurate
@@ -214,7 +231,7 @@ public:
    * \param start state
    * \param color
    */
-  void publishState(ob::ScopedState<> state, const rviz_colors &color, double thickness = 1.5, const std::string& ns = "state_sphere");
+  void publishState(ob::ScopedState<> state, const moveit_visual_tools::rviz_colors &color, double thickness = 1.5, const std::string& ns = "state_sphere");
 
   /**
    * \brief Visualize the sampling area in Rviz
@@ -223,11 +240,10 @@ public:
    */
   void publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance);
 
-  bool publishText(const std::string &text, const rviz_colors &color = BLACK);
+  bool publishText(const std::string &text, const moveit_visual_tools::rviz_colors &color = moveit_visual_tools::BLACK);
 
-  bool publishText(const std::string &text, const geometry_msgs::Pose &pose, const rviz_colors &color = BLACK);
+  bool publishText(const std::string &text, const geometry_msgs::Pose &pose, const moveit_visual_tools::rviz_colors &color = moveit_visual_tools::BLACK);
 
-  std_msgs::ColorRGBA getColor(const rviz_colors &color);
 
 }; // end class
 

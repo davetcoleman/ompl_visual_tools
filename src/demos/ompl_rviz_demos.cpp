@@ -107,11 +107,12 @@ public:
 
     // Define an experience setup class
     lightning_setup_ = ot::LightningPtr( new ot::Lightning(space_) );
-    lightning_setup_->load("two_dimension_world", "ompl_storage");
+    lightning_setup_->load("two_dimension_world");
     si_ = lightning_setup_->getSpaceInformation();
 
     // Load the tool for displaying in Rviz
-    viewer_.reset(new ompl_rviz_viewer::OmplRvizViewer(verbose_, si_));
+    viewer_.reset(new ompl_rviz_viewer::OmplRvizViewer(BASE_FRAME));
+    viewer_->setSpaceInformation(si_);
 
     // Set the planning from scratch planner
     lightning_setup_->setPlanner(ob::PlannerPtr(new og::RRTstar( si_ )));
@@ -206,8 +207,8 @@ public:
     // Show start and goal
     if (use_visuals_)
     {
-      viewer_->publishState(start, GREEN, 4, "plan_start_goal");
-      viewer_->publishState(goal,  RED,   4, "plan_start_goal");
+      viewer_->publishState(start, moveit_visual_tools::GREEN, 4, "plan_start_goal");
+      viewer_->publishState(goal,  moveit_visual_tools::RED,   4, "plan_start_goal");
     }
 
     // set the start and goal states
@@ -407,7 +408,7 @@ public:
 
       // Interpolate solution
       lightning_setup_->getSolutionPath().interpolate();
-      viewer_->publishPath( lightning_setup_->getSolutionPath(), GREEN, 1.0, "final_solution");
+      viewer_->publishPath( lightning_setup_->getSolutionPath(), moveit_visual_tools::GREEN, 1.0, "final_solution");
     }
 
     // Print the states to screen -----------------------------------------------------
@@ -428,7 +429,7 @@ public:
       if (!just_path)
       {
         // Visualize the explored space
-        viewer_->publishGraph(planner_data, ORANGE, 0.2, "plan_from_scratch");
+        viewer_->publishGraph(planner_data, moveit_visual_tools::ORANGE, 0.2, "plan_from_scratch");
 
         // Visualize the sample locations
         //viewer_->publishSamples(planner_data);
@@ -446,12 +447,12 @@ public:
         //ROS_DEBUG_STREAM_NAMED("temp","Displaying planner data " << i << " and chosen ID was " << chosenID);
 
         // Make the chosen path a different color and thickness
-        rviz_colors color = BLACK;
+        moveit_visual_tools::rviz_colors color = moveit_visual_tools::BLACK;
         double thickness = 0.2;
         std::string ns = "repair_filtered_paths";
         if (chosenID == i)
         {
-          color = RED;
+          color = moveit_visual_tools::RED;
           thickness = 0.6;
           ns = "repair_chosen_path";
         }
@@ -468,7 +469,7 @@ public:
       for (std::size_t i = 0; i < repairPlannerDatas.size(); ++i)
       {
         //ROS_DEBUG_STREAM_NAMED("temp","Displaying planner data " << i);
-        viewer_->publishGraph(repairPlannerDatas[i], RAND, 0.2, std::string("repair_tree_"+boost::lexical_cast<std::string>(i)));
+        viewer_->publishGraph(repairPlannerDatas[i], moveit_visual_tools::RAND, 0.2, std::string("repair_tree_"+boost::lexical_cast<std::string>(i)));
 
         viewer_->publishStartGoalSpheres(repairPlannerDatas[i], std::string("repair_tree_"+boost::lexical_cast<std::string>(i)));
       }
@@ -489,7 +490,7 @@ public:
     // Show all paths
     for (std::size_t i = 0; i < paths.size(); ++i)
     {
-      viewer_->publishPath( paths[i], RAND );
+      viewer_->publishPath( paths[i], moveit_visual_tools::RAND );
     }
   }
 
@@ -530,9 +531,9 @@ public:
           ROS_DEBUG_STREAM_NAMED("temp","Score is " << score);
           viewer_->publishText("Score " + boost::lexical_cast<std::string>(score));
 
-          viewer_->publishPath( path1, GREEN, 0.8);
+          viewer_->publishPath( path1, moveit_visual_tools::GREEN, 0.8);
           viewer_->publishSamples( path1 );
-          viewer_->publishPath( path2, RAND );
+          viewer_->publishPath( path2, moveit_visual_tools::RAND );
           viewer_->publishSamples( path2 );
 
           ros::Duration(1).sleep();
@@ -573,17 +574,17 @@ public:
           double maxToDisplay = 20;
           if (score < maxToDisplay / 3)
           {
-            viewer_->publishPath( path2, GREEN );
+            viewer_->publishPath( path2, moveit_visual_tools::GREEN );
             found = true;
           }
           else if (score < maxToDisplay / 3 * 2)
           {
-            viewer_->publishPath( path2, YELLOW );
+            viewer_->publishPath( path2, moveit_visual_tools::YELLOW );
             found = true;
           }
           else if (score < maxToDisplay)
           {
-            viewer_->publishPath( path2, RED );
+            viewer_->publishPath( path2, moveit_visual_tools::RED );
             found = true;
           }
 
@@ -593,7 +594,7 @@ public:
         }
         if (found)
         {
-          viewer_->publishPath( path1, GREEN, 0.8 );
+          viewer_->publishPath( path1, moveit_visual_tools::GREEN, 0.8 );
           ros::Duration(2).sleep();
         }
         else
@@ -633,9 +634,9 @@ public:
         viewer_->publishText("Score " + boost::lexical_cast<std::string>(score));
 
         // Display
-        viewer_->publishPath( path1, GREEN, 0.8 );
+        viewer_->publishPath( path1, moveit_visual_tools::GREEN, 0.8 );
         viewer_->publishSamples( path1 );
-        viewer_->publishPath( path2, RAND );
+        viewer_->publishPath( path2, moveit_visual_tools::RAND );
         viewer_->publishSamples( path2 );
 
         ros::Duration(4.0).sleep();

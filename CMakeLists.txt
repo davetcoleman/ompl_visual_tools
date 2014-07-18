@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ompl_rviz_viewer)
 
 # Load catkin and all dependencies required for this package
-find_package(catkin REQUIRED COMPONENTS 
+find_package(catkin REQUIRED COMPONENTS
+  moveit_visual_tools
+  moveit_core
+  moveit_planners_ompl 
   roscpp 
   roslib
   visualization_msgs 
@@ -14,13 +17,17 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 include_directories(${Boost_INCLUDE_DIRS} ${OMPL_INCLUDE_DIRS})
 
 catkin_package(
-  CATKIN_DEPENDS 
+  CATKIN_DEPENDS
+    moveit_visual_tools
+    moveit_core
+    moveit_planners_ompl 
     roscpp
     roslib
     visualization_msgs 
   INCLUDE_DIRS 
     include
   LIBRARIES 
+    ${PROJECT_NAME}
     ${PROJECT_NAME}_ppm
 )
 

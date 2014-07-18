@@ -56,26 +56,33 @@
 // Custom validity checker that accounts for cost
 #include <ompl_rviz_viewer/costs/cost_map_2d_optimization_objective.h>
 
+// For converting OMPL state to a MoveIt robot state
+#include <moveit/ompl_interface/model_based_planning_context.h>
+#include <moveit/robot_state/robot_state.h>
+
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 namespace bnu = boost::numeric::ublas;
 
+using namespace moveit_visual_tools;
+
 namespace ompl_rviz_viewer
 {
 
-OmplRvizViewer::OmplRvizViewer(bool verbose, ompl::base::SpaceInformationPtr si)
-  : verbose_(verbose),
-    si_(si)
+OmplRvizViewer::OmplRvizViewer(const std::string& base_link, const std::string& marker_topic, robot_model::RobotModelConstPtr robot_model)
+  : VisualTools(base_link, marker_topic, robot_model)
 {
   // ROS Publishing stuff
   marker_pub_ = nh_.advertise<visualization_msgs::Marker>("ompl_rviz_markers", 1);
   ros::Duration(1).sleep();
+
+  //  visual_tools_.reset(new VisualTools(BASE_FRAME));
 }
 
-OmplRvizViewer::~OmplRvizViewer()
+void OmplRvizViewer::setSpaceInformation(ompl::base::SpaceInformationPtr si)
 {
+  si_ = si;
 }
-
 void OmplRvizViewer::setCostMap(intMatrixPtr cost)
 {
   cost_ = cost;
@@ -599,6 +606,67 @@ void OmplRvizViewer::publishSphere(const geometry_msgs::Point &point, const rviz
   markerPublisher(sphere_marker);
 }
 
+void OmplRvizViewer::publishRobotPath( const ompl_interface::ModelBasedPlanningContextPtr &mbp_context,
+                                       const moveit::core::LinkModel *tip_link,
+                                       const ob::PlannerDataPtr& plannerData, const rviz_colors color,
+                                       const double thickness, const std::string& ns )
+{
+  std::cout << "debug " << std::endl;
+  og::PathGeometric path(si_);
+  convertPlannerData(plannerData, path);
+  std::cout << "debug " << std::endl;
+
+  // MoveIt state:
+  moveit::core::RobotState robot_state(mbp_context->getRobotModel());
+  std::cout << "debug " << std::endl;  
+  // Coordinate state
+  Eigen::Affine3d pose;
+
+  // Make multiple paths of type RealVector that represent each tip we want to display
+  int dimensions = 3; // X,Y,Z
+
+  ob::StateSpacePtr space;
+  space.reset( new ob::RealVectorStateSpace( dimensions ));
+  std::cout << "debug " << std::endl;
+  ompl::base::SpaceInformationPtr cartesian_space_info;
+  cartesian_space_info.reset(new ompl::base::SpaceInformation(space));
+
+  og::PathGeometric cartesian_path(cartesian_space_info);  
+
+  ROS_DEBUG_STREAM_NAMED("temp","Converting path with " << path.getStateCount() << " states to a end effector tip path");
+
+  for( std::size_t i = 1; i < path.getStateCount(); ++i )
+  {
+      // Convert each state in the path to a MoveIt! robot state so that we can perform forward kinematics
+      mbp_context->getOMPLStateSpace()->copyToRobotState(robot_state, path.getState(i));
+
+      // Show the robot temporarily
+      publishRobotState(robot_state);
+     
+      // Get the coordinate of an end effector
+      pose = robot_state.getGlobalLinkTransform(tip_link);
+
+      // Debug pose
+      std::cout << "Pose: " << i << "------ \n" << pose.translation() << std::endl;
+
+      // Convert to a state
+      /*
+      ob::RealVectorStateSpace::StateType *real_state;
+      real_state->values[0] = pose.translation().x();
+      real_state->values[1] = pose.translation().y();
+      real_state->values[2] = pose.translation().z();
+      */
+
+      // Add to a geometric path
+      //cartesian_path.append(real_state);
+      ros::Duration(1.0).sleep();
+
+      VisualTools::publishSphere(pose, BLUE, REGULAR);
+  }
+
+  //publishPath(cartesian_path, color, thickness, ns);
+}
+
 void OmplRvizViewer::publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color,
                   const double thickness, const std::string& ns )
 {
@@ -646,7 +714,7 @@ void OmplRvizViewer::publishPath( const og::PathGeometric& path, const rviz_colo
   marker.color = this_color;
 
   if (verbose_)
-    ROS_INFO("Publishing Path");
+    ROS_INFO("Publishing Path ");
 
   geometry_msgs::Point last_vertex;
   geometry_msgs::Point this_vertex;
@@ -694,24 +762,15 @@ geometry_msgs::Point OmplRvizViewer::getCoordinates( const ob::State *state )
   const ob::RealVectorStateSpace::StateType *real_state =
     static_cast<const ob::RealVectorStateSpace::StateType*>(state);
 
+  // 
+
+
   // Create point
   geometry_msgs::Point point;
   point.x = real_state->values[0];
   point.y = real_state->values[1];
   point.z = getCostHeight(point);
   return point;
-}
-
-double OmplRvizViewer::fRand(double fMin, double fMax)
-{
-  double f = (double)rand() / RAND_MAX;
-  return fMin + f * (fMax - fMin);
-}
-
-double OmplRvizViewer::dRand(double dMin, double dMax)
-{
-  double d = (double)rand() / RAND_MAX;
-  return dMin + d * (dMax - dMin);
 }
 
 int OmplRvizViewer::natRound(double x)
@@ -775,73 +834,6 @@ bool OmplRvizViewer::publishText(const std::string &text, const geometry_msgs::P
 
   return true;
 }
-
-std_msgs::ColorRGBA OmplRvizViewer::getColor(const rviz_colors &color)
-{
-  std_msgs::ColorRGBA result;
-  result.a = 1.0;
-  switch(color)
-  {
-    case RED:
-      result.r = 0.8;
-      result.g = 0.1;
-      result.b = 0.1;
-      break;
-    case GREEN:
-      result.r = 0.1;
-      result.g = 0.8;
-      result.b = 0.1;
-      break;
-    case GREY:
-      result.r = 0.9;
-      result.g = 0.9;
-      result.b = 0.9;
-      break;
-    case WHITE:
-      result.r = 1.0;
-      result.g = 1.0;
-      result.b = 1.0;
-      break;
-    case ORANGE:
-      result.r = 1.0;
-      result.g = 0.5;
-      result.b = 0.0;
-      break;
-    case TRANSLUCENT:
-      result.r = 0.1;
-      result.g = 0.1;
-      result.b = 0.8;
-      result.a = 0.3;
-      break;
-    case BLACK:
-      result.r = 0.0;
-      result.g = 0.0;
-      result.b = 0.0;
-      break;
-    case YELLOW:
-      result.r = 1.0;
-      result.g = 1.0;
-      result.b = 0.0;
-      break;
-    case RAND:
-      // Make sure color is not *too* light
-      do
-      {
-        result.r = fRand(0.0,1.0);
-        result.g = fRand(0.0,1.0);
-        result.b = fRand(0.0,1.0);
-      } while (result.r + result.g + result.b < 2); // 3 would be white
-      break;
-    case BLUE:
-    default:
-      result.r = 0.1;
-      result.g = 0.1;
-      result.b = 0.8;
-  }
-
-  return result;
-}
-
 
 
 } // end namespace
