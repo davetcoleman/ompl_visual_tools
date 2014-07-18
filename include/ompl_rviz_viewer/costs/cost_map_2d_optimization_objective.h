@@ -40,7 +40,10 @@
 #ifndef OMPL_RVIZ_VIEWER__COST_MAP_OPTIMIZATION_OBJECTIVE_
 #define OMPL_RVIZ_VIEWER__COST_MAP_OPTIMIZATION_OBJECTIVE_
 
+// OMPL
 #include <ompl/base/OptimizationObjective.h>
+#include <ompl/base/SpaceInformation.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
 
 // Boost
 #include <boost/numeric/ublas/matrix.hpp>

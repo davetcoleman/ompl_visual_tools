@@ -40,6 +40,14 @@ target_link_libraries(${PROJECT_NAME}_ppm
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
+# Rviz Viewer Library
+add_library(${PROJECT_NAME}
+  src/ompl_rviz_viewer.cpp
+)
+target_link_libraries(${PROJECT_NAME} 
+  ${PROJECT_NAME}_ppm ${catkin_LIBRARIES} ${Boost_LIBRARIES}  
+)
+
 # Executable for SimpleSetup (in our case T-RRT)
 # add_executable(ompl_rviz_planner
 #   src/ompl_rviz_planner.cpp 
@@ -59,6 +67,7 @@ target_link_libraries(ompl_rviz_lightning
   ${OMPL_LIBRARIES} 
   ${catkin_LIBRARIES} 
   ${Boost_LIBRARIES}
+  ${PROJECT_NAME} 
   ${PROJECT_NAME}_ppm
 )
 
@@ -70,6 +79,7 @@ target_link_libraries(experience_database_test
   ${OMPL_LIBRARIES} 
   ${catkin_LIBRARIES} 
   ${Boost_LIBRARIES}
+  ${PROJECT_NAME} 
   ${PROJECT_NAME}_ppm
 )
 
