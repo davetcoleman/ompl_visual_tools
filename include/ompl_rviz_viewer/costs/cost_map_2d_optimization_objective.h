@@ -43,6 +43,7 @@
 // OMPL
 #include <ompl/base/OptimizationObjective.h>
 #include <ompl/base/SpaceInformation.h>
+#include <ompl/base/Cost.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 
 // Boost
@@ -93,7 +94,7 @@ public:
     }
 
     /** \brief Defines motion cost */
-    virtual Cost motionCost(const State *s1, const State *s2) const
+    virtual ompl::base::Cost motionCost(const State *s1, const State *s2) const
     {
         // Only accrue positive changes in cost
         double positiveCostAccrued = std::max(stateCost(s2).v - stateCost(s1).v, 0.0);

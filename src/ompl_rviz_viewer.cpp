@@ -75,42 +75,21 @@ OmplRvizViewer::OmplRvizViewer(const std::string& base_link, const std::string& 
   // ROS Publishing stuff
   marker_pub_ = nh_.advertise<visualization_msgs::Marker>("ompl_rviz_markers", 1);
   ros::Duration(1).sleep();
+}
 
-  //  visual_tools_.reset(new VisualTools(BASE_FRAME));
+void OmplRvizViewer::setStateSpace(ompl::base::StateSpacePtr space)
+{
+  si_.reset(new ompl::base::SpaceInformation(space));
 }
 
 void OmplRvizViewer::setSpaceInformation(ompl::base::SpaceInformationPtr si)
 {
   si_ = si;
 }
+
 void OmplRvizViewer::setCostMap(intMatrixPtr cost)
 {
   cost_ = cost;
-}
-
-void OmplRvizViewer::markerPublisher(const visualization_msgs::Marker& marker)
-{
-  // Publish normal
-  marker_pub_.publish( marker );
-
-  // Process
-  ros::spinOnce();
-  ros::Duration(0.01).sleep();
-}
-
-void OmplRvizViewer::deleteAllMarkers()
-{
-  visualization_msgs::Marker marker;
-  marker.header.frame_id = BASE_FRAME;
-  marker.header.stamp = ros::Time();
-  marker.action = 3; // In ROS-J: visualization_msgs::Marker::DELETEALL;
-
-  // Publish normal
-  marker_pub_.publish( marker );
-
-  // Process
-  ros::spinOnce();
-  ros::Duration(0.1).sleep();
 }
 
 double OmplRvizViewer::getCost(const geometry_msgs::Point &point)
@@ -249,7 +228,9 @@ void OmplRvizViewer::publishTriangles(PPMImage *image)
 
   }
 
-  markerPublisher(marker);
+  // Send to Rviz
+  marker_pub_.publish( marker );
+  ros::spinOnce();;
 }
 
 /**
@@ -361,11 +342,11 @@ void OmplRvizViewer::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, co
 {
   for (std::size_t i = 0; i < planner_data->numStartVertices(); ++i)
   {
-    publishSphere( getCoordinates( planner_data->getStartVertex(i).getState() ), GREEN, 3.0, ns);
+    publishSphere( getCoordinates( planner_data->getStartVertex(i).getState() ), GREEN, REGULAR, ns);
   }
   for (std::size_t i = 0; i < planner_data->numGoalVertices(); ++i)
   {
-    publishSphere( getCoordinates( planner_data->getGoalVertex(i).getState() ), RED, 3.0, ns );
+    publishSphere( getCoordinates( planner_data->getGoalVertex(i).getState() ), RED, REGULAR, ns );
   }
 }
 
@@ -428,8 +409,9 @@ void OmplRvizViewer::publishGraph(ob::PlannerDataPtr planner_data, const rviz_co
 
   }
 
-  // Publish the marker
-  markerPublisher(marker);
+  // Send to Rviz
+  marker_pub_.publish( marker );
+  ros::spinOnce();;
 }
 
 void OmplRvizViewer::publishSamples(const ob::PlannerDataPtr& plannerData)
@@ -496,8 +478,9 @@ void OmplRvizViewer::publishSamples( og::PathGeometric& path )
     marker.colors.push_back( color );
   }
 
-  // Publish the marker
-  markerPublisher(marker);
+  // Send to Rviz
+  marker_pub_.publish( marker );
+  ros::spinOnce();;
 }
 
 void OmplRvizViewer::convertPlannerData(const ob::PlannerDataPtr plannerData, og::PathGeometric &path)
@@ -559,69 +542,26 @@ void OmplRvizViewer::publishStates(std::vector<const ompl::base::State*> states)
     marker.colors.push_back( color );
   }
 
-  // Publish the marker
-  markerPublisher(marker);
+    // Send to Rviz
+  marker_pub_.publish( marker );
+  ros::spinOnce();;
 }
 
-void OmplRvizViewer::publishSphere(const geometry_msgs::Point &point, const rviz_colors color, double scale, const std::string& ns)
-{
-  visualization_msgs::Marker sphere_marker;
-
-  sphere_marker.header.frame_id = BASE_FRAME;
-
-  // Set the namespace and id for this marker.  This serves to create a unique ID
-  sphere_marker.ns = ns;
-  // Set the marker type.
-  sphere_marker.type = visualization_msgs::Marker::SPHERE_LIST;
-  // Set the marker action.  Options are ADD and DELETE
-  sphere_marker.action = visualization_msgs::Marker::ADD;
-  // Marker group position and orientation
-  sphere_marker.pose.position.x = 0;
-  sphere_marker.pose.position.y = 0;
-  sphere_marker.pose.position.z = 0;
-  sphere_marker.pose.orientation.x = 0.0;
-  sphere_marker.pose.orientation.y = 0.0;
-  sphere_marker.pose.orientation.z = 0.0;
-  sphere_marker.pose.orientation.w = 1.0;
-
-  // Add the point pair to the line message
-  sphere_marker.points.push_back( point );
-  sphere_marker.colors.push_back( getColor(color) );
-
-  // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-  sphere_marker.header.stamp = ros::Time::now();
-
-  static int sphere_id_ = 0;
-  sphere_marker.id = ++sphere_id_;
-  sphere_marker.color = getColor(color);
-  sphere_marker.scale.x = scale;
-  sphere_marker.scale.y = scale;
-  sphere_marker.scale.z = scale;
-
-  // Update the single point with new pose
-  sphere_marker.points[0] = point;
-  sphere_marker.colors[0] = getColor(color);
-
-  // Publish
-  markerPublisher(sphere_marker);
-}
-
-void OmplRvizViewer::publishRobotPath( const ompl_interface::ModelBasedPlanningContextPtr &mbp_context,
-                                       const moveit::core::LinkModel *tip_link,
+void OmplRvizViewer::publishRobotPath( const moveit::core::LinkModel *tip_link,
                                        const ob::PlannerDataPtr& plannerData, const rviz_colors color,
                                        const double thickness, const std::string& ns )
 {
-  std::cout << "debug " << std::endl;
+  // Make sure a robot state is available
+  loadSharedRobotState();
+
+  // Convert to regular path
   og::PathGeometric path(si_);
   convertPlannerData(plannerData, path);
-  std::cout << "debug " << std::endl;
 
-  // MoveIt state:
-  moveit::core::RobotState robot_state(mbp_context->getRobotModel());
-  std::cout << "debug " << std::endl;  
-  // Coordinate state
+  // Coordinate state of end effector
   Eigen::Affine3d pose;
-
+  
+  /*
   // Make multiple paths of type RealVector that represent each tip we want to display
   int dimensions = 3; // X,Y,Z
 
@@ -632,22 +572,28 @@ void OmplRvizViewer::publishRobotPath( const ompl_interface::ModelBasedPlanningC
   cartesian_space_info.reset(new ompl::base::SpaceInformation(space));
 
   og::PathGeometric cartesian_path(cartesian_space_info);  
+  */
 
   ROS_DEBUG_STREAM_NAMED("temp","Converting path with " << path.getStateCount() << " states to a end effector tip path");
 
-  for( std::size_t i = 1; i < path.getStateCount(); ++i )
+  for( std::size_t i = 0; i < path.getStateCount(); ++i )
   {
       // Convert each state in the path to a MoveIt! robot state so that we can perform forward kinematics
-      mbp_context->getOMPLStateSpace()->copyToRobotState(robot_state, path.getState(i));
+      ompl_interface::ModelBasedStateSpacePtr mbss = boost::static_pointer_cast<ompl_interface::ModelBasedStateSpace>(si_->getStateSpace());
+
+      mbss->copyToRobotState( *shared_robot_state_, path.getState(i) );      
+
+
+      //mbp_context->getOMPLStateSpace()->copyToRobotState(shared_robot_state_, path.getState(i));
 
       // Show the robot temporarily
-      publishRobotState(robot_state);
+      publishRobotState(shared_robot_state_);
      
       // Get the coordinate of an end effector
-      pose = robot_state.getGlobalLinkTransform(tip_link);
+      //pose = shared_robot_state_->getGlobalLinkTransform(tip_link);
 
       // Debug pose
-      std::cout << "Pose: " << i << "------ \n" << pose.translation() << std::endl;
+      std::cout << "Pose: " << i << " of link " << tip_link->getName() << ": \n" << pose.translation() << std::endl;
 
       // Convert to a state
       /*
@@ -659,9 +605,10 @@ void OmplRvizViewer::publishRobotPath( const ompl_interface::ModelBasedPlanningC
 
       // Add to a geometric path
       //cartesian_path.append(real_state);
-      ros::Duration(1.0).sleep();
 
-      VisualTools::publishSphere(pose, BLUE, REGULAR);
+      publishSphere(pose, moveit_visual_tools::ORANGE, moveit_visual_tools::LARGE);
+      
+      ros::Duration(1.0).sleep();
   }
 
   //publishPath(cartesian_path, color, thickness, ns);
@@ -735,8 +682,9 @@ void OmplRvizViewer::publishPath( const og::PathGeometric& path, const rviz_colo
     last_vertex = this_vertex;
   }
 
-  // Publish the marker
-  markerPublisher(marker);
+  // Send to Rviz
+  marker_pub_.publish( marker );
+  ros::spinOnce();;
 }
 
 geometry_msgs::Point OmplRvizViewer::getCoordinates( int vertex_id, ob::PlannerDataPtr planner_data )
@@ -787,7 +735,7 @@ void OmplRvizViewer::publishState(ob::ScopedState<> state, const rviz_colors &co
   state_pt.y = state[1];
   state_pt.z = getCostHeight(state_pt);
 
-  publishSphere(state_pt, color, thickness, ns);
+  publishSphere(state_pt, color, REGULAR, ns);
 }
 
 void OmplRvizViewer::publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance)
@@ -797,9 +745,9 @@ void OmplRvizViewer::publishSampleRegion(const ob::ScopedState<>& state_area, co
   state_pt.y = state_area[1];
   state_pt.z = getCostHeight(state_pt);
 
-  publishSphere(state_pt, BLACK, 1.5, "sample_region"); // mid point
+  publishSphere(state_pt, BLACK, REGULAR, "sample_region"); // mid point
   // outer sphere (x2 b/c its a radius, x0.1 to make it look nicer)
-  publishSphere(state_pt, TRANSLUCENT, 2.1*distance, "sample_region");
+  publishSphere(state_pt, TRANSLUCENT, REGULAR, "sample_region");
 }
 
 bool OmplRvizViewer::publishText(const std::string &text, const rviz_colors &color)
@@ -830,7 +778,9 @@ bool OmplRvizViewer::publishText(const std::string &text, const geometry_msgs::P
   text_marker.color = getColor( color );
   text_marker.scale.z = ceil(cost_->size1() / 20.0);    // only z is required (size of an "A")
 
-  markerPublisher( text_marker );
+  // Send to Rviz
+  marker_pub_.publish( text_marker );
+  ros::spinOnce();;
 
   return true;
 }

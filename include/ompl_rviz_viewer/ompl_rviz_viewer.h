@@ -121,13 +121,16 @@ public:
                  const std::string& marker_topic = moveit_visual_tools::RVIZ_MARKER_TOPIC,
                  robot_model::RobotModelConstPtr robot_model = robot_model::RobotModelConstPtr());
 
+  /**
+   * \brief Load the OMPL state space or space information pointer 
+   */
+  void setStateSpace(ompl::base::StateSpacePtr space);
   void setSpaceInformation(ompl::base::SpaceInformationPtr si);
 
+  /**
+   * \brief Optional cost map for 2D environments
+   */
   void setCostMap(intMatrixPtr cost);
-
-  void markerPublisher(const visualization_msgs::Marker& marker);
-
-  void deleteAllMarkers();
 
   /**
    * \brief Helper function for converting a point to the correct cost
@@ -186,14 +189,11 @@ public:
    */
   void publishStates(std::vector<const ompl::base::State*> states);
 
-  void publishSphere(const geometry_msgs::Point &point, const moveit_visual_tools::rviz_colors color, double scale = 0.3, const std::string& ns = "sphere");
-
   /**
    * \brief Display resulting path from a solver, in the form of a plannerData
    *        where the list of states is also the order of the path. This uses MoveIt's robot state for inverse kinematics
    */
-  void publishRobotPath( const ompl_interface::ModelBasedPlanningContextPtr &mbp_context,
-                         const moveit::core::LinkModel *tip_link,
+  void publishRobotPath( const moveit::core::LinkModel *tip_link,
                          const ob::PlannerDataPtr& plannerData, const moveit_visual_tools::rviz_colors color,
                          const double thickness = 0.4, const std::string& ns = "result_path" );
 
