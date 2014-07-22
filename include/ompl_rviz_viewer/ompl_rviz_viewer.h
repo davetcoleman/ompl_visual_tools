@@ -97,14 +97,8 @@ class OmplRvizViewer : public moveit_visual_tools::VisualTools
 {
 private:
 
-  // A shared node handle
-  ros::NodeHandle nh_;
-
   // Show more visual and console output, with general slower run time.
   bool verbose_;
-
-  // A shared ROS publisher
-  ros::Publisher marker_pub_;
 
   // Keep a pointer to an optional cost map
   intMatrixPtr cost_;

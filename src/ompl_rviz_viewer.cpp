@@ -72,9 +72,6 @@ namespace ompl_rviz_viewer
 OmplRvizViewer::OmplRvizViewer(const std::string& base_link, const std::string& marker_topic, robot_model::RobotModelConstPtr robot_model)
   : VisualTools(base_link, marker_topic, robot_model)
 {
-  // ROS Publishing stuff
-  marker_pub_ = nh_.advertise<visualization_msgs::Marker>("ompl_rviz_markers", 1);
-  ros::Duration(1).sleep();
 }
 
 void OmplRvizViewer::setStateSpace(ompl::base::StateSpacePtr space)
@@ -229,7 +226,7 @@ void OmplRvizViewer::publishTriangles(PPMImage *image)
   }
 
   // Send to Rviz
-  marker_pub_.publish( marker );
+  pub_rviz_marker_.publish( marker );
   ros::spinOnce();;
 }
 
@@ -410,7 +407,7 @@ void OmplRvizViewer::publishGraph(ob::PlannerDataPtr planner_data, const rviz_co
   }
 
   // Send to Rviz
-  marker_pub_.publish( marker );
+  pub_rviz_marker_.publish( marker );
   ros::spinOnce();;
 }
 
@@ -429,6 +426,8 @@ void OmplRvizViewer::publishSamples(const ob::PlannerDataPtr& plannerData)
 
 void OmplRvizViewer::publishSamples( og::PathGeometric& path )
 {
+  // TODO convert to use publishSpheres from parent class
+
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.
   marker.header.frame_id = BASE_FRAME;
@@ -479,7 +478,7 @@ void OmplRvizViewer::publishSamples( og::PathGeometric& path )
   }
 
   // Send to Rviz
-  marker_pub_.publish( marker );
+  pub_rviz_marker_.publish( marker );
   ros::spinOnce();;
 }
 
@@ -543,7 +542,7 @@ void OmplRvizViewer::publishStates(std::vector<const ompl::base::State*> states)
   }
 
     // Send to Rviz
-  marker_pub_.publish( marker );
+  pub_rviz_marker_.publish( marker );
   ros::spinOnce();;
 }
 
@@ -683,8 +682,8 @@ void OmplRvizViewer::publishPath( const og::PathGeometric& path, const rviz_colo
   }
 
   // Send to Rviz
-  marker_pub_.publish( marker );
-  ros::spinOnce();;
+  pub_rviz_marker_.publish( marker );
+  ros::spinOnce();
 }
 
 geometry_msgs::Point OmplRvizViewer::getCoordinates( int vertex_id, ob::PlannerDataPtr planner_data )
@@ -779,7 +778,7 @@ bool OmplRvizViewer::publishText(const std::string &text, const geometry_msgs::P
   text_marker.scale.z = ceil(cost_->size1() / 20.0);    // only z is required (size of an "A")
 
   // Send to Rviz
-  marker_pub_.publish( text_marker );
+  pub_rviz_marker_.publish( text_marker );
   ros::spinOnce();;
 
   return true;
