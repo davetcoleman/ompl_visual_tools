@@ -218,8 +218,8 @@ public:
 
     // Auto setup parameters (optional actually)
     lightning_setup_->setup();
-    lightning_setup_->enableRecall(use_recall);
-    lightning_setup_->enableScratch(use_scratch);
+    lightning_setup_->enablePlanningFromRecall(use_recall);
+    lightning_setup_->enablePlanningFromScratch(use_scratch);
 
     //ROS_ERROR_STREAM_NAMED("temp","out of curiosity: coll check resolution: "
     //   << si_->getStateValidityCheckingResolution());
@@ -439,9 +439,10 @@ public:
     // Retrieve Planner - show filtered paths ------------------------------------------------
     if (true)
     {
-      std::vector<ob::PlannerDataPtr> recallPlannerDatas;
-      std::size_t chosenID;
-      lightning_setup_->getRetrieveRepairPlanner().getRecalledPlannerDatas( recallPlannerDatas, chosenID);
+      const std::vector<ob::PlannerDataPtr> &recallPlannerDatas = lightning_setup_->getRetrieveRepairPlanner().getLastRecalledNearestPaths();
+      const std::size_t &chosenID = lightning_setup_->getRetrieveRepairPlanner().getLastRecalledNearestPathChosen();
+      //lightning_setup_->getRetrieveRepairPlanner().getRecalledPlannerDatas( recallPlannerDatas, chosenID);
+
       for (std::size_t i = 0; i < recallPlannerDatas.size(); ++i)
       {
         //ROS_DEBUG_STREAM_NAMED("temp","Displaying planner data " << i << " and chosen ID was " << chosenID);
@@ -525,6 +526,9 @@ public:
           viewer_->convertPlannerData(paths[i], path1);
           og::PathGeometric path2(si_);
           viewer_->convertPlannerData(paths[j], path2);
+
+          // Reverse path2 if necessary so that it matches path1 better
+          lightning_setup_->reversePathIfNecessary(path1, path2);
 
           double score = lightning_setup_->getDynamicTimeWarp()->getPathsScoreNonConst(path1, path2);
 

@@ -5,14 +5,14 @@ project(ompl_rviz_viewer)
 find_package(catkin REQUIRED COMPONENTS
   moveit_visual_tools
   moveit_core
-  moveit_planners_ompl 
+  moveit_planners_ompl
   roscpp 
   roslib
-  visualization_msgs 
+  visualization_msgs
 )
 
 find_package(OMPL REQUIRED)
-find_package(Boost REQUIRED COMPONENTS serialization)
+find_package(Boost) # REQUIRED COMPONENTS serialization) # todo remove serialization dep
 
 include_directories(${Boost_INCLUDE_DIRS} ${OMPL_INCLUDE_DIRS})
 

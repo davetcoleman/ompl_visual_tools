@@ -31,6 +31,5 @@
   <run_depend>ompl</run_depend>
 
   <export>
-
   </export>
 </package>
