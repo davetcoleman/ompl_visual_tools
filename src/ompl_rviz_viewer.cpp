@@ -252,7 +252,7 @@ void OmplRvizViewer::publishTriangle( int x, int y, visualization_msgs::Marker* 
 }
 
 void OmplRvizViewer::interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker,
-                      const std_msgs::ColorRGBA color )
+                                      const std_msgs::ColorRGBA color )
 {
   // Copy to non-const
   geometry_msgs::Point point_a = p1;
@@ -541,80 +541,87 @@ void OmplRvizViewer::publishStates(std::vector<const ompl::base::State*> states)
     marker.colors.push_back( color );
   }
 
-    // Send to Rviz
+  // Send to Rviz
   pub_rviz_marker_.publish( marker );
   ros::spinOnce();;
 }
 
-void OmplRvizViewer::publishRobotPath( const moveit::core::LinkModel *tip_link,
-                                       const ob::PlannerDataPtr& plannerData, const rviz_colors color,
-                                       const double thickness, const std::string& ns )
+void OmplRvizViewer::publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
+                                       const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated)
 {
   // Make sure a robot state is available
   loadSharedRobotState();
 
-  // Convert to regular path
-  og::PathGeometric path(si_);
-  convertPlannerData(plannerData, path);
-
-  // Coordinate state of end effector
+  // Vars
   Eigen::Affine3d pose;
-  
-  /*
-  // Make multiple paths of type RealVector that represent each tip we want to display
-  int dimensions = 3; // X,Y,Z
+  std::vector< std::vector<geometry_msgs::Point> > paths_msgs(tips.size()); // each tip has its own path of points
+  robot_trajectory::RobotTrajectoryPtr robot_trajectory;
 
-  ob::StateSpacePtr space;
-  space.reset( new ob::RealVectorStateSpace( dimensions ));
-  std::cout << "debug " << std::endl;
-  ompl::base::SpaceInformationPtr cartesian_space_info;
-  cartesian_space_info.reset(new ompl::base::SpaceInformation(space));
+  ompl_interface::ModelBasedStateSpacePtr model_state_space =
+    boost::static_pointer_cast<ompl_interface::ModelBasedStateSpace>(si_->getStateSpace());
 
-  og::PathGeometric cartesian_path(cartesian_space_info);  
-  */
-
-  ROS_DEBUG_STREAM_NAMED("temp","Converting path with " << path.getStateCount() << " states to a end effector tip path");
-
-  for( std::size_t i = 0; i < path.getStateCount(); ++i )
+  // Optionally save the trajectory
+  if (show_trajectory_animated)
   {
-      // Convert each state in the path to a MoveIt! robot state so that we can perform forward kinematics
-      ompl_interface::ModelBasedStateSpacePtr mbss = boost::static_pointer_cast<ompl_interface::ModelBasedStateSpace>(si_->getStateSpace());
-
-      mbss->copyToRobotState( *shared_robot_state_, path.getState(i) );      
-
-
-      //mbp_context->getOMPLStateSpace()->copyToRobotState(shared_robot_state_, path.getState(i));
-
-      // Show the robot temporarily
-      publishRobotState(shared_robot_state_);
-     
-      // Get the coordinate of an end effector
-      //pose = shared_robot_state_->getGlobalLinkTransform(tip_link);
-
-      // Debug pose
-      std::cout << "Pose: " << i << " of link " << tip_link->getName() << ": \n" << pose.translation() << std::endl;
-
-      // Convert to a state
-      /*
-      ob::RealVectorStateSpace::StateType *real_state;
-      real_state->values[0] = pose.translation().x();
-      real_state->values[1] = pose.translation().y();
-      real_state->values[2] = pose.translation().z();
-      */
-
-      // Add to a geometric path
-      //cartesian_path.append(real_state);
-
-      publishSphere(pose, moveit_visual_tools::ORANGE, moveit_visual_tools::LARGE);
-      
-      ros::Duration(1.0).sleep();
+    robot_trajectory.reset(new robot_trajectory::RobotTrajectory(robot_model_, joint_model_group->getName()));
   }
 
-  //publishPath(cartesian_path, color, thickness, ns);
+  // Each state in the path
+  for (std::size_t state_id = 0; state_id < path->numVertices(); ++state_id)
+  {
+    // Check if program is shutting down
+    if (!ros::ok())
+      return;
+
+    // Convert to robot state
+    model_state_space->copyToRobotState( *shared_robot_state_, path->getVertex(state_id).getState() );
+    //shared_robot_state_->update(true); // force update so that the virtual joint is updated to the grounded foot
+
+    //publishRobotState(shared_robot_state_);
+
+    // Each tip in the robot state
+    for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
+    {
+      // Forward kinematics
+      pose = shared_robot_state_->getGlobalLinkTransform(tips[tip_id]);
+
+      // Optionally save the trajectory
+      if (show_trajectory_animated)
+      {
+        robot_state::RobotState robot_state_copy = *shared_robot_state_;
+        robot_trajectory->addSuffixWayPoint(robot_state_copy, 0.05); // 1 second interval
+      }
+
+      // Debug pose
+      //std::cout << "Pose: " << state_id << " of link " << tips[tip_id]->getName() << ": \n" << pose.translation() << std::endl;
+
+      paths_msgs[tip_id].push_back( convertPose(pose).position );
+
+      // Show goal state arrow
+      if (state_id == path->numVertices() -1)
+      {
+        publishArrow( pose, moveit_visual_tools::BLACK );
+      }
+    }
+  } // for each state
+
+  for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
+  {
+    VisualTools::publishPath( paths_msgs[tip_id], moveit_visual_tools::RAND, moveit_visual_tools::SMALL );
+    ros::Duration(0.05).sleep();
+    publishSpheres( paths_msgs[tip_id], moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );
+    ros::Duration(0.05).sleep();
+  }
+
+  // Debugging - Convert to trajectory
+  if (show_trajectory_animated)
+  {
+    publishTrajectoryPath(*robot_trajectory, true);
+  }
 }
 
 void OmplRvizViewer::publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color,
-                  const double thickness, const std::string& ns )
+                                  const double thickness, const std::string& ns )
 {
   og::PathGeometric path(si_);
   convertPlannerData(plannerData, path);
@@ -709,7 +716,7 @@ geometry_msgs::Point OmplRvizViewer::getCoordinates( const ob::State *state )
   const ob::RealVectorStateSpace::StateType *real_state =
     static_cast<const ob::RealVectorStateSpace::StateType*>(state);
 
-  // 
+  //
 
 
   // Create point

@@ -116,7 +116,7 @@ public:
                  robot_model::RobotModelConstPtr robot_model = robot_model::RobotModelConstPtr());
 
   /**
-   * \brief Load the OMPL state space or space information pointer 
+   * \brief Load the OMPL state space or space information pointer
    */
   void setStateSpace(ompl::base::StateSpacePtr space);
   void setSpaceInformation(ompl::base::SpaceInformationPtr si);
@@ -187,9 +187,8 @@ public:
    * \brief Display resulting path from a solver, in the form of a plannerData
    *        where the list of states is also the order of the path. This uses MoveIt's robot state for inverse kinematics
    */
-  void publishRobotPath( const moveit::core::LinkModel *tip_link,
-                         const ob::PlannerDataPtr& plannerData, const moveit_visual_tools::rviz_colors color,
-                         const double thickness = 0.4, const std::string& ns = "result_path" );
+  void publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
+                         const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated);
 
   /**
    * \brief Display result path from a solver, in the form of a plannerData
