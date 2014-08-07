@@ -16,6 +16,12 @@ streamlined for considering costs and experience-based planning.
 
 Clone into your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) and rebuild.
 
+### OMPL
+
+This repo currently requires ``OMPL 0.14.0`` or newer, which is not available in debian for ROS Hydro. To use on Hydro, please install OMPL from source.
+
+Additionally, to compile this you need the ``lightning_framework`` branch of davetcoleman/ompl's code. If you don't want to use that branch, just disable the demos from being build in CMakeLists.txt. This depedency is unfortuante.
+
 ## Usage
 
 Start Rviz using the included launch file:
