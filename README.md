@@ -18,9 +18,19 @@ streamlined for considering costs and experience-based planning.
 
 ## How to Build
 
+**Indigo**
+
+Coming soon
+```
+sudo apt-get install ros-indigo-ompl-visual-tools
+```
+
+**Hydro**
+
 Clone into your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) and rebuild.
 
-Note: This repo currently requires ``OMPL 0.14.0`` or newer, which is not available in debian for ROS Hydro. To use on Hydro, please install OMPL from source.
+Note: this repo currently requires ``OMPL 0.14.0`` or newer, which is not available in debian for ROS Hydro. Please install OMPL from source.
+
 
 ## Usage
 
