@@ -2,6 +2,8 @@
 
 The OMPL Visual Tools is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
 
+Formally named ompl_rviz_viewer until August 2014.
+
 The ompl_visual_tools was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
 The space is specified as a grey scale cost map image that can be passed in to the program. 
 The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
@@ -20,8 +22,6 @@ Clone into your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a
 
 This repo currently requires ``OMPL 0.14.0`` or newer, which is not available in debian for ROS Hydro. To use on Hydro, please install OMPL from source.
 
-Additionally, to compile this you need the ``lightning_framework`` branch of davetcoleman/ompl's code. If you don't want to use that branch, just disable the demos from being build in CMakeLists.txt. This depedency is unfortuante.
-
 ## Usage
 
 Start Rviz using the included launch file:
@@ -32,33 +32,13 @@ roslaunch ompl_visual_tools ompl_rviz.launch
 
 ### Cost-based planner with Transition-based RRT:
 
-**Note:** *I have not been maintaining this aspect of the code very well, so currently to use just this aspect you need to turn off the lightning components using the following command:*
-
-```
-rosrun ompl_visual_tools ompl_rviz_demos --noRecall
-```
-
-To see optional parameters, pass in ``--help`` argument. There are many options.
-
-**Note:** *To change the algorithm being used, manually edit the code*
-
-### Experienced based-planning with Lightning Framework
-
-ompl_visual_tools can also help debug experience-based planning like the lightning framework. Examples:
-
-Image of an old path (red line) being repaired into feasible path (green line)
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/similar_paths.png" />
-
-Image of multiple paths in a experience database:
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/repaired_path.png" />
-
-To run:
-
 ```
 rosrun ompl_visual_tools ompl_rviz_demos
 ```
 
 To see optional parameters, pass in ``--help`` argument. There are many options.
+
+**Note:** *To change the algorithm being used, manually edit the code*
 
 ## Cost Map Usage
 
