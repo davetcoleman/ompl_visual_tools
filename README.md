@@ -2,7 +2,7 @@
 
 The OMPL Visual Tools is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
 
-Formally named ompl_rviz_viewer until August 2014.
+Formally named ompl_rviz_viewer until August 2014, this project spun out of an internship at Willow Garage. [Video](https://www.youtube.com/watch?v=RcGvi4Svd4k)
 
 The ompl_visual_tools was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
 The space is specified as a grey scale cost map image that can be passed in to the program. 
