@@ -1,8 +1,8 @@
-# OMPL RViz Viewer
+# OMPL Visual Tools
 
-The OMPL Rview Viewer is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
+The OMPL Visual Tools is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
 
-The ompl_rviz_viewer was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
+The ompl_visual_tools was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
 The space is specified as a grey scale cost map image that can be passed in to the program. 
 The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
 Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
@@ -10,7 +10,7 @@ Additionally, absolute obstacles can be specified by defining a max limit to the
 This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more 
 streamlined for considering costs and experience-based planning.
 
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/hydro-devel/screenshots/ompl_rviz_viewer.png" />
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/ompl_visual_tools.png" />
 
 ## How to Build
 
@@ -27,7 +27,7 @@ Additionally, to compile this you need the ``lightning_framework`` branch of dav
 Start Rviz using the included launch file:
 
 ```
-roslaunch ompl_rviz_viewer ompl_rviz.launch
+roslaunch ompl_visual_tools ompl_rviz.launch
 ```
 
 ### Cost-based planner with Transition-based RRT:
@@ -35,7 +35,7 @@ roslaunch ompl_rviz_viewer ompl_rviz.launch
 **Note:** *I have not been maintaining this aspect of the code very well, so currently to use just this aspect you need to turn off the lightning components using the following command:*
 
 ```
-rosrun ompl_rviz_viewer ompl_rviz_demos --noRecall
+rosrun ompl_visual_tools ompl_rviz_demos --noRecall
 ```
 
 To see optional parameters, pass in ``--help`` argument. There are many options.
@@ -44,18 +44,18 @@ To see optional parameters, pass in ``--help`` argument. There are many options.
 
 ### Experienced based-planning with Lightning Framework
 
-ompl_rviz_viewer can also help debug experience-based planning like the lightning framework. Examples:
+ompl_visual_tools can also help debug experience-based planning like the lightning framework. Examples:
 
 Image of an old path (red line) being repaired into feasible path (green line)
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/hydro-devel/screenshots/similar_paths.png" />
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/similar_paths.png" />
 
 Image of multiple paths in a experience database:
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_rviz_viewer/hydro-devel/screenshots/repaired_path.png" />
+<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/repaired_path.png" />
 
 To run:
 
 ```
-rosrun ompl_rviz_viewer ompl_rviz_demos
+rosrun ompl_visual_tools ompl_rviz_demos
 ```
 
 To see optional parameters, pass in ``--help`` argument. There are many options.
@@ -66,7 +66,7 @@ A default cost map image will be used, located in the resources/ folder, for run
 Optionally one can pass in their own cost map image through a command line argument, as shown in the following example:
 
 ```
-rosrun ompl_rviz_viewer ompl_rviz_planner cost_map.ppm
+rosrun ompl_visual_tools ompl_rviz_planner cost_map.ppm
 ```
 
 The image must be in the PPM "Netpbm color image" format. To convert a jpg, png or any other image into this format on Linux simply use the "convert" command, as shown in the following example:

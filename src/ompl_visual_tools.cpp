@@ -37,7 +37,7 @@
 */
 
 // This library
-#include <ompl_rviz_viewer/ompl_rviz_viewer.h>
+#include <ompl_visual_tools/ompl_visual_tools.h>
 
 // ROS
 #include <ros/ros.h>
@@ -54,7 +54,7 @@
 #include <ompl/config.h>
 
 // Custom validity checker that accounts for cost
-#include <ompl_rviz_viewer/costs/cost_map_2d_optimization_objective.h>
+#include <ompl_visual_tools/costs/cost_map_2d_optimization_objective.h>
 
 // For converting OMPL state to a MoveIt robot state
 #include <moveit/ompl_interface/model_based_planning_context.h>
@@ -66,30 +66,30 @@ namespace bnu = boost::numeric::ublas;
 
 using namespace moveit_visual_tools;
 
-namespace ompl_rviz_viewer
+namespace ompl_visual_tools
 {
 
-OmplRvizViewer::OmplRvizViewer(const std::string& base_link, const std::string& marker_topic, robot_model::RobotModelConstPtr robot_model)
+OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string& marker_topic, robot_model::RobotModelConstPtr robot_model)
   : VisualTools(base_link, marker_topic, robot_model)
 {
 }
 
-void OmplRvizViewer::setStateSpace(ompl::base::StateSpacePtr space)
+void OmplVisualTools::setStateSpace(ompl::base::StateSpacePtr space)
 {
   si_.reset(new ompl::base::SpaceInformation(space));
 }
 
-void OmplRvizViewer::setSpaceInformation(ompl::base::SpaceInformationPtr si)
+void OmplVisualTools::setSpaceInformation(ompl::base::SpaceInformationPtr si)
 {
   si_ = si;
 }
 
-void OmplRvizViewer::setCostMap(intMatrixPtr cost)
+void OmplVisualTools::setCostMap(intMatrixPtr cost)
 {
   cost_ = cost;
 }
 
-double OmplRvizViewer::getCost(const geometry_msgs::Point &point)
+double OmplVisualTools::getCost(const geometry_msgs::Point &point)
 {
   // Check that a cost map has been passed in
   if (cost_)
@@ -100,7 +100,7 @@ double OmplRvizViewer::getCost(const geometry_msgs::Point &point)
     return 1;
 }
 
-double OmplRvizViewer::getCostHeight(const geometry_msgs::Point &point)
+double OmplVisualTools::getCostHeight(const geometry_msgs::Point &point)
 {
   // TODO make faster
 
@@ -169,7 +169,7 @@ double OmplRvizViewer::getCostHeight(const geometry_msgs::Point &point)
   return val + COST_HEIGHT_OFFSET;
 }
 
-void OmplRvizViewer::publishTriangles(PPMImage *image)
+void OmplVisualTools::publishTriangles(PPMImage *image)
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -233,7 +233,7 @@ void OmplRvizViewer::publishTriangles(PPMImage *image)
 /**
  * \brief Helper Function to display triangles
  */
-void OmplRvizViewer::publishTriangle( int x, int y, visualization_msgs::Marker* marker, PPMImage *image )
+void OmplVisualTools::publishTriangle( int x, int y, visualization_msgs::Marker* marker, PPMImage *image )
 {
   // Point
   geometry_msgs::Point point;
@@ -251,7 +251,7 @@ void OmplRvizViewer::publishTriangle( int x, int y, visualization_msgs::Marker* 
   marker->colors.push_back( color );
 }
 
-void OmplRvizViewer::interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker,
+void OmplVisualTools::interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker,
                                       const std_msgs::ColorRGBA color )
 {
   // Copy to non-const
@@ -335,7 +335,7 @@ void OmplRvizViewer::interpolateLine( const geometry_msgs::Point &p1, const geom
 
 }
 
-void OmplRvizViewer::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, const std::string& ns)
+void OmplVisualTools::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, const std::string& ns)
 {
   for (std::size_t i = 0; i < planner_data->numStartVertices(); ++i)
   {
@@ -347,7 +347,7 @@ void OmplRvizViewer::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, co
   }
 }
 
-void OmplRvizViewer::publishGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color, const double thickness, const std::string& ns)
+void OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color, const double thickness, const std::string& ns)
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -411,7 +411,7 @@ void OmplRvizViewer::publishGraph(ob::PlannerDataPtr planner_data, const rviz_co
   ros::spinOnce();;
 }
 
-void OmplRvizViewer::publishSamples(const ob::PlannerDataPtr& plannerData)
+void OmplVisualTools::publishSamples(const ob::PlannerDataPtr& plannerData)
 {
   og::PathGeometric path(si_);
   convertPlannerData(plannerData, path);
@@ -424,7 +424,7 @@ void OmplRvizViewer::publishSamples(const ob::PlannerDataPtr& plannerData)
   publishSamples(path);
 }
 
-void OmplRvizViewer::publishSamples( og::PathGeometric& path )
+void OmplVisualTools::publishSamples( og::PathGeometric& path )
 {
   // TODO convert to use publishSpheres from parent class
 
@@ -482,14 +482,14 @@ void OmplRvizViewer::publishSamples( og::PathGeometric& path )
   ros::spinOnce();;
 }
 
-void OmplRvizViewer::convertPlannerData(const ob::PlannerDataPtr plannerData, og::PathGeometric &path)
+void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr plannerData, og::PathGeometric &path)
 {
   // Convert the planner data verticies into a vector of states
   for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
     path.append(plannerData->getVertex(i).getState());
 }
 
-void OmplRvizViewer::publishStates(std::vector<const ompl::base::State*> states)
+void OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states)
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.
@@ -546,7 +546,7 @@ void OmplRvizViewer::publishStates(std::vector<const ompl::base::State*> states)
   ros::spinOnce();;
 }
 
-void OmplRvizViewer::publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
+void OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
                                        const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated)
 {
   // Make sure a robot state is available
@@ -620,7 +620,7 @@ void OmplRvizViewer::publishRobotPath( const ompl::base::PlannerDataPtr &path, r
   }
 }
 
-void OmplRvizViewer::publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color,
+void OmplVisualTools::publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color,
                                   const double thickness, const std::string& ns )
 {
   og::PathGeometric path(si_);
@@ -629,7 +629,7 @@ void OmplRvizViewer::publishPath( const ob::PlannerDataPtr& plannerData, const r
   publishPath(path, color, thickness, ns);
 }
 
-void OmplRvizViewer::publishPath( const og::PathGeometric& path, const rviz_colors color, const double thickness, const std::string& ns )
+void OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_colors color, const double thickness, const std::string& ns )
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.
@@ -693,7 +693,7 @@ void OmplRvizViewer::publishPath( const og::PathGeometric& path, const rviz_colo
   ros::spinOnce();
 }
 
-geometry_msgs::Point OmplRvizViewer::getCoordinates( int vertex_id, ob::PlannerDataPtr planner_data )
+geometry_msgs::Point OmplVisualTools::getCoordinates( int vertex_id, ob::PlannerDataPtr planner_data )
 {
   ob::PlannerDataVertex vertex = planner_data->getVertex( vertex_id );
 
@@ -703,7 +703,7 @@ geometry_msgs::Point OmplRvizViewer::getCoordinates( int vertex_id, ob::PlannerD
   return getCoordinates(state);
 }
 
-geometry_msgs::Point OmplRvizViewer::getCoordinates( const ob::State *state )
+geometry_msgs::Point OmplVisualTools::getCoordinates( const ob::State *state )
 {
 
   if (!state)
@@ -727,12 +727,12 @@ geometry_msgs::Point OmplRvizViewer::getCoordinates( const ob::State *state )
   return point;
 }
 
-int OmplRvizViewer::natRound(double x)
+int OmplVisualTools::natRound(double x)
 {
   return static_cast<int>(floor(x + 0.5f));
 }
 
-void OmplRvizViewer::publishState(ob::ScopedState<> state, const rviz_colors &color, double thickness, const std::string& ns)
+void OmplVisualTools::publishState(ob::ScopedState<> state, const rviz_colors &color, double thickness, const std::string& ns)
 {
   // TODO merge this with getCoordinates?
 
@@ -744,7 +744,7 @@ void OmplRvizViewer::publishState(ob::ScopedState<> state, const rviz_colors &co
   publishSphere(state_pt, color, REGULAR, ns);
 }
 
-void OmplRvizViewer::publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance)
+void OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance)
 {
   geometry_msgs::Point state_pt;
   state_pt.x = state_area[0];
@@ -756,7 +756,7 @@ void OmplRvizViewer::publishSampleRegion(const ob::ScopedState<>& state_area, co
   publishSphere(state_pt, TRANSLUCENT, REGULAR, "sample_region");
 }
 
-bool OmplRvizViewer::publishText(const std::string &text, const rviz_colors &color)
+bool OmplVisualTools::publishText(const std::string &text, const rviz_colors &color)
 {
   geometry_msgs::Pose text_pose;
   text_pose.position.x = 0;
@@ -765,7 +765,7 @@ bool OmplRvizViewer::publishText(const std::string &text, const rviz_colors &col
   publishText(text, text_pose, color);
 }
 
-bool OmplRvizViewer::publishText(const std::string &text, const geometry_msgs::Pose &pose, const rviz_colors &color)
+bool OmplVisualTools::publishText(const std::string &text, const geometry_msgs::Pose &pose, const rviz_colors &color)
 {
   visualization_msgs::Marker text_marker;
   text_marker.header.frame_id = BASE_FRAME;

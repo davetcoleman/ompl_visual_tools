@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ompl_rviz_viewer)
+project(ompl_visual_tools)
 
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
@@ -47,9 +47,9 @@ target_link_libraries(${PROJECT_NAME}_ppm
   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
-# Rviz Viewer Library
+# OMPL Visual Tools Library
 add_library(${PROJECT_NAME}
-  src/ompl_rviz_viewer.cpp
+  src/ompl_visual_tools.cpp
 )
 target_link_libraries(${PROJECT_NAME} 
   ${PROJECT_NAME}_ppm ${catkin_LIBRARIES} ${Boost_LIBRARIES}  

@@ -39,9 +39,9 @@
  * 8/1/2012
  */
 
-#include <ompl_rviz_viewer/utilities/ppm.h>
+#include <ompl_visual_tools/utilities/ppm.h>
 
-namespace ompl_rviz_viewer
+namespace ompl_visual_tools
 {
 
 // *************************************************************************************************

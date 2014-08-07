@@ -36,8 +36,8 @@
    Desc:   Tools for displaying OMPL components in Rviz
 */
 
-#ifndef OMPL_RVIZ_VIEWER__OMPL_RVIZ_VIEWER_
-#define OMPL_RVIZ_VIEWER__OMPL_RVIZ_VIEWER_
+#ifndef OMPL_VISUAL_TOOLS__OMPL_VISUAL_TOOLS_
+#define OMPL_VISUAL_TOOLS__OMPL_VISUAL_TOOLS_
 
 // ROS
 #include <ros/ros.h>
@@ -50,7 +50,7 @@
 #include <ompl/base/ScopedState.h>
 
 // Custom validity checker that accounts for cost
-#include <ompl_rviz_viewer/costs/cost_map_2d_optimization_objective.h>
+#include <ompl_visual_tools/costs/cost_map_2d_optimization_objective.h>
 
 // MoveIt
 #include <moveit/robot_model/link_model.h>
@@ -85,7 +85,7 @@ typedef boost::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPt
 //{
 //}
 
-namespace ompl_rviz_viewer
+namespace ompl_visual_tools
 {
 
 static const std::string BASE_FRAME = "/world";
@@ -93,7 +93,7 @@ static const double COST_HEIGHT_OFFSET = 0.5;
 
 typedef std::map< std::string, std::list<std::size_t> > MarkerList;
 
-class OmplRvizViewer : public moveit_visual_tools::VisualTools
+class OmplVisualTools : public moveit_visual_tools::VisualTools
 {
 private:
 
@@ -111,7 +111,7 @@ public:
   /**
    * \brief Constructor
    */
-  OmplRvizViewer(const std::string& base_link,
+  OmplVisualTools(const std::string& base_link,
                  const std::string& marker_topic = moveit_visual_tools::RVIZ_MARKER_TOPIC,
                  robot_model::RobotModelConstPtr robot_model = robot_model::RobotModelConstPtr());
 
@@ -240,8 +240,8 @@ public:
 
 }; // end class
 
-typedef boost::shared_ptr<OmplRvizViewer> OmplRvizViewerPtr;
-typedef boost::shared_ptr<const OmplRvizViewer> OmplRvizViewerConstPtr;
+typedef boost::shared_ptr<OmplVisualTools> OmplVisualToolsPtr;
+typedef boost::shared_ptr<const OmplVisualTools> OmplVisualToolsConstPtr;
 
 } // end namespace
 

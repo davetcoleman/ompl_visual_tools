@@ -8,7 +8,7 @@
 
   <!-- Launch visualizer -->  
   <node name="$(anon rviz)" launch-prefix="$(arg launch_prefix)" pkg="rviz" type="rviz" 
-	respawn="false" output="screen" args="-d $(find ompl_rviz_viewer)/launch/ompl_rviz.rviz" />
+	respawn="false" output="screen" args="-d $(find ompl_visual_tools)/launch/ompl_rviz.rviz" />
 
   <!-- Publish dummy transform to prevent rviz 'Global Status: Warn' -->  
   <node pkg="tf" type="static_transform_publisher" name="tf_publisher_dummy" args="0 0 0 0 0 0 /world /base 1" />

@@ -37,8 +37,8 @@
  */
 
 
-#ifndef OMPL_RVIZ_VIEWER__COST_MAP_OPTIMIZATION_OBJECTIVE_
-#define OMPL_RVIZ_VIEWER__COST_MAP_OPTIMIZATION_OBJECTIVE_
+#ifndef OMPL_VISUAL_TOOLS__COST_MAP_OPTIMIZATION_OBJECTIVE_
+#define OMPL_VISUAL_TOOLS__COST_MAP_OPTIMIZATION_OBJECTIVE_
 
 // OMPL
 #include <ompl/base/OptimizationObjective.h>
@@ -51,9 +51,9 @@
 #include <boost/numeric/ublas/io.hpp>
 
 // For reading image files
-#include <ompl_rviz_viewer/utilities/ppm.h>
+#include <ompl_visual_tools/utilities/ppm.h>
 
-namespace ompl_rviz_viewer
+namespace ompl_visual_tools
 {
 typedef boost::numeric::ublas::matrix<int> intMatrix;
 typedef boost::shared_ptr<intMatrix> intMatrixPtr;
@@ -79,7 +79,7 @@ public:
     {
         description_ = "Cost Map";
 
-        cost_.reset(new ompl_rviz_viewer::intMatrix());
+        cost_.reset(new ompl_visual_tools::intMatrix());
     };
 
     /** \brief Deconstructor */
@@ -112,7 +112,7 @@ public:
     }
 
     /** \brief Passed in a cost matrix loaded from an image file, etc */
-    void setCostMatrix(ompl_rviz_viewer::intMatrixPtr cost)
+    void setCostMatrix(ompl_visual_tools::intMatrixPtr cost)
     {
         cost_ = cost;
     };
@@ -130,7 +130,7 @@ public:
     void loadImage( std::string image_path )
     {
         // Load cost map from image file
-        image_ = ompl_rviz_viewer::readPPM( image_path.c_str() );
+        image_ = ompl_visual_tools::readPPM( image_path.c_str() );
 
         // Error check
         if( !image_ )
@@ -219,10 +219,10 @@ public:
     }
 
     // The RGB image data
-    ompl_rviz_viewer::PPMImage *image_;
+    ompl_visual_tools::PPMImage *image_;
 
     // The cost for each x,y - which is derived from the RGB data
-    ompl_rviz_viewer::intMatrixPtr cost_;
+    ompl_visual_tools::intMatrixPtr cost_;
 
     // The cost at which it becomes an obstacle
     double max_cost_threshold_;

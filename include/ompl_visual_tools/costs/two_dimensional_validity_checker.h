@@ -36,8 +36,8 @@
    Desc:   Custom State Validity Checker with cost function
 */
 
-#ifndef OMPL_RVIZ_VIEWER__TWO_DIMENSIONAL_VALIDITY_CHECKER_
-#define OMPL_RVIZ_VIEWER__TWO_DIMENSIONAL_VALIDITY_CHECKER_
+#ifndef OMPL_VISUAL_TOOLS__TWO_DIMENSIONAL_VALIDITY_CHECKER_
+#define OMPL_VISUAL_TOOLS__TWO_DIMENSIONAL_VALIDITY_CHECKER_
 
 // Boost
 #include <boost/numeric/ublas/matrix.hpp>
@@ -48,7 +48,7 @@
 
 namespace ob = ompl::base;
 
-namespace ompl_rviz_viewer
+namespace ompl_visual_tools
 {
   typedef boost::numeric::ublas::matrix<int> intMatrix;
   typedef boost::shared_ptr<intMatrix> intMatrixPtr;
@@ -68,13 +68,13 @@ int nat_round(double x)
 class TwoDimensionalValidityChecker : public ob::StateValidityChecker
 {
 private:
-    ompl_rviz_viewer::intMatrixPtr cost_;
+    ompl_visual_tools::intMatrixPtr cost_;
     double max_threshold_;
 
 public:
 
     /** \brief Constructor */
-    TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, ompl_rviz_viewer::intMatrixPtr cost,
+    TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, ompl_visual_tools::intMatrixPtr cost,
         double max_threshold ) :
         StateValidityChecker(si)
     {

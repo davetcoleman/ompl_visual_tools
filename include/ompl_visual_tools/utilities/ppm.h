@@ -5,13 +5,13 @@
  * License Unkown
  */
 
-#ifndef OMPL_RVIZ_VIEWER_PPM_
-#define OMPL_RVIZ_VIEWER_PPM_
+#ifndef OMPL_VISUAL_TOOLS_PPM_
+#define OMPL_VISUAL_TOOLS_PPM_
 
 #include <stdio.h>
 #include <stdlib.h>
 
-namespace ompl_rviz_viewer
+namespace ompl_visual_tools
 {
 
 // *************************************************************************************************

@@ -5,8 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /OMPL Rviz Viewer1
-        - /OMPL Rviz Viewer1/Namespaces1
+        - /OMPL Visual Tools1
+        - /OMPL Visual Tools1/Namespaces1
       Splitter Ratio: 0.784387
     Tree Height: 1281
   - Class: rviz/Help
@@ -22,7 +22,7 @@ Visualization Manager:
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /ompl_rviz_markers
-      Name: OMPL Rviz Viewer
+      Name: OMPL Visual Tools
       Namespaces:
         cost_map: false
         final_solution: false
