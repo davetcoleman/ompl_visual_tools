@@ -88,6 +88,8 @@ typedef boost::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPt
 namespace ompl_visual_tools
 {
 
+// Default constants
+static const std::string RVIZ_MARKER_TOPIC = "/ompl_rviz_markers";
 static const std::string BASE_FRAME = "/world";
 static const double COST_HEIGHT_OFFSET = 0.5;
 
@@ -112,8 +114,8 @@ public:
    * \brief Constructor
    */
   OmplVisualTools(const std::string& base_link,
-                 const std::string& marker_topic = moveit_visual_tools::RVIZ_MARKER_TOPIC,
-                 robot_model::RobotModelConstPtr robot_model = robot_model::RobotModelConstPtr());
+                  const std::string& marker_topic = ompl_visual_tools::RVIZ_MARKER_TOPIC,
+                  robot_model::RobotModelConstPtr robot_model = robot_model::RobotModelConstPtr());
 
   /**
    * \brief Load the OMPL state space or space information pointer

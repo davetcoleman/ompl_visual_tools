@@ -7,8 +7,8 @@ Panels:
         - /Global Options1
         - /OMPL Visual Tools1
         - /OMPL Visual Tools1/Namespaces1
-      Splitter Ratio: 0.784387
-    Tree Height: 1281
+      Splitter Ratio: 0.524804
+    Tree Height: 1286
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -24,20 +24,13 @@ Visualization Manager:
       Marker Topic: /ompl_rviz_markers
       Name: OMPL Visual Tools
       Namespaces:
-        cost_map: false
-        final_solution: false
-        plan_from_scratch: false
-        plan_start_goal: false
-        repair_chosen_path: false
-        repair_tree_0: false
-        repair_tree_1: true
-        sample_region: false
+        {}
       Queue Size: 10000
       Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
-    Fixed Frame: base
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -68,14 +61,14 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1519
+  Height: 1524
   Help:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000010f00000590fc0200000003fb000000100044006900730070006c006100790073010000004100000590000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff000005fb0000059000000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000018100000595fc0200000003fb000000100044006900730070006c006100790073010000004100000595000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff000003790000059500000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 1808
-  X: -1815
+  Width: 1280
+  X: -3
   Y: 24

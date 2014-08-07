@@ -436,7 +436,7 @@ public:
 int main( int argc, char** argv )
 {
   ros::init(argc, argv, "ompl_visual_tools");
-  ROS_INFO( "OMPL Visual Tools with SimpleSetup Framework ----------------------------------------- " );
+  ROS_INFO( "OMPL Visual Tools Demo ----------------------------------------- " );
 
   // Seed random
   srand ( time(NULL) );
@@ -460,7 +460,7 @@ int main( int argc, char** argv )
       {
         ROS_INFO_STREAM_NAMED("main","Usage: ompl_rviz_demos"
                               << " --verbose --noVisuals --image [image_file] --runs [num plans] "
-                              << " -h");
+                              << " -h --help");
         return 0;
       }
 
@@ -507,7 +507,6 @@ int main( int argc, char** argv )
 
     // Choose random image
     int rand_num = ompl_visual_tools::OmplVisualTools::dRand(0,2);
-    ROS_ERROR_STREAM_NAMED("temp","random num is " << rand_num);
     switch( rand_num )
     {
       case 0:
