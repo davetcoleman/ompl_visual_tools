@@ -13,14 +13,14 @@ This little program is similar to the OMPL.app that is distributed with OMPL, bu
 streamlined for considering costs and experience-based planning.
 
 <img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/ompl_visual_tools.png" />
+.
+.
 
 ## How to Build
 
 Clone into your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) and rebuild.
 
-### OMPL
-
-This repo currently requires ``OMPL 0.14.0`` or newer, which is not available in debian for ROS Hydro. To use on Hydro, please install OMPL from source.
+Note: This repo currently requires ``OMPL 0.14.0`` or newer, which is not available in debian for ROS Hydro. To use on Hydro, please install OMPL from source.
 
 ## Usage
 
