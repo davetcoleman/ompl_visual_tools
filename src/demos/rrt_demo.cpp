@@ -140,9 +140,9 @@ public:
   /**
    * \brief Clear all markers displayed in Rviz
    */
-  void deleteAllMakers()
-  {
-    // Reset rviz markers cause we can
+  void deleteAllMakers()  
+  { 
+    // Clear current rviz makers
     visual_tools_->deleteAllMarkers();
   }
 
@@ -249,15 +249,15 @@ public:
     {
       if (!simple_setup_->haveExactSolutionPath())
       {
-        ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found from planner " << simple_setup_->getSolutionPlannerName());
+        ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found");
         if (use_visuals_)
-          visual_tools_->publishText("APPROXIMATE solution found from planner " + simple_setup_->getSolutionPlannerName(), text_pose);
+          visual_tools_->publishText("APPROXIMATE solution found", text_pose);
       }
       else
       {
-        ROS_DEBUG_STREAM_NAMED("plan","Exact solution found from planner " << simple_setup_->getSolutionPlannerName());
+        ROS_DEBUG_STREAM_NAMED("plan","Exact solution found");
         if (use_visuals_)
-          visual_tools_->publishText("Exact solution found from planner " + simple_setup_->getSolutionPlannerName(), text_pose);
+          visual_tools_->publishText("Exact solution found", text_pose);
 
       }
 
@@ -405,6 +405,8 @@ public:
 
       // Interpolate solution
       simple_setup_->getSolutionPath().interpolate();
+
+      // Show path
       visual_tools_->publishPath( simple_setup_->getSolutionPath(), moveit_visual_tools::GREEN, 1.0, "final_solution");
     }
 
