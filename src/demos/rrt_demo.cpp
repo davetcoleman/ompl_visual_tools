@@ -53,6 +53,10 @@
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/base/PlannerTerminationCondition.h>
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
+
+// Boost
+#include <boost/pointer_cast.hpp>
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -61,9 +65,9 @@ namespace ompl_visual_tools
 {
 
 /**
- * \brief SimpleSetup Planning Class
+ * \brief SimpleSetup demo class
  */
-class OmplRvizDemos
+class RRTDemo
 {
 
 private:
@@ -72,6 +76,9 @@ private:
 
   // Cost in 2D
   ompl::base::CostMap2DOptimizationObjectivePtr cost_map_;
+
+  // Cost is just path length
+  boost::shared_ptr<ompl::base::PathLengthOptimizationObjective> path_length_objective_;
 
   // The visual tools for interfacing with Rviz
   ompl_visual_tools::OmplVisualToolsPtr visual_tools_;
@@ -96,7 +103,7 @@ public:
   /**
    * \brief Constructor
    */
-  OmplRvizDemos(bool verbose, bool use_visuals)
+  RRTDemo(bool verbose, bool use_visuals)
     : verbose_(verbose),
       use_visuals_(use_visuals)
   {
@@ -110,27 +117,32 @@ public:
     // Load the tool for displaying in Rviz
     visual_tools_.reset(new ompl_visual_tools::OmplVisualTools(BASE_FRAME));
     visual_tools_->setSpaceInformation(si_);
+    visual_tools_->setGlobalScale(100);
 
     // Set the planner
-    simple_setup_->setPlanner(ob::PlannerPtr(new og::RRTstar( si_ )));
+    //simple_setup_->setPlanner(ob::PlannerPtr(new og::RRTstar( si_ )));
+    simple_setup_->setPlanner(ob::PlannerPtr(new og::RRT( si_ )));
 
     // Load the cost map
     cost_map_.reset(new ompl::base::CostMap2DOptimizationObjective( si_ ));
+
+    // Load an alternitive optimization objective
+    path_length_objective_.reset(new ompl::base::PathLengthOptimizationObjective( si_ ));
   }
 
   /**
    * \brief Deconstructor
    */
-  ~OmplRvizDemos()
+  ~RRTDemo()
   {
   }
 
   /**
    * \brief Clear all markers displayed in Rviz
    */
-  void resetMarkers()
-  {
-    // Reset rviz markers cause we can
+  void deleteAllMakers()  
+  { 
+    // Clear current rviz makers
     visual_tools_->deleteAllMarkers();
   }
 
@@ -154,12 +166,35 @@ public:
 
     // Pass cost to visualizer
     visual_tools_->setCostMap(cost_map_->cost_);
+
+    // Set state validity checking for this space
+    simple_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( 
+      new ob::TwoDimensionalValidityChecker( si_, cost_map_->cost_, cost_map_->max_cost_threshold_ ) ) );
+
+    // The interval in which obstacles are checked for between states
+    // seems that it default to 0.01 but doesn't do a good job at that level
+    si_->setStateValidityCheckingResolution(0.001);
+
+    // Setup the optimization objective to use the 2d cost map
+    //simple_setup_->setOptimizationObjective(cost_map_);
+    simple_setup_->setOptimizationObjective(path_length_objective_);
+
+    // Setup -----------------------------------------------------------
+
+    // Auto setup parameters
+    simple_setup_->setup(); // optional
+
+    //ROS_ERROR_STREAM_NAMED("temp","out of curiosity: coll check resolution: "
+    //   << si_->getStateValidityCheckingResolution());
+
+    // Debug - this call is optional, but we put it in to get more output information
+    //simple_setup_->print();
   }
 
   void publishCostMapImage()
   {
     if (use_visuals_)
-      visual_tools_->publishTriangles(cost_map_->image_);
+      visual_tools_->publishCostMap(cost_map_->image_);
   }
 
   /**
@@ -178,15 +213,11 @@ public:
     if (run_id) // skip first run
       simple_setup_->clear();
 
-    // Set state validity checking for this space
-    simple_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( new ob::TwoDimensionalValidityChecker(
-                                                                                                                  si_, cost_map_->cost_, cost_map_->max_cost_threshold_ ) ) );
-
-    // Setup the optimization objective to use the 2d cost map
-    simple_setup_->setOptimizationObjective(cost_map_);
+    // Clear the previous solutions
+    //simple_setup_->getProblemDefinition()->clearSolutionPaths();
 
     // Create the termination condition
-    double seconds = 1;
+    double seconds = 2;
     ob::PlannerTerminationCondition ptc = ob::timedPlannerTerminationCondition( seconds, 0.1 );
 
     // Create start and goal space
@@ -197,27 +228,12 @@ public:
     // Show start and goal
     if (use_visuals_)
     {
-      visual_tools_->publishState(start, moveit_visual_tools::GREEN, 4, "plan_start_goal");
-      visual_tools_->publishState(goal,  moveit_visual_tools::RED,   4, "plan_start_goal");
+      visual_tools_->publishState(start, moveit_visual_tools::GREEN,  moveit_visual_tools::XLARGE, "plan_start_goal");
+      visual_tools_->publishState(goal,  moveit_visual_tools::ORANGE, moveit_visual_tools::XLARGE, "plan_start_goal");
     }
 
     // set the start and goal states
     simple_setup_->setStartAndGoalStates(start, goal);
-
-    // Setup -----------------------------------------------------------
-
-    // Auto setup parameters (optional actually)
-    simple_setup_->setup();
-
-    //ROS_ERROR_STREAM_NAMED("temp","out of curiosity: coll check resolution: "
-    //   << si_->getStateValidityCheckingResolution());
-
-    // The interval in which obstacles are checked for between states
-    // seems that it default to 0.01 but doesn't do a good job at that level
-    si_->setStateValidityCheckingResolution(0.005);
-
-    // Debug - this call is optional, but we put it in to get more output information
-    //simple_setup_->print();
 
     // Solve -----------------------------------------------------------
 
@@ -233,15 +249,15 @@ public:
     {
       if (!simple_setup_->haveExactSolutionPath())
       {
-        ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found from planner " << simple_setup_->getSolutionPlannerName());
+        ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found");
         if (use_visuals_)
-          visual_tools_->publishText("APPROXIMATE solution found from planner " + simple_setup_->getSolutionPlannerName(), text_pose);
+          visual_tools_->publishText("APPROXIMATE solution found", text_pose);
       }
       else
       {
-        ROS_DEBUG_STREAM_NAMED("plan","Exact solution found from planner " << simple_setup_->getSolutionPlannerName());
+        ROS_DEBUG_STREAM_NAMED("plan","Exact solution found");
         if (use_visuals_)
-          visual_tools_->publishText("Exact solution found from planner " + simple_setup_->getSolutionPlannerName(), text_pose);
+          visual_tools_->publishText("Exact solution found", text_pose);
 
       }
 
@@ -389,6 +405,8 @@ public:
 
       // Interpolate solution
       simple_setup_->getSolutionPath().interpolate();
+
+      // Show path
       visual_tools_->publishPath( simple_setup_->getSolutionPath(), moveit_visual_tools::GREEN, 1.0, "final_solution");
     }
 
@@ -399,24 +417,20 @@ public:
       simple_setup_->getSolutionPath().print(std::cout);
     }
 
-    // Planning From Scratch -----------------------------------------------------------
-    if (true)
+    // Get information about the exploration data structure the motion planner used in planning
+    const ob::PlannerDataPtr planner_data( new ob::PlannerData( si_ ) );
+    simple_setup_->getPlannerData( *planner_data );
+
+    // Optionally display the search tree/graph or the samples
+    if (!just_path)
     {
-      // Get information about the exploration data structure the motion planner used in planning from scratch
-      const ob::PlannerDataPtr planner_data( new ob::PlannerData( si_ ) );
-      simple_setup_->getPlannerData( *planner_data );
-
-      // Optionally display the search tree/graph or the samples
-      if (!just_path)
-      {
-        // Visualize the explored space
-        visual_tools_->publishGraph(planner_data, moveit_visual_tools::ORANGE, 0.2, "plan_from_scratch");
-
-        // Visualize the sample locations
-        //visual_tools_->publishSamples(planner_data);
-      }
+      // Visualize the explored space
+      visual_tools_->publishGraph(planner_data, moveit_visual_tools::ORANGE, 0.2, "tree");
+ 
+      // Visualize the sample locations
+      visual_tools_->publishSamples(planner_data);
     }
-
+ 
   }
 
   /** \brief Allow access to simple_setup framework */
@@ -522,17 +536,17 @@ int main( int argc, char** argv )
   }
 
   // Create the planner
-  ompl_visual_tools::OmplRvizDemos planner(verbose, use_visuals);
+  ompl_visual_tools::RRTDemo demo(verbose, use_visuals);
 
   // Clear Rviz
-  planner.resetMarkers();
+  demo.deleteAllMakers();
 
   // Load an image
   ROS_INFO_STREAM_NAMED("main","Loading image " << image_path);
-  planner.loadCostMapImage( image_path, 0.4 );
-  planner.publishCostMapImage();
+  demo.loadCostMapImage( image_path, 0.4 );
+  demo.publishCostMapImage();
 
-  // Run the planner the desired number of times
+  // Run the demo the desired number of times
   for (std::size_t i = 0; i < runs; ++i)
   {
     // Check if user wants to shutdown
@@ -546,26 +560,24 @@ int main( int argc, char** argv )
     // Refresh visuals
     if (use_visuals && i > 0)
     {
-      planner.publishCostMapImage();
-      //planner.loadCostMapImage( image_path, 0 ); //OmplVisualTools::fRand(0.2,0.5) );
-      // Display before planning
+      demo.publishCostMapImage();
       ros::spinOnce();
     }
 
     // Run the planner
-    planner.plan( i, runs );
+    demo.plan( i, runs );
 
     // Create a pause if we are doing more runs and this is not the last run
     if (runs > 1 && i < runs - 1 && use_visuals)
     {
       // Let publisher publish
       ros::spinOnce();
-      ros::Duration(1.0).sleep();
+      ros::Duration(5.0).sleep();
     }
 
-    // Reset marker if this is not our last run
+    // Clear markers if this is not our last run
     if (i < runs - 1 && use_visuals)
-      planner.resetMarkers();
+      demo.deleteAllMakers();
   }
 
   // Wait to let anything still being published finish

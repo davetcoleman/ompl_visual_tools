@@ -34,16 +34,108 @@ Note: this repo currently requires ``OMPL 0.14.0`` or newer, which is not availa
 
 ## Usage
 
+This library can be integrated into your project to easily view a 2D, 3D or robot planning environment in Rviz.
+
+First, load the visualizer:
+
+```
+    // The visual tools for interfacing with Rviz
+    ompl_visual_tools::OmplVisualToolsPtr visual_tools_;
+
+    // Load the tool for displaying in Rviz
+    visual_tools_.reset(new ompl_visual_tools::OmplVisualTools(BASE_FRAME));
+    visual_tools_->setSpaceInformation(si_);
+    visual_tools_->setGlobalScale(100);
+
+    // Clear current rviz makers
+    visual_tools_->deleteAllMarkers();
+```
+
+### Two Dimensions with optional cost map
+
+To test with a 2D environment with a cost map:
+```
+    // Cost in 2D
+    ompl::base::CostMap2DOptimizationObjectivePtr cost_map_;
+    cost_map_->max_cost_threshold_percent_ = max_cost_threshold_percent;
+    cost_map_->loadImage(image_path);
+
+    // Pass cost to visualizer
+    visual_tools_->setCostMap(cost_map_->cost_);
+```
+
+To view the cost map in Rviz:
+```
+    visual_tools_->publishCostMap(cost_map_->image_);
+```
+
+To view the start and goal location:
+```
+    visual_tools_->publishState(start, moveit_visual_tools::GREEN,  moveit_visual_tools::XLARGE, "plan_start_goal");
+    visual_tools_->publishState(goal,  moveit_visual_tools::ORANGE, moveit_visual_tools::XLARGE, "plan_start_goal");
+```
+
+To view the solution path:
+```
+      // Interpolate solution
+      simple_setup_->getSolutionPath().interpolate();
+      
+      // Show path
+      visual_tools_->publishPath( simple_setup_->getSolutionPath(), moveit_visual_tools::GREEN, 1.0, "final_solution");
+```
+
+And to see more of what the planner was doing:
+```
+      // Visualize the explored space
+      visual_tools_->publishGraph(planner_data, moveit_visual_tools::ORANGE, 0.2, "tree");
+ 
+      // Visualize the sample locations
+      visual_tools_->publishSamples(planner_data);
+```
+
+### MoveIt! Robot Planning
+
+See moveit_visual_tools for more information about tools this class can use with MoveIt!. For OMPL-specific features:
+
+First, set the state space that MoveIt! has chosen for your robot in OMPL:
+
+```
+    // Create a state space describing our robot's planning group
+    ompl_interface::ModelBasedStateSpaceSpecification model_ss_spec(moveit_robot_model, joint_model_group);
+    const ompl_interface::JointModelStateSpaceFactory factory;
+    ompl_interface::ModelBasedStateSpacePtr model_state_space = factory.getNewStateSpace(model_ss_spec);
+
+    // Setup the state space
+    model_state_space->setup();
+
+    visual_tools_->setStateSpace(model_state_space);
+```
+
+Then you can publish the paths of various tips on a robot, as planned in OMPL:
+```
+    std::vector<ompl::base::PlannerDataPtr> paths;
+    simple_setup.getAllPaths(paths);
+
+    // Get tip links for this setup
+    std::vector<const robot_model::LinkModel*> tips;
+    joint_model_group_->getEndEffectorTips(tips);
+
+    bool show_trajectory_animated = true;
+    visual_tools_->publishRobotPath(paths[0], joint_model_group, tips, show_trajectory_animated);
+```
+
+## View in Rviz
+
 Start Rviz using the included launch file:
 
 ```
 roslaunch ompl_visual_tools ompl_rviz.launch
 ```
 
-### Cost-based planner with Transition-based RRT:
+### Demo planner with standard RRT:
 
 ```
-rosrun ompl_visual_tools ompl_rviz_demos
+rosrun ompl_visual_tools rrt_demo
 ```
 
 To see optional parameters, pass in ``--help`` argument. There are many options.
@@ -56,7 +148,7 @@ A default cost map image will be used, located in the resources/ folder, for run
 Optionally one can pass in their own cost map image through a command line argument, as shown in the following example:
 
 ```
-rosrun ompl_visual_tools ompl_rviz_planner cost_map.ppm
+rosrun ompl_visual_tools rrt_demo cost_map.ppm
 ```
 
 The image must be in the PPM "Netpbm color image" format. To convert a jpg, png or any other image into this format on Linux simply use the "convert" command, as shown in the following example:
