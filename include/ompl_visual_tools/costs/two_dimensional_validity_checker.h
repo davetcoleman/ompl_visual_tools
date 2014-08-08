@@ -83,12 +83,15 @@ public:
     }
 
     /** \brief Obstacle checker */
-    virtual bool isValid(const ob::State * state ) const
+    virtual bool isValid(const ob::State *state ) const
     {
         return cost(state) < max_threshold_ && cost(state) > 1;
     }
 
-    virtual double cost(const ob::State *state) const
+private:
+
+    // Note: this cost function is not the one used for the optimization objective, it is only a helper function for isValid
+    double cost(const ob::State *state) const
     {
         const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
 
@@ -97,7 +100,6 @@ public:
 
         return cost;
     }
-
 };
 }
 }

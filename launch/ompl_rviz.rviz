@@ -7,7 +7,7 @@ Panels:
         - /Global Options1
         - /OMPL Visual Tools1
         - /OMPL Visual Tools1/Namespaces1
-      Splitter Ratio: 0.524804
+      Splitter Ratio: 0.784387
     Tree Height: 1286
   - Class: rviz/Help
     Name: Help
@@ -24,7 +24,11 @@ Visualization Manager:
       Marker Topic: /ompl_rviz_markers
       Name: OMPL Visual Tools
       Namespaces:
-        {}
+        cost_map: false
+        final_solution: true
+        plan_from_scratch: true
+        plan_start_goal: true
+        text: true
       Queue Size: 10000
       Value: true
   Enabled: true
@@ -41,22 +45,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1035.75
+      Distance: 1030.42
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 483.516
-        Y: 450.147
-        Z: -135.728
+        X: 209.965
+        Y: 150.492
+        Z: -37.2218
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.834796
+      Pitch: 1.4398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.02527
+      Yaw: 1.57027
     Saved: ~
 Window Geometry:
   Displays:
@@ -66,7 +70,7 @@ Window Geometry:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000018100000595fc0200000003fb000000100044006900730070006c006100790073010000004100000595000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff000003790000059500000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000010f00000595fc0200000003fb000000100044006900730070006c006100790073010000004100000595000000dd00fffffffb0000000800480065006c00700000000342000000bb0000007600fffffffb0000000a00560069006500770073000000031d000000dd000000b000ffffff000003eb0000059500000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1280

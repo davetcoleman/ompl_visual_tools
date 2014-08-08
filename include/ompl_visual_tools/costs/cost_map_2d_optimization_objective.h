@@ -66,7 +66,7 @@ namespace ompl
 {
 namespace base
 {
-/** \brief An optimization objective which defines path cost using the idea of mechanical work. To be used in conjunction with TRRT. */
+/** \brief An optimization objective which defines path cost using the idea of mechanical work.  */
 class CostMap2DOptimizationObjective : public OptimizationObjective
 {
 public:
@@ -185,7 +185,7 @@ public:
                 cost_->data()[i] = 1;
 
             // Color different if it is an obstacle
-            if( cost_->data()[i] > max_cost_threshold_ || cost_->data()[i] <= 1)
+            if( cost_->data()[i] >= max_cost_threshold_ || cost_->data()[i] <= 1)
             {
                 //std::cout << "cost is " <<  cost_->data()[i] << " threshold is " <<  max_cost_threshold_ << std::endl;
 

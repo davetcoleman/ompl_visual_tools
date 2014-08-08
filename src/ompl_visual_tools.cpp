@@ -169,7 +169,7 @@ double OmplVisualTools::getCostHeight(const geometry_msgs::Point &point)
   return val + COST_HEIGHT_OFFSET;
 }
 
-void OmplVisualTools::publishTriangles(PPMImage *image)
+void OmplVisualTools::publishCostMap(PPMImage *image)
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -339,11 +339,11 @@ void OmplVisualTools::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, c
 {
   for (std::size_t i = 0; i < planner_data->numStartVertices(); ++i)
   {
-    publishSphere( getCoordinates( planner_data->getStartVertex(i).getState() ), GREEN, REGULAR, ns);
+    publishSphere( stateToPointMsg( planner_data->getStartVertex(i).getState() ), GREEN, REGULAR, ns);
   }
   for (std::size_t i = 0; i < planner_data->numGoalVertices(); ++i)
   {
-    publishSphere( getCoordinates( planner_data->getGoalVertex(i).getState() ), RED, REGULAR, ns );
+    publishSphere( stateToPointMsg( planner_data->getGoalVertex(i).getState() ), RED, REGULAR, ns );
   }
 }
 
@@ -388,7 +388,7 @@ void OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_c
   // Loop through all verticies
   for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
   {
-    this_vertex = getCoordinates( vertex_id, planner_data );
+    this_vertex = stateToPointMsg( vertex_id, planner_data );
 
     // Get the out edges from the current vertex
     std::vector<unsigned int> edge_list;
@@ -399,7 +399,7 @@ void OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_c
          edge_it != edge_list.end(); ++edge_it)
     {
       // Convert vertex id to next coordinates
-      next_vertex = getCoordinates( *edge_it, planner_data );
+      next_vertex = stateToPointMsg( *edge_it, planner_data );
 
       interpolateLine( this_vertex, next_vertex, &marker, marker.color );
     }
@@ -416,8 +416,8 @@ void OmplVisualTools::publishSamples(const ob::PlannerDataPtr& plannerData)
   og::PathGeometric path(si_);
   convertPlannerData(plannerData, path);
 
-  std::size_t beforeInterpolateCount = path.getStateCount();
-  path.interpolate();
+  //std::size_t beforeInterpolateCount = path.getStateCount();
+  //path.interpolate();
   //ROS_INFO_STREAM_NAMED("publishResult","Interpolation of path increased states count from "
   //    << beforeInterpolateCount << " to " << path.getStateCount());
 
@@ -426,60 +426,13 @@ void OmplVisualTools::publishSamples(const ob::PlannerDataPtr& plannerData)
 
 void OmplVisualTools::publishSamples( og::PathGeometric& path )
 {
-  // TODO convert to use publishSpheres from parent class
-
-  visualization_msgs::Marker marker;
-  // Set the frame ID and timestamp.
-  marker.header.frame_id = BASE_FRAME;
-  marker.header.stamp = ros::Time();
-
-  // Set the namespace and id for this marker.  This serves to create a unique ID
-  marker.ns = "sample_locations";
-
-  // Set the marker type.
-  marker.type = visualization_msgs::Marker::SPHERE_LIST;
-
-  // Set the marker action.  Options are ADD and DELETE
-  marker.action = visualization_msgs::Marker::ADD;
-
-  static std::size_t id = 0;
-  marker.id = ++id;
-
-  marker.pose.position.x = 0.0;
-  marker.pose.position.y = 0.0;
-  marker.pose.position.z = 0.0;
-
-  marker.pose.orientation.x = 0.0;
-  marker.pose.orientation.y = 0.0;
-  marker.pose.orientation.z = 0.0;
-  marker.pose.orientation.w = 1.0;
-
-  marker.scale.x = 0.4;
-  marker.scale.y = 0.4;
-  marker.scale.z = 0.4;
-
-  marker.color = getColor( RED );
-
-  // Make line color
-  std_msgs::ColorRGBA color = getColor( RED );
-
-  // Point
-  geometry_msgs::Point point_a;
-
-  // Loop through all verticies
+  std::vector<geometry_msgs::Point> points;
   for (std::size_t i = 0; i < path.getStateCount(); ++i)
   {
-    point_a = getCoordinates( path.getState(i) );
-    point_a.z = getCostHeight( point_a );
-
-    // Add the point pair to the line message
-    marker.points.push_back( point_a );
-    marker.colors.push_back( color );
+    points.push_back( stateToPointMsg( path.getState(i) ) );
   }
 
-  // Send to Rviz
-  pub_rviz_marker_.publish( marker );
-  ros::spinOnce();;
+  publishSpheres(points, RED, SMALL, "sample_locations");
 }
 
 void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr plannerData, og::PathGeometric &path)
@@ -534,7 +487,7 @@ void OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states
   for( int vertex_id = 0; vertex_id < int( states.size() ); ++vertex_id )
   {
     // First point
-    point_a = getCoordinates( states[vertex_id] );
+    point_a = stateToPointMsg( states[vertex_id] );
 
     // Add the point pair to the line message
     marker.points.push_back( point_a );
@@ -673,13 +626,13 @@ void OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_col
   geometry_msgs::Point this_vertex;
 
   // Initialize first vertex
-  last_vertex = getCoordinates(path.getState(0));
+  last_vertex = stateToPointMsg(path.getState(0));
 
   // Convert path coordinates
   for( std::size_t i = 1; i < path.getStateCount(); ++i )
   {
     // Get current coordinates
-    this_vertex = getCoordinates(path.getState(i));
+    this_vertex = stateToPointMsg(path.getState(i));
 
     // Publish line with interpolation
     interpolateLine( last_vertex, this_vertex, &marker, marker.color );
@@ -693,31 +646,27 @@ void OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_col
   ros::spinOnce();
 }
 
-geometry_msgs::Point OmplVisualTools::getCoordinates( int vertex_id, ob::PlannerDataPtr planner_data )
+geometry_msgs::Point OmplVisualTools::stateToPointMsg( int vertex_id, ob::PlannerDataPtr planner_data )
 {
   ob::PlannerDataVertex vertex = planner_data->getVertex( vertex_id );
 
   // Get this vertex's coordinates
   const ob::State *state = vertex.getState();
 
-  return getCoordinates(state);
+  return stateToPointMsg(state);
 }
 
-geometry_msgs::Point OmplVisualTools::getCoordinates( const ob::State *state )
+geometry_msgs::Point OmplVisualTools::stateToPointMsg( const ob::State *state )
 {
-
   if (!state)
   {
-    ROS_ERROR("No state found for a vertex");
+    ROS_FATAL("No state found for a vertex");
     exit(1);
   }
 
   // Convert to RealVectorStateSpace
   const ob::RealVectorStateSpace::StateType *real_state =
     static_cast<const ob::RealVectorStateSpace::StateType*>(state);
-
-  //
-
 
   // Create point
   geometry_msgs::Point point;
@@ -727,21 +676,24 @@ geometry_msgs::Point OmplVisualTools::getCoordinates( const ob::State *state )
   return point;
 }
 
+geometry_msgs::Point OmplVisualTools::stateToPointMsg( const ob::ScopedState<> state )
+{
+  // Create point
+  geometry_msgs::Point point;
+  point.x = state[0];
+  point.y = state[1];
+  point.z = getCostHeight(point);
+  return point;
+}
+
 int OmplVisualTools::natRound(double x)
 {
   return static_cast<int>(floor(x + 0.5f));
 }
 
-void OmplVisualTools::publishState(ob::ScopedState<> state, const rviz_colors &color, double thickness, const std::string& ns)
+void OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_colors &color, const rviz_scales scale, const std::string& ns)
 {
-  // TODO merge this with getCoordinates?
-
-  geometry_msgs::Point state_pt;
-  state_pt.x = state[0];
-  state_pt.y = state[1];
-  state_pt.z = getCostHeight(state_pt);
-
-  publishSphere(state_pt, color, REGULAR, ns);
+  publishSphere( stateToPointMsg( state ), color, scale, ns);
 }
 
 void OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance)
