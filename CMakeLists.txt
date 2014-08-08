@@ -56,10 +56,10 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # Executable for Demos and Testing
-add_executable(ompl_rviz_demos
-  src/demos/ompl_rviz_demos.cpp 
+add_executable(rrt_demo
+  src/demos/rrt_demo.cpp 
 )
-target_link_libraries(ompl_rviz_demos 
+target_link_libraries(rrt_demo 
   ${OMPL_LIBRARIES} 
   ${catkin_LIBRARIES} 
   ${Boost_LIBRARIES}
@@ -78,6 +78,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 # Mark executables for installation
-install(TARGETS ompl_rviz_demos
+install(TARGETS rrt_demo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

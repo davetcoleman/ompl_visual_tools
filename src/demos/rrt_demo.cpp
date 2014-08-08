@@ -65,9 +65,9 @@ namespace ompl_visual_tools
 {
 
 /**
- * \brief SimpleSetup Planning Class
+ * \brief SimpleSetup demo class
  */
-class OmplRvizDemos
+class RRTDemo
 {
 
 private:
@@ -103,7 +103,7 @@ public:
   /**
    * \brief Constructor
    */
-  OmplRvizDemos(bool verbose, bool use_visuals)
+  RRTDemo(bool verbose, bool use_visuals)
     : verbose_(verbose),
       use_visuals_(use_visuals)
   {
@@ -133,7 +133,7 @@ public:
   /**
    * \brief Deconstructor
    */
-  ~OmplRvizDemos()
+  ~RRTDemo()
   {
   }
 
@@ -534,7 +534,7 @@ int main( int argc, char** argv )
   }
 
   // Create the planner
-  ompl_visual_tools::OmplRvizDemos demo(verbose, use_visuals);
+  ompl_visual_tools::RRTDemo demo(verbose, use_visuals);
 
   // Clear Rviz
   demo.deleteAllMakers();
