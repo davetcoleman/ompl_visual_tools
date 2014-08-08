@@ -2,8 +2,8 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.0 (2014-08-08)
+------------------
 * Removed getSolutionPlannerName that is not available in OMPL released version
 * Updated README
 * Renamed file to rrt_demo.cpp
