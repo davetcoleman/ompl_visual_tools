@@ -734,7 +734,10 @@ bool OmplVisualTools::publishText(const std::string &text, const geometry_msgs::
   text_marker.text = text;
   text_marker.pose = pose;
   text_marker.color = getColor( color );
-  text_marker.scale.z = ceil(cost_->size1() / 20.0);    // only z is required (size of an "A")
+  if (cost_)
+    text_marker.scale.z = ceil(cost_->size1() / 20.0);    // only z is required (size of an "A")
+  else
+    text_marker.scale.z = 10;
 
   // Send to Rviz
   pub_rviz_marker_.publish( text_marker );
