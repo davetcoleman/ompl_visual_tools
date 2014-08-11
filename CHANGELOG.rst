@@ -2,6 +2,15 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Removed debug output
+* Removed hard-coded base_frame name
+* Improved memory usage
+* Cost ptr bug fix
+* Removed setOptimizationMethod()
+* Contributors: Dave Coleman
+
 2.1.0 (2014-08-08)
 ------------------
 * Removed getSolutionPlannerName that is not available in OMPL released version
