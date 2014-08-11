@@ -2,8 +2,8 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.1 (2014-08-11)
+------------------
 * Removed debug output
 * Removed hard-coded base_frame name
 * Improved memory usage
