@@ -90,7 +90,6 @@ namespace ompl_visual_tools
 
 // Default constants
 static const std::string RVIZ_MARKER_TOPIC = "/ompl_rviz_markers";
-static const std::string BASE_FRAME = "/world";
 static const double COST_HEIGHT_OFFSET = 0.5;
 
 typedef std::map< std::string, std::list<std::size_t> > MarkerList;
@@ -107,6 +106,9 @@ private:
 
   // Remember what space we are working in
   ompl::base::SpaceInformationPtr si_;
+
+  // Cached Point object to reduce memory loading
+  geometry_msgs::Point temp_point_;
 
 public:
 

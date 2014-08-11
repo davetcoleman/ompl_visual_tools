@@ -173,7 +173,7 @@ void OmplVisualTools::publishCostMap(PPMImage *image)
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-  marker.header.frame_id = BASE_FRAME;
+  marker.header.frame_id = base_frame_;
   marker.header.stamp = ros::Time::now();
 
   // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -236,11 +236,10 @@ void OmplVisualTools::publishCostMap(PPMImage *image)
 void OmplVisualTools::publishTriangle( int x, int y, visualization_msgs::Marker* marker, PPMImage *image )
 {
   // Point
-  geometry_msgs::Point point;
-  point.x = x;
-  point.y = y;
-  point.z = getCost(point); // to speed things up, we know is always whole number
-  marker->points.push_back( point );
+  temp_point_.x = x;
+  temp_point_.y = y;
+  temp_point_.z = getCost(temp_point_); // to speed things up, we know is always whole number
+  marker->points.push_back( temp_point_ );
 
   std_msgs::ColorRGBA color;
   color.r = image->data[ image->getID( x, y ) ].red / 255.0;
@@ -351,7 +350,7 @@ void OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_c
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-  marker.header.frame_id = BASE_FRAME;
+  marker.header.frame_id = base_frame_;
   marker.header.stamp = ros::Time();
 
   // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -439,14 +438,18 @@ void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr plannerData, o
 {
   // Convert the planner data verticies into a vector of states
   for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
+  {
+    std::cout << "convertPlannerData #" << i
+              << " state: " << plannerData->getVertex(i).getState() << std::endl;
     path.append(plannerData->getVertex(i).getState());
+  }
 }
 
 void OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states)
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.
-  marker.header.frame_id = BASE_FRAME;
+  marker.header.frame_id = base_frame_;
   marker.header.stamp = ros::Time();
 
   // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -576,6 +579,8 @@ void OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
 void OmplVisualTools::publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color,
                                   const double thickness, const std::string& ns )
 {
+  std::cout << "Verticies: " << plannerData->numVertices() << std::endl;
+
   og::PathGeometric path(si_);
   convertPlannerData(plannerData, path);
 
@@ -586,7 +591,7 @@ void OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_col
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.
-  marker.header.frame_id = BASE_FRAME;
+  marker.header.frame_id = base_frame_;
   marker.header.stamp = ros::Time();
 
   // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -625,6 +630,14 @@ void OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_col
   geometry_msgs::Point last_vertex;
   geometry_msgs::Point this_vertex;
 
+  std::cout << "path state count: " << path.getStateCount() << std::endl;
+
+  if (path.getStateCount() <= 0)
+  {
+    ROS_WARN_STREAM_NAMED("publishPath","No states found in path");
+    return;
+  }
+
   // Initialize first vertex
   last_vertex = stateToPointMsg(path.getState(0));
 
@@ -648,12 +661,10 @@ void OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_col
 
 geometry_msgs::Point OmplVisualTools::stateToPointMsg( int vertex_id, ob::PlannerDataPtr planner_data )
 {
-  ob::PlannerDataVertex vertex = planner_data->getVertex( vertex_id );
+  ob::PlannerDataVertex *vertex = &planner_data->getVertex( vertex_id );
 
   // Get this vertex's coordinates
-  const ob::State *state = vertex.getState();
-
-  return stateToPointMsg(state);
+  return stateToPointMsg(vertex->getState());
 }
 
 geometry_msgs::Point OmplVisualTools::stateToPointMsg( const ob::State *state )
@@ -669,21 +680,19 @@ geometry_msgs::Point OmplVisualTools::stateToPointMsg( const ob::State *state )
     static_cast<const ob::RealVectorStateSpace::StateType*>(state);
 
   // Create point
-  geometry_msgs::Point point;
-  point.x = real_state->values[0];
-  point.y = real_state->values[1];
-  point.z = getCostHeight(point);
-  return point;
+  temp_point_.x = real_state->values[0];
+  temp_point_.y = real_state->values[1];
+  temp_point_.z = getCostHeight(temp_point_);
+  return temp_point_;
 }
 
 geometry_msgs::Point OmplVisualTools::stateToPointMsg( const ob::ScopedState<> state )
 {
   // Create point
-  geometry_msgs::Point point;
-  point.x = state[0];
-  point.y = state[1];
-  point.z = getCostHeight(point);
-  return point;
+  temp_point_.x = state[0];
+  temp_point_.y = state[1];
+  temp_point_.z = getCostHeight(temp_point_);
+  return temp_point_;
 }
 
 int OmplVisualTools::natRound(double x)
@@ -698,14 +707,13 @@ void OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_col
 
 void OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance)
 {
-  geometry_msgs::Point state_pt;
-  state_pt.x = state_area[0];
-  state_pt.y = state_area[1];
-  state_pt.z = getCostHeight(state_pt);
+  temp_point_.x = state_area[0];
+  temp_point_.y = state_area[1];
+  temp_point_.z = getCostHeight(temp_point_);
 
-  publishSphere(state_pt, BLACK, REGULAR, "sample_region"); // mid point
+  publishSphere(temp_point_, BLACK, REGULAR, "sample_region"); // mid point
   // outer sphere (x2 b/c its a radius, x0.1 to make it look nicer)
-  publishSphere(state_pt, TRANSLUCENT, REGULAR, "sample_region");
+  publishSphere(temp_point_, TRANSLUCENT, REGULAR, "sample_region");
 }
 
 bool OmplVisualTools::publishText(const std::string &text, const rviz_colors &color)
@@ -720,7 +728,7 @@ bool OmplVisualTools::publishText(const std::string &text, const rviz_colors &co
 bool OmplVisualTools::publishText(const std::string &text, const geometry_msgs::Pose &pose, const rviz_colors &color)
 {
   visualization_msgs::Marker text_marker;
-  text_marker.header.frame_id = BASE_FRAME;
+  text_marker.header.frame_id = base_frame_;
   // Set the namespace and id for this marker.  This serves to create a unique ID
   text_marker.ns = "text";
   // Set the marker action.  Options are ADD and DELETE

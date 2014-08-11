@@ -64,6 +64,8 @@ namespace og = ompl::geometric;
 namespace ompl_visual_tools
 {
 
+static const std::string BASE_FRAME = "/world";
+
 /**
  * \brief SimpleSetup demo class
  */
