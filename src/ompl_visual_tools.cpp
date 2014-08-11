@@ -134,12 +134,6 @@ double OmplVisualTools::getCostHeight(const geometry_msgs::Point &point)
   d.y = ceil(point.y);
   d.z = getCost(d);
 
-  //std::cout << "point: \n" << point << std::endl;
-  //std::cout << "a: \n" << a << std::endl;
-  //std::cout << "b: \n" << b << std::endl;
-  //std::cout << "c: \n" << c << std::endl;
-  //std::cout << "d: \n" << d << std::endl;
-
   double R1;
   double R2;
 
@@ -165,7 +159,6 @@ double OmplVisualTools::getCostHeight(const geometry_msgs::Point &point)
   else
     val = ((a.y - point.y)/(a.y - b.y))*R1 + ((point.y - b.y)/(a.y - b.y))*R2;
 
-  //std::cout << "val: " << val << std::endl;
   return val + COST_HEIGHT_OFFSET;
 }
 
@@ -439,8 +432,6 @@ void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr plannerData, o
   // Convert the planner data verticies into a vector of states
   for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
   {
-    std::cout << "convertPlannerData #" << i
-              << " state: " << plannerData->getVertex(i).getState() << std::endl;
     path.append(plannerData->getVertex(i).getState());
   }
 }
@@ -579,8 +570,6 @@ void OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
 void OmplVisualTools::publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color,
                                   const double thickness, const std::string& ns )
 {
-  std::cout << "Verticies: " << plannerData->numVertices() << std::endl;
-
   og::PathGeometric path(si_);
   convertPlannerData(plannerData, path);
 
@@ -629,8 +618,6 @@ void OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_col
 
   geometry_msgs::Point last_vertex;
   geometry_msgs::Point this_vertex;
-
-  std::cout << "path state count: " << path.getStateCount() << std::endl;
 
   if (path.getStateCount() <= 0)
   {
