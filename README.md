@@ -14,7 +14,6 @@ streamlined for considering costs and experience-based planning.
 
 <img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/ompl_visual_tools.png" />
 .
-.
 
 ## How to Build
 

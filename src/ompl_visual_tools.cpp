@@ -424,7 +424,7 @@ void OmplVisualTools::publishSamples( og::PathGeometric& path )
     points.push_back( stateToPointMsg( path.getState(i) ) );
   }
 
-  publishSpheres(points, RED, SMALL, "sample_locations");
+  publishSpheres(points, RED, REGULAR, "sample_locations");
 }
 
 void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr plannerData, og::PathGeometric &path)
@@ -739,6 +739,23 @@ bool OmplVisualTools::publishText(const std::string &text, const geometry_msgs::
   ros::spinOnce();;
 
   return true;
+}
+
+void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
+{
+  ROS_ERROR_STREAM_NAMED("temp","visualizationCallback called");
+
+  ompl::base::PlannerDataPtr data(new ompl::base::PlannerData(si_));
+  planner->getPlannerData(*data);
+
+  publishGraph( data, moveit_visual_tools::PURPLE );
+  publishSamples( data );
+  ros::Duration(0.1).sleep();
+}
+
+ompl::base::VisualizationCallback OmplVisualTools::getVisualizationCallback()
+{
+  return boost::bind(&OmplVisualTools::visualizationCallback, this, _1);
 }
 
 

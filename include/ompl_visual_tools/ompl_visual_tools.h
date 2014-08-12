@@ -46,6 +46,7 @@
 
 // OMPL
 #include <ompl/base/SpaceInformation.h>
+#include <ompl/base/Planner.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/base/ScopedState.h>
 
@@ -245,6 +246,17 @@ public:
 
   bool publishText(const std::string &text, const geometry_msgs::Pose &pose, const moveit_visual_tools::rviz_colors &color = moveit_visual_tools::BLACK);
 
+  /**
+   * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during search
+   * \param pointer to the planner, to be used for getPlannerData()
+   */
+  void visualizationCallback(ompl::base::Planner *planner);
+
+  /**
+   * \brief Helper to set an OMPL's planner to use the visualizer callback
+   * \return a callback function
+   */
+  ompl::base::VisualizationCallback getVisualizationCallback();
 
 }; // end class
 
