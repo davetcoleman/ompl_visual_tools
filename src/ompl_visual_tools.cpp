@@ -403,20 +403,19 @@ void OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_c
   ros::spinOnce();;
 }
 
-void OmplVisualTools::publishSamples(const ob::PlannerDataPtr& plannerData)
+void OmplVisualTools::publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color,
+                                     const moveit_visual_tools::rviz_scales scale, const std::string& ns )
+//const ob::PlannerDataPtr& planner_data, const rviz_colors& color, const rviz_scales scale, const std::string& ns)
 {
   og::PathGeometric path(si_);
-  convertPlannerData(plannerData, path);
+  convertPlannerData(planner_data, path);
 
-  //std::size_t beforeInterpolateCount = path.getStateCount();
-  //path.interpolate();
-  //ROS_INFO_STREAM_NAMED("publishResult","Interpolation of path increased states count from "
-  //    << beforeInterpolateCount << " to " << path.getStateCount());
-
-  publishSamples(path);
+  publishSamples(path, color, scale, ns);
 }
 
-void OmplVisualTools::publishSamples( og::PathGeometric& path )
+void OmplVisualTools::publishSamples(const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color,
+                                     const moveit_visual_tools::rviz_scales scale, const std::string& ns )
+//og::PathGeometric& path, const rviz_colors& color, const rviz_scales scale, const std::string& ns)
 {
   std::vector<geometry_msgs::Point> points;
   for (std::size_t i = 0; i < path.getStateCount(); ++i)
@@ -424,15 +423,15 @@ void OmplVisualTools::publishSamples( og::PathGeometric& path )
     points.push_back( stateToPointMsg( path.getState(i) ) );
   }
 
-  publishSpheres(points, RED, SMALL, "sample_locations");
+  publishSpheres(points, color, scale, ns);
 }
 
-void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr plannerData, og::PathGeometric &path)
+void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr planner_data, og::PathGeometric &path)
 {
   // Convert the planner data verticies into a vector of states
-  for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
+  for (std::size_t i = 0; i < planner_data->numVertices(); ++i)
   {
-    path.append(plannerData->getVertex(i).getState());
+    path.append(planner_data->getVertex(i).getState());
   }
 }
 
@@ -567,11 +566,11 @@ void OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
   }
 }
 
-void OmplVisualTools::publishPath( const ob::PlannerDataPtr& plannerData, const rviz_colors color,
+void OmplVisualTools::publishPath( const ob::PlannerDataPtr& planner_data, const rviz_colors color,
                                   const double thickness, const std::string& ns )
 {
   og::PathGeometric path(si_);
-  convertPlannerData(plannerData, path);
+  convertPlannerData(planner_data, path);
 
   publishPath(path, color, thickness, ns);
 }
@@ -748,9 +747,10 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
   planner->getPlannerData(*data);
 
   publishGraph( data, moveit_visual_tools::PURPLE );
-  publishSamples( data );
+  publishSamples( data, moveit_visual_tools::ORANGE );
 
   // Optionaly show solution if available
+  /*
   const ompl::base::PathPtr &p = planner->getProblemDefinition()->getSolutionPath();
   if (p)
   {
@@ -758,6 +758,7 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
     path.interpolate();
     publishPath( path, moveit_visual_tools::GREEN, 0.35, "solution");
   }
+  */
 
   ros::Duration(0.1).sleep();
 }

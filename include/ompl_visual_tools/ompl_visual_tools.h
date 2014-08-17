@@ -169,19 +169,21 @@ public:
   void publishGraph(ob::PlannerDataPtr planner_data, const moveit_visual_tools::rviz_colors& color = moveit_visual_tools::BLUE, const double thickness = 0.2,
                     const std::string& ns = "space_exploration");
 
-  void publishSamples(const ob::PlannerDataPtr& plannerData);
+  void publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+                      const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
 
   /**
    * \brief Display Sample Points
    */
-  void publishSamples( og::PathGeometric& path );
+  void publishSamples( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+                       const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
 
   /**
    * \brief Convert PlannerData to PathGeometric. Assume ordering of verticies is order of path
    * \param PlannerData
    * \param PathGeometric
    */
-  void convertPlannerData(const ob::PlannerDataPtr plannerData, og::PathGeometric &path);
+  void convertPlannerData(const ob::PlannerDataPtr planner_data, og::PathGeometric &path);
 
   /**
    * \brief Display States
@@ -189,17 +191,17 @@ public:
   void publishStates(std::vector<const ompl::base::State*> states);
 
   /**
-   * \brief Display resulting path from a solver, in the form of a plannerData
+   * \brief Display resulting path from a solver, in the form of a planner_data
    *        where the list of states is also the order of the path. This uses MoveIt's robot state for inverse kinematics
    */
   void publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
                          const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated);
 
   /**
-   * \brief Display result path from a solver, in the form of a plannerData
+   * \brief Display result path from a solver, in the form of a planner_data
    * where the list of states is also the order of the path
    */
-  void publishPath( const ob::PlannerDataPtr& plannerData, const moveit_visual_tools::rviz_colors color,
+  void publishPath( const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color,
                     const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
