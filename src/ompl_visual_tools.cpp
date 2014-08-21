@@ -740,14 +740,15 @@ bool OmplVisualTools::publishText(const std::string &text, const geometry_msgs::
   return true;
 }
 
+/*
 void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
 {
   // Show the planner data
-  ompl::base::PlannerDataPtr data(new ompl::base::PlannerData(si_));
-  planner->getPlannerData(*data);
+  ompl::base::PlannerDataPtr planner_data(new ompl::base::PlannerData(si_));
+  planner->getPlannerData(*planner_data);
 
-  publishGraph( data, moveit_visual_tools::PURPLE );
-  publishSamples( data, moveit_visual_tools::ORANGE );
+  publishGraph( planner_data, moveit_visual_tools::PURPLE );
+  publishSamples( planner_data, moveit_visual_tools::ORANGE );
 
   // Optionaly show solution if available
   /*
@@ -758,7 +759,7 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
     path.interpolate();
     publishPath( path, moveit_visual_tools::GREEN, 0.35, "solution");
   }
-  */
+
 
   ros::Duration(0.1).sleep();
 }
@@ -767,6 +768,6 @@ ompl::base::VisualizationCallback OmplVisualTools::getVisualizationCallback()
 {
   return boost::bind(&OmplVisualTools::visualizationCallback, this, _1);
 }
-
+*/
 
 } // end namespace
