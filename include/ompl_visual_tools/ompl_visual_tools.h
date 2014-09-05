@@ -252,13 +252,13 @@ public:
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during search
    * \param pointer to the planner, to be used for getPlannerData()
    */
-  //  void visualizationCallback(ompl::base::Planner *planner);
+  void visualizationCallback(ompl::base::Planner *planner);
 
   /**
    * \brief Helper to set an OMPL's planner to use the visualizer callback
    * \return a callback function
    */
-  //  ompl::base::VisualizationCallback getVisualizationCallback();
+  ompl::base::VisualizationCallback getVisualizationCallback();
 
 }; // end class
 
