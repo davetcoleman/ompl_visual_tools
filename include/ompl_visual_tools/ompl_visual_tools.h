@@ -169,15 +169,22 @@ public:
   void publishGraph(ob::PlannerDataPtr planner_data, const moveit_visual_tools::rviz_colors& color = moveit_visual_tools::BLUE, const double thickness = 0.2,
                     const std::string& ns = "space_exploration");
 
-  void publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
-                      const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
-
   /**
    * \brief Display Sample Points
    */
+  void publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+                      const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
+
+
   void publishSamples( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
                        const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
 
+  /**
+   * \brief Display labels on samples
+   */
+  void publishSampleIDs( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+                         const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_labels" );
+  
   /**
    * \brief Convert PlannerData to PathGeometric. Assume ordering of verticies is order of path
    * \param PlannerData
@@ -244,9 +251,16 @@ public:
    */
   void publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance);
 
-  bool publishText(const std::string &text, const moveit_visual_tools::rviz_colors &color = moveit_visual_tools::BLACK);
+  /**
+   * \brief Publish text to rviz at a given location
+   */
+  bool publishText(const geometry_msgs::Point &point, const std::string &text,
+                   const moveit_visual_tools::rviz_colors &color = moveit_visual_tools::BLACK,
+                   bool static_id = true);
 
-  bool publishText(const std::string &text, const geometry_msgs::Pose &pose, const moveit_visual_tools::rviz_colors &color = moveit_visual_tools::BLACK);
+  bool publishText(const geometry_msgs::Pose &pose, const std::string &text, 
+                   const moveit_visual_tools::rviz_colors &color = moveit_visual_tools::BLACK,
+                   bool static_id = true);
 
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during search

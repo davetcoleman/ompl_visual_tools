@@ -254,13 +254,13 @@ public:
       {
         ROS_WARN_STREAM_NAMED("plan","APPROXIMATE solution found");
         if (use_visuals_)
-          visual_tools_->publishText("APPROXIMATE solution found", text_pose);
+          visual_tools_->publishText(text_pose, "APPROXIMATE solution found");
       }
       else
       {
         ROS_DEBUG_STREAM_NAMED("plan","Exact solution found");
         if (use_visuals_)
-          visual_tools_->publishText("Exact solution found", text_pose);
+          visual_tools_->publishText(text_pose, "Exact solution found");
 
       }
 
@@ -282,7 +282,7 @@ public:
     {
       ROS_ERROR("No Solution Found");
       if (use_visuals_)
-        visual_tools_->publishText("No Solution Found", text_pose);
+        visual_tools_->publishText(text_pose, "No Solution Found");
     }
 
     return solved;

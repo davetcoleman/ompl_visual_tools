@@ -403,9 +403,18 @@ void OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_c
   ros::spinOnce();;
 }
 
+void OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color,
+                                       const moveit_visual_tools::rviz_scales scale, const std::string& ns )
+{
+  for (std::size_t i = 0; i < path.getStateCount(); ++i)
+  {
+    std::string text = boost::lexical_cast<std::string>(i+2);
+    publishText( stateToPointMsg( path.getState(i) ), text, color, false);
+  }
+}
+
 void OmplVisualTools::publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color,
                                      const moveit_visual_tools::rviz_scales scale, const std::string& ns )
-//const ob::PlannerDataPtr& planner_data, const rviz_colors& color, const rviz_scales scale, const std::string& ns)
 {
   og::PathGeometric path(si_);
   convertPlannerData(planner_data, path);
@@ -415,7 +424,6 @@ void OmplVisualTools::publishSamples(const ob::PlannerDataPtr& planner_data, con
 
 void OmplVisualTools::publishSamples(const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color,
                                      const moveit_visual_tools::rviz_scales scale, const std::string& ns )
-//og::PathGeometric& path, const rviz_colors& color, const rviz_scales scale, const std::string& ns)
 {
   std::vector<geometry_msgs::Point> points;
   for (std::size_t i = 0; i < path.getStateCount(); ++i)
@@ -424,6 +432,9 @@ void OmplVisualTools::publishSamples(const og::PathGeometric& path, const moveit
   }
 
   publishSpheres(points, color, scale, ns);
+
+  // Show the vertex ids
+  publishSampleIDs( path, moveit_visual_tools::BLACK );
 }
 
 void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr planner_data, og::PathGeometric &path)
@@ -702,52 +713,48 @@ void OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, c
   publishSphere(temp_point_, TRANSLUCENT, REGULAR, "sample_region");
 }
 
-bool OmplVisualTools::publishText(const std::string &text, const rviz_colors &color)
+bool OmplVisualTools::publishText(const geometry_msgs::Point &point, const std::string &text,
+                                  const rviz_colors &color, bool static_id)
 {
   geometry_msgs::Pose text_pose;
-  text_pose.position.x = 0;
-  text_pose.position.y = 0;
-  text_pose.position.z = 0;
-  publishText(text, text_pose, color);
+  text_pose.position = point;
+  ros::Duration(0.1).sleep();
+
+  return publishText(text_pose, text, color, static_id);
 }
 
-bool OmplVisualTools::publishText(const std::string &text, const geometry_msgs::Pose &pose, const rviz_colors &color)
+bool OmplVisualTools::publishText(const geometry_msgs::Pose &pose, const std::string &text, const rviz_colors &color, 
+                                  bool static_id)
 {
-  visualization_msgs::Marker text_marker;
-  text_marker.header.frame_id = base_frame_;
-  // Set the namespace and id for this marker.  This serves to create a unique ID
-  text_marker.ns = "text";
-  // Set the marker action.  Options are ADD and DELETE
-  text_marker.action = visualization_msgs::Marker::ADD;
-  // Set the marker type.
-  text_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-
-  text_marker.id = 0;
-
-  text_marker.header.stamp = ros::Time::now();
-  text_marker.text = text;
-  text_marker.pose = pose;
-  text_marker.color = getColor( color );
+  geometry_msgs::Vector3 scale;
   if (cost_)
-    text_marker.scale.z = ceil(cost_->size1() / 20.0);    // only z is required (size of an "A")
+  {
+    int size = ceil(cost_->size1() / 20.0);    // only z is required (size of an "A")
+    scale.x = size;
+    scale.y = size;
+    scale.z = size;
+  }
   else
-    text_marker.scale.z = 10;
+    scale = getScale(REGULAR); // TODO tune this
 
-  // Send to Rviz
-  pub_rviz_marker_.publish( text_marker );
-  ros::spinOnce();;
-
-  return true;
+  // send to moveit_visual_tools
+  return VisualTools::publishText( pose, text, color, scale, static_id);
 }
 
 void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
 {
-  // Show the planner data
   ompl::base::PlannerDataPtr planner_data(new ompl::base::PlannerData(si_));
   planner->getPlannerData(*planner_data);
 
+  // Show edges of graph
   publishGraph( planner_data, moveit_visual_tools::PURPLE );
-  publishSamples( planner_data, moveit_visual_tools::ORANGE );
+
+  // Convert planner data to path
+  og::PathGeometric path(si_);
+  convertPlannerData(planner_data, path);
+
+  // Show samples of graph
+  publishSamples( path, moveit_visual_tools::ORANGE );
 
   // Optionaly show solution if available
   /*
