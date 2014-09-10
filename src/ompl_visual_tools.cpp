@@ -71,6 +71,7 @@ namespace ompl_visual_tools
 
 OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string& marker_topic, robot_model::RobotModelConstPtr robot_model)
   : VisualTools(base_link, marker_topic, robot_model)
+  , disable_3d_(false)
 {
 }
 
@@ -89,6 +90,22 @@ void OmplVisualTools::setCostMap(intMatrixPtr cost)
   cost_ = cost;
 }
 
+/**
+ * \brief Getter for disable 3d option in Rviz
+ */ 
+bool OmplVisualTools::getDisable3D()
+{
+  return disable_3d_;
+}
+
+/**
+ * \brief Setter for disable 3d option in Rviz
+ */
+void OmplVisualTools::setDisable3D(bool disable_3d)
+{
+  disable_3d_ = disable_3d;
+}
+
 double OmplVisualTools::getCost(const geometry_msgs::Point &point)
 {
   // Check that a cost map has been passed in
@@ -102,7 +119,10 @@ double OmplVisualTools::getCost(const geometry_msgs::Point &point)
 
 double OmplVisualTools::getCostHeight(const geometry_msgs::Point &point)
 {
-  // TODO make faster
+  if (disable_3d_)
+    return 0.5; // all costs become almost zero in flat world
+
+  // TODO make faster the following math
 
   // check if whole number
   if (floor(point.x) == point.x && floor(point.y) == point.y)
@@ -162,7 +182,7 @@ double OmplVisualTools::getCostHeight(const geometry_msgs::Point &point)
   return val + COST_HEIGHT_OFFSET;
 }
 
-void OmplVisualTools::publishCostMap(PPMImage *image)
+void OmplVisualTools::publishCostMap(PPMImage *image, bool static_id)
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -177,7 +197,17 @@ void OmplVisualTools::publishCostMap(PPMImage *image)
 
   // Set the marker action.  Options are ADD and DELETE
   marker.action = visualization_msgs::Marker::ADD;
-  marker.id = 1;
+
+  static std::size_t cost_map_id = 0;
+  if (static_id)
+  {
+    marker.id = 0;
+  }
+  else
+  {
+    cost_map_id++;
+    marker.id = cost_map_id;
+  }
 
   marker.pose.position.x = 0;
   marker.pose.position.y = 0;
@@ -231,7 +261,11 @@ void OmplVisualTools::publishTriangle( int x, int y, visualization_msgs::Marker*
   // Point
   temp_point_.x = x;
   temp_point_.y = y;
-  temp_point_.z = getCost(temp_point_); // to speed things up, we know is always whole number
+  if (disable_3d_)
+    temp_point_.z = 0; // all costs become zero in flat world
+  else
+    temp_point_.z = getCost(temp_point_); // to speed things up, we know is always whole number
+
   marker->points.push_back( temp_point_ );
 
   std_msgs::ColorRGBA color;
@@ -406,10 +440,27 @@ void OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_c
 void OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color,
                                        const moveit_visual_tools::rviz_scales scale, const std::string& ns )
 {
+  // Create a small scale for font size
+  geometry_msgs::Vector3 scale_msg;
+  if (cost_)
+  {
+    int size = ceil(cost_->size1() / 30.0);    // only z is required (size of an "A")
+    scale_msg.x = size;
+    scale_msg.y = size;
+    scale_msg.z = size;
+  }
+  else
+    scale_msg = getScale(scale); // TODO tune this
+
+  std::string text;
+  // Publish all
   for (std::size_t i = 0; i < path.getStateCount(); ++i)
   {
-    std::string text = boost::lexical_cast<std::string>(i+2);
-    publishText( stateToPointMsg( path.getState(i) ), text, color, false);
+    text = boost::lexical_cast<std::string>(i+2);
+
+    // send to moveit_visual_tools
+    VisualTools::publishText( convertPointToPose(stateToPointMsg( path.getState(i) )), 
+                              text, color, scale_msg, false);
   }
 }
 
@@ -434,7 +485,7 @@ void OmplVisualTools::publishSamples(const og::PathGeometric& path, const moveit
   publishSpheres(points, color, scale, ns);
 
   // Show the vertex ids
-  publishSampleIDs( path, moveit_visual_tools::BLACK );
+  //publishSampleIDs( path, moveit_visual_tools::BLACK );
 }
 
 void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr planner_data, og::PathGeometric &path)
@@ -718,7 +769,6 @@ bool OmplVisualTools::publishText(const geometry_msgs::Point &point, const std::
 {
   geometry_msgs::Pose text_pose;
   text_pose.position = point;
-  ros::Duration(0.1).sleep();
 
   return publishText(text_pose, text, color, static_id);
 }

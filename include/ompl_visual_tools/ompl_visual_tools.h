@@ -111,6 +111,9 @@ private:
   // Cached Point object to reduce memory loading
   geometry_msgs::Point temp_point_;
 
+  // Mode that disables showing 3D in Rviz
+  bool disable_3d_;
+
 public:
 
   /**
@@ -132,6 +135,16 @@ public:
   void setCostMap(intMatrixPtr cost);
 
   /**
+   * \brief Getter for disable 3d option in Rviz
+   */ 
+  bool getDisable3D();
+
+  /**
+   * \brief Setter for disable 3d option in Rviz
+   */
+  void setDisable3D(bool disable_3d);
+
+  /**
    * \brief Helper function for converting a point to the correct cost
    */
   double getCost(const geometry_msgs::Point &point);
@@ -145,7 +158,7 @@ public:
   /**
    * \brief Visualize Results
    */
-  void publishCostMap(PPMImage *image);
+  void publishCostMap(PPMImage *image, bool static_id = true);
 
   /**
    * \brief Helper Function to display triangles
