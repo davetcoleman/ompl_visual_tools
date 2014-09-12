@@ -99,9 +99,6 @@ class OmplVisualTools : public moveit_visual_tools::VisualTools
 {
 private:
 
-  // Show more visual and console output, with general slower run time.
-  bool verbose_;
-
   // Keep a pointer to an optional cost map
   intMatrixPtr cost_;
 
@@ -158,44 +155,53 @@ public:
   /**
    * \brief Visualize Results
    */
-  void publishCostMap(PPMImage *image, bool static_id = true);
+  bool publishCostMap(PPMImage *image, bool static_id = true);
 
   /**
    * \brief Helper Function to display triangles
    */
-  void publishTriangle( int x, int y, visualization_msgs::Marker* marker, PPMImage *image );
+  bool publishTriangle( int x, int y, visualization_msgs::Marker* marker, PPMImage *image );
 
   /**
    * \brief Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
    */
-  void interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker,
+  bool interpolateLine( const geometry_msgs::Point &p1, const geometry_msgs::Point &p2, visualization_msgs::Marker* marker,
                         const std_msgs::ColorRGBA color );
 
   /**
    * \brief Display Start Goal
    */
-  void publishStartGoalSpheres(ob::PlannerDataPtr planner_data, const std::string& ns);
+  bool publishStartGoalSpheres(ob::PlannerDataPtr planner_data, const std::string& ns);
 
   /**
    * \brief Display Explored Space
    */
-  void publishGraph(ob::PlannerDataPtr planner_data, const moveit_visual_tools::rviz_colors& color = moveit_visual_tools::BLUE, const double thickness = 0.2,
+  bool publishGraph(ob::PlannerDataPtr planner_data, const moveit_visual_tools::rviz_colors& color = moveit_visual_tools::BLUE, const double thickness = 0.2,
                     const std::string& ns = "space_exploration");
 
   /**
    * \brief Display Sample Points
    */
-  void publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+  bool publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
                       const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
 
 
-  void publishSamples( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+  bool publishSamples( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
                        const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
+
+  /**
+   * \brief 
+   * \param input - description
+   * \param input - description
+   * \return 
+   */
+  bool publishEdge(const ob::State* stateA, const ob::State* stateB, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::BLUE, 
+                   const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::REGULAR);
 
   /**
    * \brief Display labels on samples
    */
-  void publishSampleIDs( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+  bool publishSampleIDs( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
                          const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_labels" );
   
   /**
@@ -208,26 +214,26 @@ public:
   /**
    * \brief Display States
    */
-  void publishStates(std::vector<const ompl::base::State*> states);
+  bool publishStates(std::vector<const ompl::base::State*> states);
 
   /**
    * \brief Display resulting path from a solver, in the form of a planner_data
    *        where the list of states is also the order of the path. This uses MoveIt's robot state for inverse kinematics
    */
-  void publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
+  bool publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
                          const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated);
 
   /**
    * \brief Display result path from a solver, in the form of a planner_data
    * where the list of states is also the order of the path
    */
-  void publishPath( const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color,
+  bool publishPath( const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color,
                     const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
    * \brief Display result path from a solver
    */
-  void publishPath( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" );
+  bool publishPath( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
    * \brief Helper Function: gets the x,y coordinates for a given vertex id
@@ -253,7 +259,7 @@ public:
    * \param start state
    * \param color
    */
-  void publishState(const ob::ScopedState<> state, const moveit_visual_tools::rviz_colors &color,
+  bool publishState(const ob::ScopedState<> state, const moveit_visual_tools::rviz_colors &color,
                     const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::REGULAR,
                     const std::string& ns = "state_sphere");
 
@@ -262,7 +268,7 @@ public:
    * \param state_area - the center point of the uniform sampler
    * \param distance - the radius around the center for sampling
    */
-  void publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance);
+  bool publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance);
 
   /**
    * \brief Publish text to rviz at a given location
@@ -280,12 +286,16 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void visualizationCallback(ompl::base::Planner *planner);
+  void visualizationStateCallback(ompl::base::State *state);
+  void visualizationEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB);
 
   /**
    * \brief Helper to set an OMPL's planner to use the visualizer callback
    * \return a callback function
    */
   ompl::base::VisualizationCallback getVisualizationCallback();
+  ompl::base::VisualizationStateCallback getVisualizationStateCallback();
+  ompl::base::VisualizationEdgeCallback getVisualizationEdgeCallback();
 
 }; // end class
 
