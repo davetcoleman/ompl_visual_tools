@@ -597,9 +597,9 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
 
         // Convert to robot state
         model_state_space->copyToRobotState( *shared_robot_state_, path->getVertex(state_id).getState() );
-        //shared_robot_state_->update(true); // force update so that the virtual joint is updated to the grounded foot
+        shared_robot_state_->updateStateWithFakeBase();
 
-        //publishRobotState(shared_robot_state_);
+        publishRobotState(shared_robot_state_);
 
         // Each tip in the robot state
         for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
@@ -825,11 +825,13 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
     publishSamples( path, moveit_visual_tools::ORANGE );
 
     // Outline with circle
+    /*
     for (std::size_t i = 0; i < path.getStateCount(); ++i)
     {
         publishSphere( convertPointToPose(stateToPointMsg( path.getState(i) )), 
-                       moveit_visual_tools::TRANSLUCENT2, 6.92965*2 );
+                       moveit_visual_tools::TRANSLUCENT2, 6.92965 );
     }
+    */
 
     if (path.getStateCount() > 2)
         ros::Duration(0.1).sleep();
@@ -841,8 +843,8 @@ void OmplVisualTools::visualizationStateCallback(ompl::base::State *state)
 
     publishSphere(point, GREEN);
 
-        publishSphere( convertPointToPose(stateToPointMsg( state )), 
-                       moveit_visual_tools::TRANSLUCENT2, 6.92965*2 );
+    //publishSphere( convertPointToPose(stateToPointMsg( state )), 
+    //               moveit_visual_tools::TRANSLUCENT2, 6.92965*2 );
 
     ros::Duration(0.01).sleep();
 }
