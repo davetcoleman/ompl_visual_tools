@@ -3,6 +3,7 @@ project(ompl_visual_tools)
 
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
+  graph_msgs
   moveit_visual_tools
   moveit_core
   moveit_planners_ompl
@@ -18,6 +19,7 @@ include_directories(${Boost_INCLUDE_DIRS} ${OMPL_INCLUDE_DIRS})
 
 catkin_package(
   CATKIN_DEPENDS
+    graph_msgs
     moveit_visual_tools
     moveit_core
     moveit_planners_ompl 

@@ -41,6 +41,8 @@
 
 // ROS
 #include <ros/ros.h>
+#include <graph_msgs/GeometryGraph.h>
+#include <graph_msgs/Edges.h>
 
 // Boost
 #include <boost/numeric/ublas/matrix.hpp>
@@ -380,7 +382,8 @@ bool OmplVisualTools::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, c
     return true;
 }
 
-bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color, const double thickness, const std::string& ns)
+bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_colors& color, 
+                                   const double thickness, const std::string& ns)
 {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -416,7 +419,7 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_c
     geometry_msgs::Point next_vertex;
 
     // Loop through all verticies
-    for( int vertex_id = 0; vertex_id < int( planner_data->numVertices() ); ++vertex_id )
+    for( std::size_t vertex_id = 0; vertex_id < planner_data->numVertices(); ++vertex_id )
     {
         this_vertex = stateToPointMsg( vertex_id, planner_data );
 
@@ -644,6 +647,58 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
     return true;
 }
 
+bool OmplVisualTools::publishRobotGraph( const ompl::base::PlannerDataPtr &graph, 
+                                         const std::vector<const robot_model::LinkModel*> &tips)
+{
+    // Make sure a robot state is available
+    loadSharedRobotState();
+
+    // Turn into multiple graphs (one for each tip)
+    std::vector<graph_msgs::GeometryGraph> graphs(tips.size());
+
+    // Convert states to points
+    std::vector< std::vector<geometry_msgs::Point> > vertex_tip_points;
+    convertRobotStatesToTipPoints(graph, tips, vertex_tip_points);
+
+    // Copy tip points to each resulting tip graph
+    for (std::size_t vertex_id = 0; vertex_id < vertex_tip_points.size(); ++vertex_id)
+    {
+        for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
+        {
+            graphs[tip_id].nodes.push_back(vertex_tip_points[vertex_id][tip_id]);
+        }
+    }
+
+    // Now just copy the edges into each structure
+    for (std::size_t vertex_id = 0; vertex_id < graph->numVertices(); ++vertex_id)
+    {
+        // Get the out edges from the current vertex
+        std::vector<unsigned int> edge_list;
+        graph->getEdges( vertex_id, edge_list );
+
+        // Do for each tip
+        for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
+        {
+            // Create new edge with all the node ids listed
+            graph_msgs::Edges edge;
+            edge.node_ids = edge_list;
+            graphs[tip_id].edges.push_back(edge);
+
+        } // for each tip
+    } // for each vertex
+
+    // Now publish each tip graph
+    for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
+    {
+        VisualTools::publishGraph( graphs[tip_id], getRandColor(), 0.005 );
+        ros::Duration(0.05).sleep();
+        //publishSpheres( graphs[tip_id], moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );
+        //ros::Duration(0.05).sleep();
+    }
+
+    return true;
+}
+
 bool OmplVisualTools::publishPath( const ob::PlannerDataPtr& planner_data, const rviz_colors color,
                                    const double thickness, const std::string& ns )
 {
@@ -804,6 +859,44 @@ bool OmplVisualTools::publishText(const geometry_msgs::Pose &pose, const std::st
 
     // send to moveit_visual_tools
     return VisualTools::publishText( pose, text, color, scale, static_id);
+}
+
+bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr &graph, 
+                                                    const std::vector<const robot_model::LinkModel*> &tips, 
+                                                    std::vector< std::vector<geometry_msgs::Point> > & vertex_tip_points)
+{
+    // Make sure a robot state is available
+    loadSharedRobotState();
+
+    // Vars
+    Eigen::Affine3d pose;
+
+    // Load information about the robot's geometry
+    ompl_interface::ModelBasedStateSpacePtr model_state_space =
+        boost::static_pointer_cast<ompl_interface::ModelBasedStateSpace>(si_->getStateSpace());
+
+    // Rows correspond to robot states
+    vertex_tip_points.clear();
+    vertex_tip_points.resize(graph->numVertices());
+
+    // Each state in the path
+    for (std::size_t state_id = 0; state_id < graph->numVertices(); ++state_id)
+    {
+        // Convert to robot state
+        model_state_space->copyToRobotState( *shared_robot_state_, graph->getVertex(state_id).getState() );
+        shared_robot_state_->updateStateWithFakeBase();
+
+        // Each tip in the robot state
+        for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
+        {
+            // Forward kinematics
+            pose = shared_robot_state_->getGlobalLinkTransform(tips[tip_id]);
+
+            vertex_tip_points[state_id].push_back( convertPose(pose).position );
+        }
+    }
+
+    return true;
 }
 
 void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)

@@ -224,6 +224,12 @@ public:
                          const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated);
 
   /**
+   * \brief Display resulting graph from a planner, in the form of a planner_data object
+   *        This uses MoveIt's robot state for inverse kinematics
+   */
+  bool publishRobotGraph( const ompl::base::PlannerDataPtr &graph, 
+                          const std::vector<const robot_model::LinkModel*> &tips);
+  /**
    * \brief Display result path from a solver, in the form of a planner_data
    * where the list of states is also the order of the path
    */
@@ -280,6 +286,16 @@ public:
   bool publishText(const geometry_msgs::Pose &pose, const std::string &text, 
                    const moveit_visual_tools::rviz_colors &color = moveit_visual_tools::BLACK,
                    bool static_id = true);
+
+  /**
+   * \brief Convet each vertex in a graph into a list of tip locations, as desired
+   * \param input - description
+   * \param input - description
+   * \return 
+   */
+  bool convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr &graph, 
+                                     const std::vector<const robot_model::LinkModel*> &tips, 
+                                     std::vector< std::vector<geometry_msgs::Point> > & vertex_tip_points);
 
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during search
