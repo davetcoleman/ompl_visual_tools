@@ -182,12 +182,29 @@ public:
   /**
    * \brief Display Sample Points
    */
-  bool publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
-                      const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
+  MOVEIT_DEPRECATED bool publishSamples( const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+                                         const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
 
 
-  bool publishSamples( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
-                       const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
+  MOVEIT_DEPRECATED bool publishSamples( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED,
+                                         const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "sample_locations" );
+
+  /**
+   * \brief Publish a marker of a series of spheres to rviz
+   * \param spheres - where to publish them
+   * \param color - an enum pre-defined name of a color
+   * \param scale - an enum pre-defined name of a size
+   * \param ns - namespace of marker
+   * \return true on success
+   */
+  bool publishSpheres( const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED, 
+                       const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "planner_data_spheres" );
+  bool publishSpheres( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED, 
+                       double scale = 0.1, const std::string& ns = "path_spheres" );
+  bool publishSpheres( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color = moveit_visual_tools::RED, 
+                       const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::SMALL, const std::string& ns = "path_spheres" );
+  bool publishSpheres( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color, 
+                       const geometry_msgs::Vector3 &scale, const std::string& ns = "path_spheres");
 
   /**
    * \brief 
@@ -302,7 +319,7 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void visualizationCallback(ompl::base::Planner *planner);
-  void visualizationStateCallback(ompl::base::State *state);
+  void visualizationStateCallback(ompl::base::State *state, std::size_t type);
   void visualizationEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB);
 
   /**

@@ -113,7 +113,7 @@ First, set the state space that MoveIt! has chosen for your robot in OMPL:
 Then you can publish the paths of various tips on a robot, as planned in OMPL:
 ```
     std::vector<ompl::base::PlannerDataPtr> paths;
-    simple_setup.getAllPaths(paths);
+    simple_setup.getAllPlannerDatas(paths);
 
     // Get tip links for this setup
     std::vector<const robot_model::LinkModel*> tips;

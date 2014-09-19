@@ -61,6 +61,7 @@
 // For converting OMPL state to a MoveIt robot state
 #include <moveit/ompl_interface/model_based_planning_context.h>
 #include <moveit/robot_state/robot_state.h>
+#include <moveit/macros/deprecation.h>
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -486,25 +487,65 @@ bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const move
 bool OmplVisualTools::publishSamples(const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color,
                                      const moveit_visual_tools::rviz_scales scale, const std::string& ns )
 {
+    ROS_ERROR_STREAM_NAMED("ompl_visual_tools","Deprecated");
     og::PathGeometric path(si_);
     convertPlannerData(planner_data, path);
 
-    return publishSamples(path, color, scale, ns);
+    return publishSpheres(path, color, scale, ns);
 }
 
 bool OmplVisualTools::publishSamples(const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color,
                                      const moveit_visual_tools::rviz_scales scale, const std::string& ns )
 {
+    ROS_ERROR_STREAM_NAMED("ompl_visual_tools","Deprecated");
     std::vector<geometry_msgs::Point> points;
     for (std::size_t i = 0; i < path.getStateCount(); ++i)
     {
         points.push_back( stateToPointMsg( path.getState(i) ) );
     }
 
-    return publishSpheres(points, color, scale, ns);
+    return VisualTools::publishSpheres(points, color, scale, ns);
 
     // Show the vertex ids
     //publishSampleIDs( path, moveit_visual_tools::BLACK );
+}
+
+bool OmplVisualTools::publishSpheres( const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color, 
+                                      const moveit_visual_tools::rviz_scales scale, const std::string& ns)
+{
+    og::PathGeometric path(si_);
+    convertPlannerData(planner_data, path);
+
+    return publishSpheres(path, color, scale, ns);
+}
+
+bool OmplVisualTools::publishSpheres( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color, 
+                                      double scale, const std::string& ns)
+{
+    geometry_msgs::Vector3 scale_vector;
+    scale_vector.x = scale;
+    scale_vector.y = scale;
+    scale_vector.z = scale;
+    publishSpheres( path, color, scale_vector, ns);    
+}
+
+bool OmplVisualTools::publishSpheres( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color, 
+                                      const rviz_scales scale, const std::string& ns)
+{
+    publishSpheres( path, color, getScale(scale, false, 0.25), ns);    
+}
+
+bool OmplVisualTools::publishSpheres( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color, 
+                                      const geometry_msgs::Vector3 &scale, const std::string& ns)
+{
+    std::vector<geometry_msgs::Point> points;
+    for (std::size_t i = 0; i < path.getStateCount(); ++i)
+        points.push_back( stateToPointMsg( path.getState(i) ) );
+
+    return VisualTools::publishSpheres(points, color, scale, ns);
+
+    // Show the vertex ids
+    //publishSampleIDs( path, moveit_visual_tools::BLACK );    
 }
 
 void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr planner_data, og::PathGeometric &path)
@@ -634,7 +675,7 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
     {
         VisualTools::publishPath( paths_msgs[tip_id], moveit_visual_tools::RAND, moveit_visual_tools::SMALL );
         ros::Duration(0.05).sleep();
-        publishSpheres( paths_msgs[tip_id], moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );
+        VisualTools::publishSpheres( paths_msgs[tip_id], moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );
         ros::Duration(0.05).sleep();
     }
 
@@ -692,8 +733,9 @@ bool OmplVisualTools::publishRobotGraph( const ompl::base::PlannerDataPtr &graph
     {
         VisualTools::publishGraph( graphs[tip_id], getRandColor(), 0.005 );
         ros::Duration(0.05).sleep();
-        //publishSpheres( graphs[tip_id], moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );
-        //ros::Duration(0.05).sleep();
+        
+        VisualTools::publishSpheres( graphs[tip_id].nodes, moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );
+        ros::Duration(0.05).sleep();
     }
 
     return true;
@@ -915,38 +957,49 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
     convertPlannerData(planner_data, path);
 
     // Show samples of graph
-    publishSamples( path, moveit_visual_tools::ORANGE );
+    OmplVisualTools::publishSpheres( path, moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL);
 
     // Outline with circle
-    /*
-    for (std::size_t i = 0; i < path.getStateCount(); ++i)
-    {
-        publishSphere( convertPointToPose(stateToPointMsg( path.getState(i) )), 
-                       moveit_visual_tools::TRANSLUCENT2, 6.92965 );
-    }
-    */
-
-    if (path.getStateCount() > 2)
-        ros::Duration(0.1).sleep();
+    double nn_radius = 3.46482;
+    OmplVisualTools::publishSpheres( path, moveit_visual_tools::TRANSLUCENT2, nn_radius*2 );
+    
+    //if (path.getStateCount() > 2)
+    //    ros::Duration(0.1).sleep();
+    ros::spinOnce();
 }
 
-void OmplVisualTools::visualizationStateCallback(ompl::base::State *state)
+void OmplVisualTools::visualizationStateCallback(ompl::base::State *state, std::size_t type)
 {
-    geometry_msgs::Point point = stateToPointMsg( state );
+    geometry_msgs::Pose pose = convertPointToPose(stateToPointMsg( state ));
 
-    publishSphere(point, GREEN);
+    double nn_radius = 3.46482;
 
-    //publishSphere( convertPointToPose(stateToPointMsg( state )), 
-    //               moveit_visual_tools::TRANSLUCENT2, 6.92965*2 );
-
-    ros::Duration(0.01).sleep();
+    switch (type)
+    {
+        case 1: // Candidate COEVERAGE node to be added
+            publishSphere(pose, GREEN, moveit_visual_tools::SMALL);
+            break;
+        case 2: // Candidate CONNECTIVITY node to be added
+            publishSphere(pose, BLUE, moveit_visual_tools::SMALL);
+            break;
+        case 3: // sampled nearby node
+            publishSphere(pose, RED, moveit_visual_tools::SMALL);
+            break;
+        case 4: // Candidate node has already been added
+            publishSphere(pose, PURPLE, moveit_visual_tools::REGULAR);
+            // Outline with circle
+            publishSphere(pose, moveit_visual_tools::TRANSLUCENT2, nn_radius*2 );
+            break;
+        default:
+            ROS_ERROR_STREAM_NAMED("visualizationStateCallback","Invalid state type value");
+    }
+    ros::spinOnce();
 }
 
 void OmplVisualTools::visualizationEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB)
 {
-    publishEdge(stateA, stateB, PURPLE, REGULAR);
-
-    ros::Duration(1.0).sleep();
+    publishEdge(stateA, stateB, ORANGE, SMALL);
+    ros::spinOnce();
 }
 
 ompl::base::VisualizationCallback OmplVisualTools::getVisualizationCallback()
@@ -956,7 +1009,7 @@ ompl::base::VisualizationCallback OmplVisualTools::getVisualizationCallback()
 
 ompl::base::VisualizationStateCallback OmplVisualTools::getVisualizationStateCallback()
 {
-    return boost::bind(&OmplVisualTools::visualizationStateCallback, this, _1);
+    return boost::bind(&OmplVisualTools::visualizationStateCallback, this, _1, _2);
 }
 
 ompl::base::VisualizationEdgeCallback OmplVisualTools::getVisualizationEdgeCallback()
