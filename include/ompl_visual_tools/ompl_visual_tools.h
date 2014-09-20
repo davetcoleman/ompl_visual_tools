@@ -319,7 +319,7 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void visualizationCallback(ompl::base::Planner *planner);
-  void visualizationStateCallback(ompl::base::State *state, std::size_t type);
+  void visualizationStateCallback(ompl::base::State *state, std::size_t type, double neighborRadius);
   void visualizationEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB);
 
   /**
