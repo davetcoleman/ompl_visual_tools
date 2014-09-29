@@ -612,6 +612,21 @@ bool OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states
   return true;
 }
 
+bool OmplVisualTools::publishRobotState( const ompl::base::State *state )
+{
+  // Make sure a robot state is available
+  loadSharedRobotState();
+
+  ompl_interface::ModelBasedStateSpacePtr model_state_space =
+    boost::static_pointer_cast<ompl_interface::ModelBasedStateSpace>(si_->getStateSpace());
+
+  // Convert to robot state
+  model_state_space->copyToRobotState( *shared_robot_state_, state );
+  shared_robot_state_->updateStateWithFakeBase();
+
+  VisualTools::publishRobotState(shared_robot_state_);
+}
+
 bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
                                         const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated)
 {
@@ -643,7 +658,7 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
     model_state_space->copyToRobotState( *shared_robot_state_, path->getVertex(state_id).getState() );
     shared_robot_state_->updateStateWithFakeBase();
 
-    publishRobotState(shared_robot_state_);
+    VisualTools::publishRobotState(shared_robot_state_);
 
     // Each tip in the robot state
     for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
@@ -731,7 +746,9 @@ bool OmplVisualTools::publishRobotGraph( const ompl::base::PlannerDataPtr &graph
     // Now publish each tip graph
   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
   {
-    VisualTools::publishGraph( graphs[tip_id], getRandColor(), 0.005 );
+    const moveit_visual_tools::rviz_colors color = getRandColor();
+    std::cout << "Color is  " << color << std::endl;
+    VisualTools::publishGraph( graphs[tip_id], color, 0.005 );
     ros::Duration(0.05).sleep();
 
     VisualTools::publishSpheres( graphs[tip_id].nodes, moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );

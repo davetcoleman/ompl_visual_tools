@@ -230,12 +230,21 @@ public:
 
   /**
    * \brief Display States
+   * \return true on success
    */
   bool publishStates(std::vector<const ompl::base::State*> states);
 
   /**
+   * \brief Convert an OMPL state to a MoveIt! robot state and publish it
+   * \param OMPL format of a robot state
+   * \return true on success
+   */
+  bool publishRobotState( const ompl::base::State *state );
+
+  /**
    * \brief Display resulting path from a solver, in the form of a planner_data
    *        where the list of states is also the order of the path. This uses MoveIt's robot state for inverse kinematics
+   * \return true on success
    */
   bool publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
                          const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated);
@@ -243,18 +252,21 @@ public:
   /**
    * \brief Display resulting graph from a planner, in the form of a planner_data object
    *        This uses MoveIt's robot state for inverse kinematics
+   * \return true on success
    */
   bool publishRobotGraph( const ompl::base::PlannerDataPtr &graph, 
                           const std::vector<const robot_model::LinkModel*> &tips);
   /**
    * \brief Display result path from a solver, in the form of a planner_data
    * where the list of states is also the order of the path
+   * \return true on success
    */
   bool publishPath( const ob::PlannerDataPtr& planner_data, const moveit_visual_tools::rviz_colors color,
                     const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
    * \brief Display result path from a solver
+   * \return true on success
    */
   bool publishPath( const og::PathGeometric& path, const moveit_visual_tools::rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" );
 
