@@ -749,10 +749,10 @@ bool OmplVisualTools::publishRobotGraph( const ompl::base::PlannerDataPtr &graph
     const moveit_visual_tools::rviz_colors color = getRandColor();
     std::cout << "Color is  " << color << std::endl;
     VisualTools::publishGraph( graphs[tip_id], color, 0.005 );
-    ros::Duration(0.05).sleep();
+    ros::Duration(0.1).sleep();
 
     VisualTools::publishSpheres( graphs[tip_id].nodes, moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );
-    ros::Duration(0.05).sleep();
+    ros::Duration(0.1).sleep();
   }
 
   return true;
@@ -879,7 +879,17 @@ int OmplVisualTools::natRound(double x)
 
 bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_colors &color, const rviz_scales scale, const std::string& ns)
 {
-  return publishSphere( stateToPointMsg( state ), color, scale, ns);
+  return publishSphere( convertPointToPose(stateToPointMsg( state )), color, scale, ns);
+}
+
+bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_colors &color, double scale, const std::string& ns)
+{
+  return publishSphere( convertPointToPose(stateToPointMsg( state )), color, scale, ns);
+}
+
+bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_colors &color, const geometry_msgs::Vector3 &scale, const std::string& ns)
+{
+  return publishSphere( convertPointToPose(stateToPointMsg( state )), color, scale, ns);  
 }
 
 bool OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance)
@@ -966,6 +976,8 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
   ompl::base::PlannerDataPtr planner_data(new ompl::base::PlannerData(si_));
   planner->getPlannerData(*planner_data);
 
+  std::cout << "visualizationCallback has states: " << planner_data->numVertices() << std::endl;
+
   // Show edges of graph
   publishGraph( planner_data, moveit_visual_tools::PURPLE );
 
@@ -977,8 +989,10 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
   OmplVisualTools::publishSpheres( path, moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL);
 
   // Outline with circle
-  double nn_radius = 3.46482;
-  OmplVisualTools::publishSpheres( path, moveit_visual_tools::TRANSLUCENT2, nn_radius*2 );
+  //double nn_radius = 3.46482;
+  //OmplVisualTools::publishSpheres( path, moveit_visual_tools::TRANSLUCENT2, nn_radius*2 );
+  
+  ros::Duration(0.1).sleep();
 
   ros::spinOnce();
 }

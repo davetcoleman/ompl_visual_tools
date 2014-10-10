@@ -297,7 +297,11 @@ public:
   bool publishState(const ob::ScopedState<> state, const moveit_visual_tools::rviz_colors &color,
                     const moveit_visual_tools::rviz_scales scale = moveit_visual_tools::REGULAR,
                     const std::string& ns = "state_sphere");
-
+  bool publishState(const ob::ScopedState<> state, const moveit_visual_tools::rviz_colors &color,
+                    double scale = 0.1, const std::string& ns = "state_sphere");
+  bool publishState(const ob::ScopedState<> state, const moveit_visual_tools::rviz_colors &color,
+                    const geometry_msgs::Vector3 &scale, const std::string& ns = "state_sphere");
+                   
   /**
    * \brief Visualize the sampling area in Rviz
    * \param state_area - the center point of the uniform sampler
