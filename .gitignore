@@ -12,3 +12,5 @@ CMakeCache.txt
 
 
 resources/
+
+CATKIN_IGNORE
