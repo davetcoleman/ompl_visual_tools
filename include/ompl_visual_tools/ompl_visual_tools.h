@@ -176,18 +176,18 @@ public:
   /**
    * \brief Display Explored Space
    */
-  bool publishGraph(ob::PlannerDataPtr planner_data, const rviz_visual_tools::rviz_colors& color = rviz_visual_tools::BLUE, const double thickness = 0.2,
+  bool publishGraph(ob::PlannerDataPtr planner_data, const rviz_visual_tools::colors& color = rviz_visual_tools::BLUE, const double thickness = 0.2,
                     const std::string& ns = "space_exploration");
 
   /**
    * \brief Display Sample Points
    */
-  MOVEIT_DEPRECATED bool publishSamples( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::rviz_colors color = rviz_visual_tools::RED,
-                                         const rviz_visual_tools::rviz_scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_locations" );
+  MOVEIT_DEPRECATED bool publishSamples( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
+                                         const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_locations" );
 
 
-  MOVEIT_DEPRECATED bool publishSamples( const og::PathGeometric& path, const rviz_visual_tools::rviz_colors color = rviz_visual_tools::RED,
-                                         const rviz_visual_tools::rviz_scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_locations" );
+  MOVEIT_DEPRECATED bool publishSamples( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
+                                         const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_locations" );
 
   /**
    * \brief Publish a marker of a series of spheres to rviz
@@ -197,13 +197,13 @@ public:
    * \param ns - namespace of marker
    * \return true on success
    */
-  bool publishSpheres( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::rviz_colors color = rviz_visual_tools::RED, 
-                       const rviz_visual_tools::rviz_scales scale = rviz_visual_tools::SMALL, const std::string& ns = "planner_data_spheres" );
-  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::rviz_colors color = rviz_visual_tools::RED, 
+  bool publishSpheres( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color = rviz_visual_tools::RED, 
+                       const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "planner_data_spheres" );
+  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED, 
                        double scale = 0.1, const std::string& ns = "path_spheres" );
-  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::rviz_colors color = rviz_visual_tools::RED, 
-                       const rviz_visual_tools::rviz_scales scale = rviz_visual_tools::SMALL, const std::string& ns = "path_spheres" );
-  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::rviz_colors color, 
+  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED, 
+                       const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "path_spheres" );
+  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color, 
                        const geometry_msgs::Vector3 &scale, const std::string& ns = "path_spheres");
 
   /**
@@ -212,14 +212,14 @@ public:
    * \param input - description
    * \return 
    */
-  bool publishEdge(const ob::State* stateA, const ob::State* stateB, const rviz_visual_tools::rviz_colors color = rviz_visual_tools::BLUE, 
-                   const rviz_visual_tools::rviz_scales scale = rviz_visual_tools::REGULAR);
+  bool publishEdge(const ob::State* stateA, const ob::State* stateB, const rviz_visual_tools::colors color = rviz_visual_tools::BLUE, 
+                   const rviz_visual_tools::scales scale = rviz_visual_tools::REGULAR);
 
   /**
    * \brief Display labels on samples
    */
-  bool publishSampleIDs( const og::PathGeometric& path, const rviz_visual_tools::rviz_colors color = rviz_visual_tools::RED,
-                         const rviz_visual_tools::rviz_scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_labels" );
+  bool publishSampleIDs( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
+                         const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_labels" );
   
   /**
    * \brief Convert PlannerData to PathGeometric. Assume ordering of verticies is order of path
@@ -261,14 +261,14 @@ public:
    * where the list of states is also the order of the path
    * \return true on success
    */
-  bool publishPath( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::rviz_colors color,
+  bool publishPath( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color,
                     const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
    * \brief Display result path from a solver
    * \return true on success
    */
-  bool publishPath( const og::PathGeometric& path, const rviz_visual_tools::rviz_colors color, const double thickness = 0.4, const std::string& ns = "result_path" );
+  bool publishPath( const og::PathGeometric& path, const rviz_visual_tools::colors color, const double thickness = 0.4, const std::string& ns = "result_path" );
 
   /**
    * \brief Helper Function: gets the x,y coordinates for a given vertex id
@@ -294,12 +294,12 @@ public:
    * \param start state
    * \param color
    */
-  bool publishState(const ob::ScopedState<> state, const rviz_visual_tools::rviz_colors &color,
-                    const rviz_visual_tools::rviz_scales scale = rviz_visual_tools::REGULAR,
+  bool publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors &color,
+                    const rviz_visual_tools::scales scale = rviz_visual_tools::REGULAR,
                     const std::string& ns = "state_sphere");
-  bool publishState(const ob::ScopedState<> state, const rviz_visual_tools::rviz_colors &color,
+  bool publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors &color,
                     double scale = 0.1, const std::string& ns = "state_sphere");
-  bool publishState(const ob::ScopedState<> state, const rviz_visual_tools::rviz_colors &color,
+  bool publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors &color,
                     const geometry_msgs::Vector3 &scale, const std::string& ns = "state_sphere");
                    
   /**
@@ -313,11 +313,11 @@ public:
    * \brief Publish text to rviz at a given location
    */
   bool publishText(const geometry_msgs::Point &point, const std::string &text,
-                   const rviz_visual_tools::rviz_colors &color = rviz_visual_tools::BLACK,
+                   const rviz_visual_tools::colors &color = rviz_visual_tools::BLACK,
                    bool static_id = true);
 
   bool publishText(const geometry_msgs::Pose &pose, const std::string &text, 
-                   const rviz_visual_tools::rviz_colors &color = rviz_visual_tools::BLACK,
+                   const rviz_visual_tools::colors &color = rviz_visual_tools::BLACK,
                    bool static_id = true);
 
   /**
