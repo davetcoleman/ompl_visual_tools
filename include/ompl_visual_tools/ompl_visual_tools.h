@@ -57,7 +57,7 @@
 #include <moveit/robot_model/link_model.h>
 
 // Visualization
-#include <moveit_visual_tools/visual_tools.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -95,7 +95,7 @@ static const double COST_HEIGHT_OFFSET = 0.5;
 
 typedef std::map< std::string, std::list<std::size_t> > MarkerList;
 
-class OmplVisualTools : public moveit_visual_tools::VisualTools
+class OmplVisualTools : public moveit_visual_tools::MoveItVisualTools
 {
 private:
 

@@ -546,14 +546,14 @@ void OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
       // Show goal state arrow
       if (state_id == path->numVertices() -1)
       {
-        publishArrow( pose, moveit_visual_tools::BLACK );
+        publishArrow( pose, rviz_visual_tools::BLACK );
       }
     }
   } // for each state
 
   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
   {
-    VisualTools::publishPath( paths_msgs[tip_id], moveit_visual_tools::RAND, moveit_visual_tools::SMALL );
+    VisualTools::publishPath( paths_msgs[tip_id], rviz_visual_tools::RAND, rviz_visual_tools::SMALL );
     ros::Duration(0.05).sleep();
     publishSpheres( paths_msgs[tip_id], moveit_visual_tools::ORANGE, moveit_visual_tools::SMALL );
     ros::Duration(0.05).sleep();
