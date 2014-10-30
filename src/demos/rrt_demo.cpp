@@ -231,8 +231,8 @@ public:
     // Show start and goal
     if (use_visuals_)
     {
-      visual_tools_->publishState(start, moveit_visual_tools::GREEN,  moveit_visual_tools::XLARGE, "plan_start_goal");
-      visual_tools_->publishState(goal,  moveit_visual_tools::ORANGE, moveit_visual_tools::XLARGE, "plan_start_goal");
+      visual_tools_->publishState(start, rviz_visual_tools::GREEN,  rviz_visual_tools::XLARGE, "plan_start_goal");
+      visual_tools_->publishState(goal,  rviz_visual_tools::ORANGE, rviz_visual_tools::XLARGE, "plan_start_goal");
     }
 
     // set the start and goal states
@@ -410,7 +410,7 @@ public:
       simple_setup_->getSolutionPath().interpolate();
 
       // Show path
-      visual_tools_->publishPath( simple_setup_->getSolutionPath(), moveit_visual_tools::GREEN, 1.0, "final_solution");
+      visual_tools_->publishPath( simple_setup_->getSolutionPath(), rviz_visual_tools::GREEN, 1.0, "final_solution");
     }
 
     // Print the states to screen -----------------------------------------------------
@@ -428,7 +428,7 @@ public:
     if (!just_path)
     {
       // Visualize the explored space
-      visual_tools_->publishGraph(planner_data, moveit_visual_tools::ORANGE, 0.2, "tree");
+      visual_tools_->publishGraph(planner_data, rviz_visual_tools::ORANGE, 0.2, "tree");
  
       // Visualize the sample locations
       visual_tools_->publishSamples(planner_data);
