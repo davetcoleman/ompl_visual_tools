@@ -971,6 +971,7 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
   return true;
 }
 
+/*
 void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
 {
   deleteAllMarkers();
@@ -1046,5 +1047,6 @@ ompl::base::VisualizationEdgeCallback OmplVisualTools::getVisualizationEdgeCallb
 {
   return boost::bind(&OmplVisualTools::visualizationEdgeCallback, this, _1, _2);
 }
+*/
 
 } // end namespace
