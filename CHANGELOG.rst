@@ -2,8 +2,8 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.0 (2014-10-31)
+------------------
 * Fix for RvizVisualTools
 * Upgrade to new moveit_visual_tools API
 * API changes for moveit_visual_tools
