@@ -929,7 +929,7 @@ bool OmplVisualTools::publishText(const geometry_msgs::Pose &pose, const std::st
     scale = getScale(rviz_visual_tools::REGULAR); // TODO tune this
 
   // send to moveit_visual_tools
-  return VisualTools::publishText( pose, text, color, scale, static_id);
+  return RvizVisualTools::publishText( pose, text, color, scale, static_id);
 }
 
 bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr &graph,
