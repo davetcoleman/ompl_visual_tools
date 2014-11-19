@@ -622,8 +622,9 @@ bool OmplVisualTools::publishRobotState( const ompl::base::State *state )
 
   // Convert to robot state
   model_state_space->copyToRobotState( *shared_robot_state_, state );
-  ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
-  //shared_robot_state_->updateStateWithFakeBase();
+
+  //ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
+  shared_robot_state_->updateStateWithFakeBase();
 
   MoveItVisualTools::publishRobotState(shared_robot_state_);
 }
@@ -657,8 +658,9 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
 
     // Convert to robot state
     model_state_space->copyToRobotState( *shared_robot_state_, path->getVertex(state_id).getState() );
-    ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
-    //shared_robot_state_->updateStateWithFakeBase();
+
+    //ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
+    shared_robot_state_->updateStateWithFakeBase();
 
     MoveItVisualTools::publishRobotState(shared_robot_state_);
 
@@ -749,7 +751,6 @@ bool OmplVisualTools::publishRobotGraph( const ompl::base::PlannerDataPtr &graph
   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
   {
     const rviz_visual_tools::colors color = getRandColor();
-    std::cout << "Color is  " << color << std::endl;
     MoveItVisualTools::publishGraph( graphs[tip_id], color, 0.005 );
     ros::Duration(0.1).sleep();
 
@@ -955,8 +956,9 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
   {
     // Convert to robot state
     model_state_space->copyToRobotState( *shared_robot_state_, graph->getVertex(state_id).getState() );
-    ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
-    //shared_robot_state_->updateStateWithFakeBase();
+    
+    //ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
+    shared_robot_state_->updateStateWithFakeBase();
 
     // Each tip in the robot state
     for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
