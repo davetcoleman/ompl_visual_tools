@@ -623,8 +623,8 @@ bool OmplVisualTools::publishRobotState( const ompl::base::State *state )
   // Convert to robot state
   model_state_space->copyToRobotState( *shared_robot_state_, state );
 
-  //ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
-  shared_robot_state_->updateStateWithFakeBase();
+  //ROS_WARN_STREAM_NAMED("temp","updateWithDynamicRoot disabled");
+  shared_robot_state_->updateWithDynamicRoot();
 
   MoveItVisualTools::publishRobotState(shared_robot_state_);
 }
@@ -659,8 +659,8 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
     // Convert to robot state
     model_state_space->copyToRobotState( *shared_robot_state_, path->getVertex(state_id).getState() );
 
-    //ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
-    shared_robot_state_->updateStateWithFakeBase();
+    //ROS_WARN_STREAM_NAMED("temp","updateWithDynamicRoot disabled");
+    shared_robot_state_->updateWithDynamicRoot();
 
     MoveItVisualTools::publishRobotState(shared_robot_state_);
 
@@ -957,8 +957,8 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
     // Convert to robot state
     model_state_space->copyToRobotState( *shared_robot_state_, graph->getVertex(state_id).getState() );
     
-    //ROS_WARN_STREAM_NAMED("temp","updateStateWithFakeBase disabled");
-    shared_robot_state_->updateStateWithFakeBase();
+    //ROS_WARN_STREAM_NAMED("temp","updateWithDynamicRoot disabled");
+    shared_robot_state_->updateWithDynamicRoot();
 
     // Each tip in the robot state
     for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
