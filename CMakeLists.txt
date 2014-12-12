@@ -69,17 +69,20 @@ target_link_libraries(rrt_demo
   ${PROJECT_NAME}_ppm
 )
 
-# Install
+## Install
+
+# Install libraries
 install(TARGETS ${PROJECT_NAME}_ppm ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
-# Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-)
+# Install header files
+install(DIRECTORY include/$PROJECT_NAME}/   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
-# Mark executables for installation
+# Install shared resources
+install(DIRECTORY launch    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(DIRECTORY resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+# Install executables
 install(TARGETS rrt_demo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
