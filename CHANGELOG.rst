@@ -2,6 +2,29 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2014-10-31)
+------------------
+* Fix for RvizVisualTools
+* Upgrade to new moveit_visual_tools API
+* API changes for moveit_visual_tools
+* Added gitignore
+* New publishState() functions
+* New publishRobotState function
+* Formatting, new callback parameter
+* Deprecated publishSamples functions
+* Added publishSpheres functions to correspond to moveit_visual_tools ones
+* Improved visualizationStateCallback
+* New publishRobotGraph function
+* New convertRobotStatesToTipPoints function
+* Fixing display database mode
+* Made publish functions return bool
+* Disable 3D option
+* publish cost map with non-static ID numbers
+* New publishSampleIDs function. Restructured publishSamples interface to use moveit_visual_tools version
+* Updated publishSampels() functions
+* Reduced size of published spheres
+* Contributors: Dave Coleman
+
 2.1.1 (2014-08-11)
 ------------------
 * Removed debug output
