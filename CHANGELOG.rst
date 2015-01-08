@@ -2,6 +2,13 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.1 (2015-01-07)
+------------------
+* Fix typo
+* Added missing images
+* Fix install space
+* Contributors: Dave Coleman
+
 2.2.0 (2014-10-31)
 ------------------
 * Fix for RvizVisualTools
