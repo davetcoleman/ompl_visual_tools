@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2014, JSK, The University of Tokyo.
+ *  Copyright (c) 2015, JSK, The University of Tokyo.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
