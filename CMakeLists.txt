@@ -6,7 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
   graph_msgs
   moveit_visual_tools
   moveit_core
-  moveit_planners_ompl
+  moveit_ompl
   roscpp 
   roslib
   visualization_msgs
@@ -22,7 +22,7 @@ catkin_package(
     graph_msgs
     moveit_visual_tools
     moveit_core
-    moveit_planners_ompl 
+    moveit_ompl 
     roscpp
     roslib
     visualization_msgs 

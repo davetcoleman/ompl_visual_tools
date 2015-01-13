@@ -72,7 +72,7 @@ class PlannerData;
 typedef boost::shared_ptr<PlannerData> PlannerDataPtr;
 }}
 
-namespace ompl_interface
+namespace moveit_ompl
 {
 class ModelBasedPlanningContext;
 typedef boost::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPtr;

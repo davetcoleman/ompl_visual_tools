@@ -100,9 +100,9 @@ First, set the state space that MoveIt! has chosen for your robot in OMPL:
 
 ```
     // Create a state space describing our robot's planning group
-    ompl_interface::ModelBasedStateSpaceSpecification model_ss_spec(moveit_robot_model, joint_model_group);
-    const ompl_interface::JointModelStateSpaceFactory factory;
-    ompl_interface::ModelBasedStateSpacePtr model_state_space = factory.getNewStateSpace(model_ss_spec);
+    moveit_ompl::ModelBasedStateSpaceSpecification model_ss_spec(moveit_robot_model, joint_model_group);
+    const moveit_ompl::JointModelStateSpaceFactory factory;
+    moveit_ompl::ModelBasedStateSpacePtr model_state_space = factory.getNewStateSpace(model_ss_spec);
 
     // Setup the state space
     model_state_space->setup();

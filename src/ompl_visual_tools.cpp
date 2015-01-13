@@ -59,7 +59,7 @@
 #include <ompl_visual_tools/costs/cost_map_2d_optimization_objective.h>
 
 // For converting OMPL state to a MoveIt robot state
-#include <moveit/ompl_interface/model_based_planning_context.h>
+#include <moveit/ompl/model_based_planning_context.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/macros/deprecation.h>
 
@@ -617,8 +617,8 @@ bool OmplVisualTools::publishRobotState( const ompl::base::State *state )
   // Make sure a robot state is available
   loadSharedRobotState();
 
-  ompl_interface::ModelBasedStateSpacePtr model_state_space =
-    boost::static_pointer_cast<ompl_interface::ModelBasedStateSpace>(si_->getStateSpace());
+  moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert to robot state
   model_state_space->copyToRobotState( *shared_robot_state_, state );
@@ -640,8 +640,8 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
   std::vector< std::vector<geometry_msgs::Point> > paths_msgs(tips.size()); // each tip has its own path of points
   robot_trajectory::RobotTrajectoryPtr robot_trajectory;
 
-  ompl_interface::ModelBasedStateSpacePtr model_state_space =
-    boost::static_pointer_cast<ompl_interface::ModelBasedStateSpace>(si_->getStateSpace());
+  moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Optionally save the trajectory
   if (show_trajectory_animated)
@@ -944,8 +944,8 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
   Eigen::Affine3d pose;
 
   // Load information about the robot's geometry
-  ompl_interface::ModelBasedStateSpacePtr model_state_space =
-    boost::static_pointer_cast<ompl_interface::ModelBasedStateSpace>(si_->getStateSpace());
+  moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Rows correspond to robot states
   vertex_tip_points.clear();
