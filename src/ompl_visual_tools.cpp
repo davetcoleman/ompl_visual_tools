@@ -629,7 +629,7 @@ bool OmplVisualTools::publishRobotState( const ompl::base::State *state )
   MoveItVisualTools::publishRobotState(shared_robot_state_);
 }
 
-bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
+bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, const robot_model::JointModelGroup* joint_model_group,
                                         const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated)
 {
   // Make sure a robot state is available
@@ -658,9 +658,6 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
 
     // Convert to robot state
     model_state_space->copyToRobotState( *shared_robot_state_, path->getVertex(state_id).getState() );
-
-    //ROS_WARN_STREAM_NAMED("temp","updateWithDynamicRoot disabled");
-    shared_robot_state_->updateWithDynamicRoot();
 
     MoveItVisualTools::publishRobotState(shared_robot_state_);
 

@@ -238,7 +238,7 @@ public:
    *        where the list of states is also the order of the path. This uses MoveIt's robot state for inverse kinematics
    * \return true on success
    */
-  bool publishRobotPath( const ompl::base::PlannerDataPtr &path, robot_model::JointModelGroup* joint_model_group,
+  bool publishRobotPath( const ompl::base::PlannerDataPtr &path, const robot_model::JointModelGroup* joint_model_group,
                          const std::vector<const robot_model::LinkModel*> &tips, bool show_trajectory_animated);
 
   /**
