@@ -252,8 +252,7 @@ bool OmplVisualTools::publishCostMap(PPMImage *image, bool static_id)
   }
 
   // Send to Rviz
-  pub_rviz_marker_.publish( marker );
-  ros::spinOnce();
+  publishMarker( marker );
 
   return true;
 }
@@ -441,8 +440,7 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_v
   }
 
   // Send to Rviz
-  pub_rviz_marker_.publish( marker );
-  ros::spinOnce();;
+  publishMarker( marker );
 
   return true;
 }
@@ -607,8 +605,8 @@ bool OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states
   }
 
   // Send to Rviz
-  pub_rviz_marker_.publish( marker );
-  ros::spinOnce();;
+  publishMarker( marker );
+
   return true;
 }
 
@@ -831,8 +829,8 @@ bool OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_vis
   }
 
   // Send to Rviz
-  pub_rviz_marker_.publish( marker );
-  ros::spinOnce();
+  publishMarker( marker );
+
   return true;
 }
 
