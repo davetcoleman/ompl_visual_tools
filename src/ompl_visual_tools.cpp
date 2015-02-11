@@ -72,8 +72,16 @@ using namespace moveit_visual_tools;
 namespace ompl_visual_tools
 {
 
-OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string& marker_topic, robot_model::RobotModelConstPtr robot_model)
-  : MoveItVisualTools(base_link, marker_topic, robot_model)
+OmplVisualTools::OmplVisualTools(const std::string& base_frame, const std::string& marker_topic,                                 
+                                 planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor)
+  : MoveItVisualTools(base_frame, marker_topic, planning_scene_monitor)
+  , disable_3d_(false)
+{
+}
+
+OmplVisualTools::OmplVisualTools(const std::string& base_frame, const std::string& marker_topic, 
+                                 robot_model::RobotModelConstPtr robot_model)
+  : MoveItVisualTools(base_frame, marker_topic, robot_model)
   , disable_3d_(false)
 {
 }

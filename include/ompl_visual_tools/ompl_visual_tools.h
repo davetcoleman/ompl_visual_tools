@@ -107,9 +107,23 @@ public:
 
   /**
    * \brief Constructor
+   * \param base_frame - common base for all visualization markers, usually "/world" or "/odom"
+   * \param marker_topic - rostopic to publish markers to - your Rviz display should match
+   * \param planning_scene_monitor - optionally pass in a pre-loaded planning scene monitor to
+   *        avoid having to re-load the URDF, kinematic solvers, etc
    */
-  OmplVisualTools(const std::string& base_link,
-                  const std::string& marker_topic = ompl_visual_tools::RVIZ_MARKER_TOPIC,
+  OmplVisualTools(const std::string& base_frame,
+                  const std::string& marker_topic,
+                  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor);
+
+  /**
+   * \brief Constructor
+   * \param base_frame - common base for all visualization markers, usually "/world" or "/odom"
+   * \param marker_topic - rostopic to publish markers to - your Rviz display should match
+   * \param robot_model - load robot model pointer so that we don't have do re-parse it here
+   */
+  OmplVisualTools(const std::string& base_frame,
+                  const std::string& marker_topic = rviz_visual_tools::RVIZ_MARKER_TOPIC,
                   robot_model::RobotModelConstPtr robot_model = robot_model::RobotModelConstPtr());
 
   /**
