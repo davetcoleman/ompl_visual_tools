@@ -431,7 +431,7 @@ public:
       visual_tools_->publishGraph(planner_data, rviz_visual_tools::ORANGE, 0.2, "tree");
  
       // Visualize the sample locations
-      visual_tools_->publishSamples(planner_data);
+      visual_tools_->publishSpheres(planner_data);
     }
  
   }

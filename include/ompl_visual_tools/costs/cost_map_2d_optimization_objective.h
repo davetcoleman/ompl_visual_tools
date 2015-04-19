@@ -218,6 +218,9 @@ public:
         }
     }
 
+    // The percentage of the top min/max cost value that is considered an obstacle, e.g. 0.1 is top 10% of peaks
+    double max_cost_threshold_percent_;
+
     // The RGB image data
     ompl_visual_tools::PPMImage *image_;
 
@@ -226,9 +229,6 @@ public:
 
     // The cost at which it becomes an obstacle
     double max_cost_threshold_;
-
-    // The percentage of the top min/max cost value that is considered an obstacle, e.g. 0.1 is top 10% of peaks
-    double max_cost_threshold_percent_;
 
 protected:
 
