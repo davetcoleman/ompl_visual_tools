@@ -688,7 +688,7 @@ bool OmplVisualTools::publishRobotPath( const ompl::base::PlannerDataPtr &path, 
       // Show goal state arrow
       if (state_id == path->numVertices() -1)
       {
-        publishArrow( pose, rviz_visual_tools::BLACK );
+        publishZArrow( pose, rviz_visual_tools::BLACK, rviz_visual_tools::SMALL );
       }
     }
   } // for each state
