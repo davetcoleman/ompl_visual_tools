@@ -753,8 +753,8 @@ bool OmplVisualTools::publishRobotGraph( const ompl::base::PlannerDataPtr &graph
     // Now publish each tip graph
   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
   {
-    const rviz_visual_tools::colors color = getRandColor();
-    MoveItVisualTools::publishGraph( graphs[tip_id], color, 0.005 );
+    const rviz_visual_tools::colors color = tips.size() == 1 ? rviz_visual_tools::BLACK : getRandColor();
+    MoveItVisualTools::publishGraph( graphs[tip_id], color, 0.002 );
     ros::Duration(0.1).sleep();
 
     MoveItVisualTools::publishSpheres( graphs[tip_id].nodes, rviz_visual_tools::ORANGE, rviz_visual_tools::SMALL );
