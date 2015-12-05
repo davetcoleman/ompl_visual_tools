@@ -252,7 +252,7 @@ bool OmplVisualTools::publishCostMap(PPMImage *image, bool static_id)
   }
 
   // Send to Rviz
-  pub_rviz_marker_.publish( marker );
+  publishMarker( marker );
   ros::spinOnce();
 
   return true;
@@ -441,7 +441,7 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_v
   }
 
   // Send to Rviz
-  pub_rviz_marker_.publish( marker );
+  publishMarker( marker );
   ros::spinOnce();;
 
   return true;
@@ -607,7 +607,7 @@ bool OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states
   }
 
   // Send to Rviz
-  pub_rviz_marker_.publish( marker );
+  publishMarker( marker );
   ros::spinOnce();;
   return true;
 }
@@ -833,7 +833,7 @@ bool OmplVisualTools::publishPath( const og::PathGeometric& path, const rviz_vis
   }
 
   // Send to Rviz
-  pub_rviz_marker_.publish( marker );
+  publishMarker( marker );
   ros::spinOnce();
   return true;
 }
@@ -891,7 +891,7 @@ bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_vis
 
 bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors &color, const geometry_msgs::Vector3 &scale, const std::string& ns)
 {
-  return publishSphere( convertPointToPose(stateToPointMsg( state )), color, scale, ns);  
+  return publishSphere( convertPointToPose(stateToPointMsg( state )), color, scale, ns);
 }
 
 bool OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance)
@@ -995,7 +995,7 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
   // Outline with circle
   //double nn_radius = 3.46482;
   //OmplVisualTools::publishSpheres( path, rviz_visual_tools::TRANSLUCENT2, nn_radius*2 );
-  
+
   ros::Duration(0.1).sleep();
 
   ros::spinOnce();
