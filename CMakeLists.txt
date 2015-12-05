@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_visual_tools
   moveit_core
   moveit_planners_ompl
-  roscpp 
+  roscpp
   roslib
   visualization_msgs
 )
@@ -22,19 +22,19 @@ catkin_package(
     graph_msgs
     moveit_visual_tools
     moveit_core
-    moveit_planners_ompl 
+    moveit_planners_ompl
     roscpp
     roslib
-    visualization_msgs 
-  INCLUDE_DIRS 
+    visualization_msgs
+  INCLUDE_DIRS
     include
-  LIBRARIES 
+  LIBRARIES
     ${PROJECT_NAME}
     ${PROJECT_NAME}_ppm
 )
 
 include_directories(
-  ${catkin_INCLUDE_DIRS} 
+  ${catkin_INCLUDE_DIRS}
   ${OMPL_INCLUDE_DIRS}
   include
 )
@@ -53,19 +53,22 @@ target_link_libraries(${PROJECT_NAME}_ppm
 add_library(${PROJECT_NAME}
   src/ompl_visual_tools.cpp
 )
-target_link_libraries(${PROJECT_NAME} 
-  ${PROJECT_NAME}_ppm ${catkin_LIBRARIES} ${Boost_LIBRARIES}  
+target_link_libraries(${PROJECT_NAME}
+  ${PROJECT_NAME}_ppm ${catkin_LIBRARIES} ${Boost_LIBRARIES}
 )
 
 # Executable for Demos and Testing
-add_executable(rrt_demo
-  src/demos/rrt_demo.cpp 
+add_executable(${PROJECT_NAME}_rrt_demo
+  src/demos/rrt_demo.cpp
 )
-target_link_libraries(rrt_demo 
-  ${OMPL_LIBRARIES} 
-  ${catkin_LIBRARIES} 
+set_target_properties(${PROJECT_NAME}_rrt_demo
+  PROPERTIES OUTPUT_NAME rrt_demo PREFIX ""
+)
+target_link_libraries(${PROJECT_NAME}_rrt_demo
+  ${OMPL_LIBRARIES}
+  ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
-  ${PROJECT_NAME} 
+  ${PROJECT_NAME}
   ${PROJECT_NAME}_ppm
 )
 
@@ -83,6 +86,7 @@ install(DIRECTORY launch    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # Install executables
-install(TARGETS rrt_demo
+install(TARGETS
+    ${PROJECT_NAME}_rrt_demo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
