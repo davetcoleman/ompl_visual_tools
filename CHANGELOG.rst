@@ -2,8 +2,8 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.0 (2015-12-05)
+------------------
 * Fixed API changes in rviz_visual_tools
 * Contributors: Dave Coleman
 
