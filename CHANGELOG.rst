@@ -2,6 +2,11 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* catkin lint cleanup
+* Contributors: Dave Coleman
+
 2.3.0 (2015-12-05)
 ------------------
 * Fixed API changes in rviz_visual_tools
