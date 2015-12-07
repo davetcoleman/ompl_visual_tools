@@ -2,8 +2,8 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.1 (2015-12-07)
+------------------
 * catkin lint cleanup
 * Contributors: Dave Coleman
 
