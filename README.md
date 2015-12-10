@@ -1,16 +1,25 @@
 # OMPL Visual Tools
 
-The OMPL Visual Tools is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz. 
+The OMPL Visual Tools is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz.
 
 Formally named ompl_rviz_viewer until August 2014, this project spun out of an internship at Willow Garage. [Video](https://www.youtube.com/watch?v=RcGvi4Svd4k)
 
-The ompl_visual_tools was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost. 
-The space is specified as a grey scale cost map image that can be passed in to the program. 
-The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost. 
+The ompl_visual_tools was originally develped for testing cost-based algorithms in a two dimensional space with a third dimension displayed as cost.
+The space is specified as a grey scale cost map image that can be passed in to the program.
+The lighter (closer to white) each pixel of the image is, the "higher the cost" is considered to be. Black is considered no cost.
 Additionally, absolute obstacles can be specified by defining a max limit to the cost, such that any value above that threshold is considered an obstacle.
 
-This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more 
+This little program is similar to the OMPL.app that is distributed with OMPL, but instead uses RViz for visualization and is more
 streamlined for considering costs and experience-based planning.
+
+Developed by [Dave Coleman](http://dav.ee/) at the University of Colorado Boulder and Willow Garage
+
+Status:
+
+ * [![Build Status](https://travis-ci.org/davetcoleman/ompl_visual_tools.svg)](https://travis-ci.org/davetcoleman/ompl_visual_tools) Travis CI
+ * [![Devel Job Status](http://jenkins.ros.org/buildStatus/icon?job=devel-indigo-ompl_visual_tools)](http://jenkins.ros.org/job/devel-indigo-ompl_visual_tools) Devel Job Status
+ * [![Build Status](http://jenkins.ros.org/buildStatus/icon?job=ros-indigo-ompl-visual-tools_binarydeb_trusty_amd64)](http://jenkins.ros.org/job/ros-indigo-ompl-visual-tools_binarydeb_trusty_amd64/) AMD64 Debian Job Status
+
 
 <img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/ompl_visual_tools.png" />
 .
@@ -78,7 +87,7 @@ To view the solution path:
 ```
       // Interpolate solution
       simple_setup_->getSolutionPath().interpolate();
-      
+
       // Show path
       visual_tools_->publishPath( simple_setup_->getSolutionPath(), rviz_visual_tools::GREEN, 1.0, "final_solution");
 ```
@@ -87,7 +96,7 @@ And to see more of what the planner was doing:
 ```
       // Visualize the explored space
       visual_tools_->publishGraph(planner_data, rviz_visual_tools::ORANGE, 0.2, "tree");
- 
+
       // Visualize the sample locations
       visual_tools_->publishSamples(planner_data);
 ```
@@ -143,7 +152,7 @@ To see optional parameters, pass in ``--help`` argument. There are many options.
 
 ## Cost Map Usage
 
-A default cost map image will be used, located in the resources/ folder, for running the algorithm. 
+A default cost map image will be used, located in the resources/ folder, for running the algorithm.
 Optionally one can pass in their own cost map image through a command line argument, as shown in the following example:
 
 ```
