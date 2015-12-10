@@ -20,9 +20,7 @@ Status:
  * [![Devel Job Status](http://jenkins.ros.org/buildStatus/icon?job=devel-indigo-ompl_visual_tools)](http://jenkins.ros.org/job/devel-indigo-ompl_visual_tools) Devel Job Status
  * [![Build Status](http://jenkins.ros.org/buildStatus/icon?job=ros-indigo-ompl-visual-tools_binarydeb_trusty_amd64)](http://jenkins.ros.org/job/ros-indigo-ompl-visual-tools_binarydeb_trusty_amd64/) AMD64 Debian Job Status
 
-
-<img align="right" src="https://raw.githubusercontent.com/davetcoleman/ompl_visual_tools/hydro-devel/screenshots/ompl_visual_tools.png" />
-.
+![](screenshots/ompl_visual_tools.png)
 
 ## How to Build
 
