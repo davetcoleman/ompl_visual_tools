@@ -22,11 +22,21 @@ Status:
 
 ![](screenshots/ompl_visual_tools.png)
 
-## How to Build
+## Install
 
-```
-sudo apt-get install ros-indigo-ompl-visual-tools
-```
+### Ubuntu Debian
+
+    sudo apt-get install ros-indigo-ompl-visual-tools
+
+### Build from Source
+
+To build this package, ``git clone`` this repo into a [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) and be sure to install necessary dependencies by running the following command in the root of your catkin workspace:
+
+    rosdep install -y --from-paths src --ignore-src --rosdistro indigo
+
+## Code API
+
+See [Class Reference](http://docs.ros.org/indigo/api/my_package/html/)
 
 ## Usage
 
