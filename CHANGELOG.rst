@@ -2,8 +2,8 @@
 Changelog for package ompl_visual_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.2 (2016-01-13)
+------------------
 * Removed usage of publishSamples in demo
 * Updated README
 * Added travis support
