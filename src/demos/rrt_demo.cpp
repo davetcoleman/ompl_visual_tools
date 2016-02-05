@@ -142,8 +142,8 @@ public:
   /**
    * \brief Clear all markers displayed in Rviz
    */
-  void deleteAllMakers()  
-  { 
+  void deleteAllMakers()
+  {
     // Clear current rviz makers
     visual_tools_->deleteAllMarkers();
   }
@@ -170,7 +170,7 @@ public:
     visual_tools_->setCostMap(cost_map_->cost_);
 
     // Set state validity checking for this space
-    simple_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr( 
+    simple_setup_->setStateValidityChecker( ob::StateValidityCheckerPtr(
       new ob::TwoDimensionalValidityChecker( si_, cost_map_->cost_, cost_map_->max_cost_threshold_ ) ) );
 
     // The interval in which obstacles are checked for between states
@@ -429,11 +429,11 @@ public:
     {
       // Visualize the explored space
       visual_tools_->publishGraph(planner_data, rviz_visual_tools::ORANGE, 0.2, "tree");
- 
+
       // Visualize the sample locations
-      visual_tools_->publishSamples(planner_data);
+      //visual_tools_->publishSamples(planner_data);
     }
- 
+
   }
 
   /** \brief Allow access to simple_setup framework */
@@ -590,5 +590,3 @@ int main( int argc, char** argv )
 
   return 0;
 }
-
-
