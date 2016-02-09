@@ -971,7 +971,6 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
   return true;
 }
 
-/*
 void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
 {
   deleteAllMarkers();
@@ -994,7 +993,7 @@ void OmplVisualTools::visualizationCallback(ompl::base::Planner *planner)
 
   // Outline with circle
   //double nn_radius = 3.46482;
-  //OmplVisualTools::publishSpheres( path, rviz_visual_tools::TRANSLUCENT2, nn_radius*2 );
+  //OmplVisualTools::publishSpheres( path, rviz_visual_tools::TRANSLUCENT, nn_radius*2 );
 
   ros::Duration(0.1).sleep();
 
@@ -1019,7 +1018,7 @@ void OmplVisualTools::visualizationStateCallback(ompl::base::State *state, std::
     case 4: // Candidate node has already been added
       publishSphere(pose, rviz_visual_tools::PURPLE, rviz_visual_tools::REGULAR);
       // Outline with circle
-      publishSphere(pose, rviz_visual_tools::TRANSLUCENT2, neighborRadius*2 );
+      publishSphere(pose, rviz_visual_tools::TRANSLUCENT, neighborRadius*2 );
       break;
     default:
       ROS_ERROR_STREAM_NAMED("visualizationStateCallback","Invalid state type value");
@@ -1047,6 +1046,5 @@ ompl::base::VisualizationEdgeCallback OmplVisualTools::getVisualizationEdgeCallb
 {
   return boost::bind(&OmplVisualTools::visualizationEdgeCallback, this, _1, _2);
 }
-*/
 
 } // end namespace

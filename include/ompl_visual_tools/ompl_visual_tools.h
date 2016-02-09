@@ -133,7 +133,7 @@ public:
 
   /**
    * \brief Getter for disable 3d option in Rviz
-   */ 
+   */
   bool getDisable3D();
 
   /**
@@ -197,22 +197,22 @@ public:
    * \param ns - namespace of marker
    * \return true on success
    */
-  bool publishSpheres( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color = rviz_visual_tools::RED, 
+  bool publishSpheres( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
                        const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "planner_data_spheres" );
-  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED, 
+  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
                        double scale = 0.1, const std::string& ns = "path_spheres" );
-  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED, 
+  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
                        const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "path_spheres" );
-  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color, 
+  bool publishSpheres( const og::PathGeometric& path, const rviz_visual_tools::colors color,
                        const geometry_msgs::Vector3 &scale, const std::string& ns = "path_spheres");
 
   /**
-   * \brief 
+   * \brief
    * \param input - description
    * \param input - description
-   * \return 
+   * \return
    */
-  bool publishEdge(const ob::State* stateA, const ob::State* stateB, const rviz_visual_tools::colors color = rviz_visual_tools::BLUE, 
+  bool publishEdge(const ob::State* stateA, const ob::State* stateB, const rviz_visual_tools::colors color = rviz_visual_tools::BLUE,
                    const rviz_visual_tools::scales scale = rviz_visual_tools::REGULAR);
 
   /**
@@ -220,7 +220,7 @@ public:
    */
   bool publishSampleIDs( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
                          const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_labels" );
-  
+
   /**
    * \brief Convert PlannerData to PathGeometric. Assume ordering of verticies is order of path
    * \param PlannerData
@@ -254,7 +254,7 @@ public:
    *        This uses MoveIt's robot state for inverse kinematics
    * \return true on success
    */
-  bool publishRobotGraph( const ompl::base::PlannerDataPtr &graph, 
+  bool publishRobotGraph( const ompl::base::PlannerDataPtr &graph,
                           const std::vector<const robot_model::LinkModel*> &tips);
   /**
    * \brief Display result path from a solver, in the form of a planner_data
@@ -301,7 +301,7 @@ public:
                     double scale = 0.1, const std::string& ns = "state_sphere");
   bool publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors &color,
                     const geometry_msgs::Vector3 &scale, const std::string& ns = "state_sphere");
-                   
+
   /**
    * \brief Visualize the sampling area in Rviz
    * \param state_area - the center point of the uniform sampler
@@ -316,7 +316,7 @@ public:
                    const rviz_visual_tools::colors &color = rviz_visual_tools::BLACK,
                    bool static_id = true);
 
-  bool publishText(const geometry_msgs::Pose &pose, const std::string &text, 
+  bool publishText(const geometry_msgs::Pose &pose, const std::string &text,
                    const rviz_visual_tools::colors &color = rviz_visual_tools::BLACK,
                    bool static_id = true);
 
@@ -324,28 +324,27 @@ public:
    * \brief Convet each vertex in a graph into a list of tip locations, as desired
    * \param input - description
    * \param input - description
-   * \return 
+   * \return
    */
-  bool convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr &graph, 
-                                     const std::vector<const robot_model::LinkModel*> &tips, 
+  bool convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr &graph,
+                                     const std::vector<const robot_model::LinkModel*> &tips,
                                      std::vector< std::vector<geometry_msgs::Point> > & vertex_tip_points);
 
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during search
    * \param pointer to the planner, to be used for getPlannerData()
-   *
+   */
   void visualizationCallback(ompl::base::Planner *planner);
   void visualizationStateCallback(ompl::base::State *state, std::size_t type, double neighborRadius);
   void visualizationEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB);
 
-  **
+  /**
    * \brief Helper to set an OMPL's planner to use the visualizer callback
    * \return a callback function
-   *
+   */
   ompl::base::VisualizationCallback getVisualizationCallback();
   ompl::base::VisualizationStateCallback getVisualizationStateCallback();
   ompl::base::VisualizationEdgeCallback getVisualizationEdgeCallback();
-  */
 
 }; // end class
 
