@@ -73,8 +73,8 @@ public:
     /** \brief Constructor */
     CostMap2DOptimizationObjective(const SpaceInformationPtr &si, double pathLengthWeight = 0.0001)
         : OptimizationObjective(si),
-          max_cost_threshold_percent_(0.4),
           image_(NULL),
+          max_cost_threshold_percent_(0.4),
           pathLengthWeight_(pathLengthWeight)
     {
         description_ = "Cost Map";
@@ -246,5 +246,3 @@ typedef boost::shared_ptr< CostMap2DOptimizationObjective > CostMap2DOptimizatio
 }
 
 #endif
-
-

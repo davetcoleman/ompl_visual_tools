@@ -94,7 +94,7 @@ void OmplVisualTools::setCostMap(intMatrixPtr cost)
 }
 
 /**
- * \brief Getter for disable 3d option in Rviz
+ * \brief Getter for disable 3d option in Rviz. This indicated there are no costs on the height map
  */
 bool OmplVisualTools::getDisable3D()
 {
@@ -102,7 +102,7 @@ bool OmplVisualTools::getDisable3D()
 }
 
 /**
- * \brief Setter for disable 3d option in Rviz
+ * \brief Setter for disable 3d option in Rviz. This indicated there are no costs on the height map
  */
 void OmplVisualTools::setDisable3D(bool disable_3d)
 {
