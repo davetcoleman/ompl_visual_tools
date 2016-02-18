@@ -212,7 +212,7 @@ public:
    * \param input - description
    * \return
    */
-  bool publishEdge(const ob::State* stateA, const ob::State* stateB, const rviz_visual_tools::colors color = rviz_visual_tools::BLUE,
+  bool publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA &color,
                    const rviz_visual_tools::scales scale = rviz_visual_tools::REGULAR);
 
   /**
@@ -334,17 +334,29 @@ public:
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during search
    * \param pointer to the planner, to be used for getPlannerData()
    */
-  void visualizationCallback(ompl::base::Planner *planner);
-  void visualizationStateCallback(ompl::base::State *state, std::size_t type, double neighborRadius);
-  void visualizationEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB);
+  void vizTriggerCallback();
+  void vizStateCallback(ompl::base::State *state, std::size_t type, double neighborRadius = 0);
+  void vizEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB, double intensity);
+
+  // Deprecated
+  void vizCallback(ompl::base::Planner *planner);
 
   /**
    * \brief Helper to set an OMPL's planner to use the visualizer callback
    * \return a callback function
    */
-  ompl::base::VisualizationCallback getVisualizationCallback();
-  ompl::base::VisualizationStateCallback getVisualizationStateCallback();
-  ompl::base::VisualizationEdgeCallback getVisualizationEdgeCallback();
+  ompl::base::VizTriggerCallback getVizTriggerCallback()
+  {
+    return boost::bind(&OmplVisualTools::vizTriggerCallback, this);
+  }
+  ompl::base::VizStateCallback getVizStateCallback()
+  {
+    return boost::bind(&OmplVisualTools::vizStateCallback, this, _1, _2, _3);
+  }
+  ompl::base::VizEdgeCallback getVizEdgeCallback()
+  {
+    return boost::bind(&OmplVisualTools::vizEdgeCallback, this, _1, _2, _3);
+  }
 
 }; // end class
 
