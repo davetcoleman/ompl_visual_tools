@@ -262,7 +262,7 @@ public:
    * \param result from an OMPL planner
    * \return geometry point msg with no z value filled in
    */
-  geometry_msgs::Point stateToPointMsg( int vertex_id, ob::PlannerDataPtr planner_data );
+  geometry_msgs::Point stateToPointMsg( std::size_t vertex_id, ob::PlannerDataPtr planner_data );
 
   geometry_msgs::Point stateToPointMsg( const ob::State *state );
 
@@ -317,13 +317,22 @@ public:
                                      std::vector< std::vector<geometry_msgs::Point> > & vertex_tip_points);
 
   /**
+   * \brief Set the range to visualize the edge costs
+   */
+  void setMinMaxEdgeCost(const double& max_edge_cost, const double& min_edge_cost)
+  {
+    max_edge_cost_ = max_edge_cost;
+    min_edge_cost_ = min_edge_cost;
+  }
+
+  /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during search
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void vizTriggerCallback();
   void vizStateCallback(ompl::base::State *state, std::size_t type, double neighborRadius = 0);
   void vizState2DCallback(const geometry_msgs::Pose& pose, std::size_t type, double neighborRadius = 0);
-  void vizEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB, double intensity);
+  void vizEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB, double value);
 
   // Deprecated
   void vizCallback(ompl::base::Planner *planner);
@@ -358,6 +367,10 @@ private:
 
   // Mode that disables showing 3D in Rviz
   bool disable_3d_;
+
+  // Set bounds on an edge's cost/weight/value for visualization purposes
+  double max_edge_cost_;
+  double min_edge_cost_;
 
 }; // end class
 

@@ -73,7 +73,10 @@ namespace ompl_visual_tools
 {
 OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string& marker_topic,
                                  robot_model::RobotModelConstPtr robot_model)
-  : MoveItVisualTools(base_link, marker_topic, robot_model), disable_3d_(false)
+  : MoveItVisualTools(base_link, marker_topic, robot_model)
+  , disable_3d_(false)
+  , max_edge_cost_(100.0)
+  , min_edge_cost_(0.0)
 {
 }
 
@@ -448,6 +451,12 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_v
 bool OmplVisualTools::publishEdge(const ob::State* stateA, const ob::State* stateB,
                                   const std_msgs::ColorRGBA &color, const rviz_visual_tools::scales scale)
 {
+  if (si_->getStateSpace()->getDimension() > 2)
+  {
+    ROS_WARN_STREAM_NAMED(name_, "stateToPointMsg not supported for more than 2 dimensions currently");
+    return false;
+  }
+
   return publishLine(stateToPointMsg(stateA), stateToPointMsg(stateB), color, scale);
 }
 
@@ -836,7 +845,7 @@ bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rviz_visu
   return true;
 }
 
-geometry_msgs::Point OmplVisualTools::stateToPointMsg(int vertex_id, ob::PlannerDataPtr planner_data)
+geometry_msgs::Point OmplVisualTools::stateToPointMsg(std::size_t vertex_id, ob::PlannerDataPtr planner_data)
 {
   ob::PlannerDataVertex* vertex = &planner_data->getVertex(vertex_id);
 
@@ -850,6 +859,11 @@ geometry_msgs::Point OmplVisualTools::stateToPointMsg(const ob::State* state)
   {
     ROS_FATAL("No state found for a vertex");
     exit(1);
+  }
+
+  if (si_->getStateSpace()->getDimension() > 2)
+  {
+    ROS_WARN_STREAM_NAMED(name_, "stateToPointMsg not supported for more than 2 dimensions currently");
   }
 
   // Convert to RealVectorStateSpace
@@ -1009,10 +1023,10 @@ void OmplVisualTools::vizCallback(ompl::base::Planner* planner)
 
 void OmplVisualTools::vizStateCallback(ompl::base::State* state, std::size_t type, double neighborRadius)
 {
-  if (si_->getStateSpace()->getDimension() < 4)
+  if (si_->getStateSpace()->getDimension() == 2)
   {
-    std::cout << "si_->getStateSpace()->getDimension(): " << si_->getStateSpace()->getDimension() << std::endl;
     geometry_msgs::Pose pose = convertPointToPose(stateToPointMsg(state));
+    vizState2DCallback(pose, type, neighborRadius);
   }
   else
   {
@@ -1061,21 +1075,25 @@ void OmplVisualTools::vizState2DCallback(const geometry_msgs::Pose& pose, std::s
   }
 }
 
-void OmplVisualTools::vizEdgeCallback(ompl::base::State* stateA, ompl::base::State* stateB, double intensity)
+void OmplVisualTools::vizEdgeCallback(ompl::base::State* stateA, ompl::base::State* stateB, double cost)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
-  rviz_visual_tools::scales scale;
-  if (intensity > 75)
-    scale = rviz_visual_tools::XSMALL;
-  else if (intensity > 50)
-    scale = rviz_visual_tools::SMALL;
-  else if (intensity > 25)
-    scale = rviz_visual_tools::REGULAR;
-  else
-    scale = rviz_visual_tools::LARGE;
+  // Convert input cost
+  const double percent = (cost - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+  //std::cout << "cost: " << cost << " percent: " << percent << std::endl;
 
-  publishEdge(stateA, stateB, getColorScale(intensity), scale);
+  rviz_visual_tools::scales scale;
+  if (percent > 0.75)
+    scale = rviz_visual_tools::REGULAR;
+  else if (percent > 0.50)
+    scale = rviz_visual_tools::SMALL;
+  else if (percent > 0.25)
+    scale = rviz_visual_tools::XSMALL;
+  else
+    scale = rviz_visual_tools::XXSMALL;
+
+  publishEdge(stateA, stateB, getColorScale(percent), scale);
 }
 
 }  // end namespace
