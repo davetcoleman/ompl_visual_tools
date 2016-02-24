@@ -619,8 +619,6 @@ bool OmplVisualTools::publishRobotState(const ompl::base::State* state)
 
   // Convert to robot state
   model_state_space->copyToRobotState(*shared_robot_state_, state);
-  ROS_WARN_STREAM_NAMED("temp", "updateStateWithFakeBase disabled");
-  // shared_robot_state_->updateStateWithFakeBase();
 
   MoveItVisualTools::publishRobotState(shared_robot_state_);
 }
@@ -1011,9 +1009,33 @@ void OmplVisualTools::vizCallback(ompl::base::Planner* planner)
 
 void OmplVisualTools::vizStateCallback(ompl::base::State* state, std::size_t type, double neighborRadius)
 {
-  batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
+  if (si_->getStateSpace()->getDimension() < 4)
+  {
+    std::cout << "si_->getStateSpace()->getDimension(): " << si_->getStateSpace()->getDimension() << std::endl;
+    geometry_msgs::Pose pose = convertPointToPose(stateToPointMsg(state));
+  }
+  else
+  {
+    // Make sure a robot state is available
+    loadSharedRobotState();
 
-  geometry_msgs::Pose pose = convertPointToPose(stateToPointMsg(state));
+    moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+      boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+
+    // Convert to robot state
+    model_state_space->copyToRobotState(*shared_robot_state_, state);
+
+    MoveItVisualTools::publishRobotState(shared_robot_state_);
+
+    // Publish arrow
+    Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
+    publishZArrow(pose);
+  }
+}
+
+void OmplVisualTools::vizState2DCallback(const geometry_msgs::Pose& pose, std::size_t type, double neighborRadius)
+{
+  batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
   switch (type)
   {

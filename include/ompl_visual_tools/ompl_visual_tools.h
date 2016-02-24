@@ -97,20 +97,6 @@ typedef std::map< std::string, std::list<std::size_t> > MarkerList;
 
 class OmplVisualTools : public moveit_visual_tools::MoveItVisualTools
 {
-private:
-
-  // Keep a pointer to an optional cost map
-  intMatrixPtr cost_;
-
-  // Remember what space we are working in
-  ompl::base::SpaceInformationPtr si_;
-
-  // Cached Point object to reduce memory loading
-  geometry_msgs::Point temp_point_;
-
-  // Mode that disables showing 3D in Rviz
-  bool disable_3d_;
-
 public:
 
   /**
@@ -336,6 +322,7 @@ public:
    */
   void vizTriggerCallback();
   void vizStateCallback(ompl::base::State *state, std::size_t type, double neighborRadius = 0);
+  void vizState2DCallback(const geometry_msgs::Pose& pose, std::size_t type, double neighborRadius = 0);
   void vizEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB, double intensity);
 
   // Deprecated
@@ -357,6 +344,20 @@ public:
   {
     return boost::bind(&OmplVisualTools::vizEdgeCallback, this, _1, _2, _3);
   }
+
+private:
+
+  // Keep a pointer to an optional cost map
+  intMatrixPtr cost_;
+
+  // Remember what space we are working in
+  ompl::base::SpaceInformationPtr si_;
+
+  // Cached Point object to reduce memory loading
+  geometry_msgs::Point temp_point_;
+
+  // Mode that disables showing 3D in Rviz
+  bool disable_3d_;
 
 }; // end class
 
