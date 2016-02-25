@@ -90,6 +90,16 @@ void OmplVisualTools::setSpaceInformation(ompl::base::SpaceInformationPtr si)
   si_ = si;
 }
 
+bool OmplVisualTools::checkSpaceInformation()
+{
+  if (!si_)
+  {
+    ROS_ERROR_STREAM_NAMED(name_, "No space information has been setup for ompl_visual_tools. Unable to visualize");
+    return false;
+  }
+  return true;
+}
+
 void OmplVisualTools::setCostMap(intMatrixPtr cost)
 {
   cost_ = cost;
@@ -443,7 +453,6 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_v
   // Send to Rviz
   publishMarker(marker);
   ros::spinOnce();
-  ;
 
   return true;
 }
@@ -451,12 +460,6 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_v
 bool OmplVisualTools::publishEdge(const ob::State* stateA, const ob::State* stateB,
                                   const std_msgs::ColorRGBA &color, const rviz_visual_tools::scales scale)
 {
-  if (si_->getStateSpace()->getDimension() > 2)
-  {
-    ROS_WARN_STREAM_NAMED(name_, "stateToPointMsg not supported for more than 2 dimensions currently");
-    return false;
-  }
-
   return publishLine(stateToPointMsg(stateA), stateToPointMsg(stateB), color, scale);
 }
 
@@ -489,35 +492,13 @@ bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rviz
   return true;
 }
 
-bool OmplVisualTools::publishSamples(const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color,
-                                     const rviz_visual_tools::scales scale, const std::string& ns)
-{
-  ROS_ERROR_STREAM_NAMED("ompl_visual_tools", "Deprecated");
-  og::PathGeometric path(si_);
-  convertPlannerData(planner_data, path);
-
-  return publishSpheres(path, color, scale, ns);
-}
-
-bool OmplVisualTools::publishSamples(const og::PathGeometric& path, const rviz_visual_tools::colors color,
-                                     const rviz_visual_tools::scales scale, const std::string& ns)
-{
-  ROS_ERROR_STREAM_NAMED("ompl_visual_tools", "Deprecated");
-  std::vector<geometry_msgs::Point> points;
-  for (std::size_t i = 0; i < path.getStateCount(); ++i)
-  {
-    points.push_back(stateToPointMsg(path.getState(i)));
-  }
-
-  return MoveItVisualTools::publishSpheres(points, color, scale, ns);
-
-  // Show the vertex ids
-  // publishSampleIDs( path, rviz_visual_tools::rviz_visual_tools::BLACK );
-}
-
 bool OmplVisualTools::publishSpheres(const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color,
                                      const rviz_visual_tools::scales scale, const std::string& ns)
 {
+  // Error check
+  if (!checkSpaceInformation())
+    return false;
+
   og::PathGeometric path(si_);
   convertPlannerData(planner_data, path);
 
@@ -620,6 +601,10 @@ bool OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states
 
 bool OmplVisualTools::publishRobotState(const ompl::base::State* state)
 {
+  // Error check
+  if (!checkSpaceInformation())
+    return false;
+
   // Make sure a robot state is available
   loadSharedRobotState();
 
@@ -637,6 +622,10 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
                                        const std::vector<const robot_model::LinkModel*>& tips,
                                        bool show_trajectory_animated)
 {
+  // Error check
+  if (!checkSpaceInformation())
+    return false;
+
   // Make sure a robot state is available
   loadSharedRobotState();
 
@@ -770,6 +759,10 @@ bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
 bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color,
                                   const double thickness, const std::string& ns)
 {
+  // Error check
+  if (!checkSpaceInformation())
+    return false;
+
   og::PathGeometric path(si_);
   convertPlannerData(planner_data, path);
 
@@ -855,26 +848,44 @@ geometry_msgs::Point OmplVisualTools::stateToPointMsg(std::size_t vertex_id, ob:
 
 geometry_msgs::Point OmplVisualTools::stateToPointMsg(const ob::State* state)
 {
+  // Error check
+  if (!checkSpaceInformation())
+    exit(-1);
+
   if (!state)
   {
-    ROS_FATAL("No state found for a vertex");
+    ROS_FATAL("No state found for vertex");
     exit(1);
   }
 
-  if (si_->getStateSpace()->getDimension() > 2)
+  // Handle 2D world
+  if (si_->getStateSpace()->getDimension() == 2)
   {
-    ROS_WARN_STREAM_NAMED(name_, "stateToPointMsg not supported for more than 2 dimensions currently");
-  }
-
-  // Convert to RealVectorStateSpace
-  const ob::RealVectorStateSpace::StateType* real_state =
+    // Convert to RealVectorStateSpace
+    const ob::RealVectorStateSpace::StateType* real_state =
       static_cast<const ob::RealVectorStateSpace::StateType*>(state);
 
-  // Create point
-  temp_point_.x = real_state->values[0];
-  temp_point_.y = real_state->values[1];
-  temp_point_.z = getCostHeight(temp_point_);
-  return temp_point_;
+    // Create point
+    temp_point_.x = real_state->values[0];
+    temp_point_.y = real_state->values[1];
+    temp_point_.z = getCostHeight(temp_point_);
+    return temp_point_;
+  }
+
+  // Assume its a RobotState
+
+  // Make sure a robot state is available
+  loadSharedRobotState();
+
+  moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+
+  // Convert to robot state
+  model_state_space->copyToRobotState(*shared_robot_state_, state);
+
+  // Get pose
+  Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
+  return convertPoseToPoint(pose);
 }
 
 geometry_msgs::Point OmplVisualTools::stateToPointMsg(const ob::ScopedState<> state)
@@ -951,6 +962,10 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
                                                     const std::vector<const robot_model::LinkModel*>& tips,
                                                     std::vector<std::vector<geometry_msgs::Point> >& vertex_tip_points)
 {
+  // Error check
+  if (!checkSpaceInformation())
+    return false;
+
   // Make sure a robot state is available
   loadSharedRobotState();
 
@@ -994,6 +1009,10 @@ void OmplVisualTools::vizTriggerCallback()
 // TODO: deprecate?
 void OmplVisualTools::vizCallback(ompl::base::Planner* planner)
 {
+  // Error check
+  if (!checkSpaceInformation())
+    return;
+
   deleteAllMarkers();
   ros::spinOnce();
 
@@ -1021,8 +1040,12 @@ void OmplVisualTools::vizCallback(ompl::base::Planner* planner)
   ros::spinOnce();
 }
 
-void OmplVisualTools::vizStateCallback(ompl::base::State* state, std::size_t type, double neighborRadius)
+void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size_t type, double neighborRadius)
 {
+  // Error check
+  if (!checkSpaceInformation())
+    return;
+
   if (si_->getStateSpace()->getDimension() == 2)
   {
     geometry_msgs::Pose pose = convertPointToPose(stateToPointMsg(state));
@@ -1075,7 +1098,7 @@ void OmplVisualTools::vizState2DCallback(const geometry_msgs::Pose& pose, std::s
   }
 }
 
-void OmplVisualTools::vizEdgeCallback(ompl::base::State* stateA, ompl::base::State* stateB, double cost)
+void OmplVisualTools::vizEdgeCallback(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 

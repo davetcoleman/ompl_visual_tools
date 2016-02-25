@@ -113,6 +113,12 @@ public:
   void setSpaceInformation(ompl::base::SpaceInformationPtr si);
 
   /**
+   * \brief Make sure user has specified a space information
+   * \return true if space information has been set
+   */
+  bool checkSpaceInformation();
+
+  /**
    * \brief Optional cost map for 2D environments
    */
   void setCostMap(intMatrixPtr cost);
@@ -164,16 +170,6 @@ public:
    */
   bool publishGraph(ob::PlannerDataPtr planner_data, const rviz_visual_tools::colors& color = rviz_visual_tools::BLUE, const double thickness = 0.2,
                     const std::string& ns = "space_exploration");
-
-  /**
-   * \brief Display Sample Points
-   */
-  MOVEIT_DEPRECATED bool publishSamples( const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
-                                         const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_locations" );
-
-
-  MOVEIT_DEPRECATED bool publishSamples( const og::PathGeometric& path, const rviz_visual_tools::colors color = rviz_visual_tools::RED,
-                                         const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL, const std::string& ns = "sample_locations" );
 
   /**
    * \brief Publish a marker of a series of spheres to rviz
@@ -330,9 +326,9 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void vizTriggerCallback();
-  void vizStateCallback(ompl::base::State *state, std::size_t type, double neighborRadius = 0);
+  void vizStateCallback(const ompl::base::State *state, std::size_t type, double neighborRadius = 0);
   void vizState2DCallback(const geometry_msgs::Pose& pose, std::size_t type, double neighborRadius = 0);
-  void vizEdgeCallback(ompl::base::State *stateA, ompl::base::State *stateB, double value);
+  void vizEdgeCallback(const ompl::base::State *stateA, const ompl::base::State *stateB, double value);
 
   // Deprecated
   void vizCallback(ompl::base::Planner *planner);
