@@ -1062,7 +1062,26 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
     // Convert to robot state
     model_state_space->copyToRobotState(*shared_robot_state_, state);
 
-    MoveItVisualTools::publishRobotState(shared_robot_state_);
+    switch (type)
+    {
+      case 1:  // Candidate COEVERAGE node to be added
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::GREEN);
+        break;
+      case 2:  // Candidate CONNECTIVITY node to be added
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::BLUE);
+        break;
+      case 3:  // sampled nearby node
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::RED);
+        break;
+      case 4:  // Candidate node has already been added
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::PURPLE);
+        break;
+      case 5:  // Large node
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::BLACK);
+        break;
+      default:
+        ROS_ERROR_STREAM_NAMED("vizStateCallback", "Invalid state type value");
+    }
 
     // Publish arrow
     Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
