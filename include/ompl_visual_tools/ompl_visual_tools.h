@@ -328,6 +328,11 @@ public:
   void vizTriggerCallback();
   void vizStateCallback(const ompl::base::State *state, std::size_t type, double neighborRadius = 0);
   void vizState2DCallback(const geometry_msgs::Pose& pose, std::size_t type, double neighborRadius = 0);
+  /**
+   * \brief Publish a line from state A to state B
+   * \param value how red->green the line should be, where [0,1] 0 is red
+   * \return true on success
+   */
   void vizEdgeCallback(const ompl::base::State *stateA, const ompl::base::State *stateB, double value);
 
   // Deprecated

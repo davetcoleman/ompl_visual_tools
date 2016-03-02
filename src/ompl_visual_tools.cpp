@@ -614,6 +614,7 @@ bool OmplVisualTools::publishRobotState(const ompl::base::State* state)
   // Convert to robot state
   model_state_space->copyToRobotState(*shared_robot_state_, state);
 
+  // Show the robot visualized in Rviz
   MoveItVisualTools::publishRobotState(shared_robot_state_);
 }
 
@@ -1062,6 +1063,9 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
     // Convert to robot state
     model_state_space->copyToRobotState(*shared_robot_state_, state);
 
+    // Show the joint limits in the console
+    //MoveItVisualTools::showJointLimits(shared_robot_state_);
+
     switch (type)
     {
       case 1:  // Candidate COEVERAGE node to be added
@@ -1095,6 +1099,9 @@ void OmplVisualTools::vizState2DCallback(const geometry_msgs::Pose& pose, std::s
 
   switch (type)
   {
+    case 0:  // This deletes all markers
+      deleteAllMarkers();
+      break;
     case 1:  // Candidate COEVERAGE node to be added
       publishSphere(pose, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL);
       break;
