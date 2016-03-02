@@ -314,11 +314,13 @@ public:
 
   /**
    * \brief Set the range to visualize the edge costs
+   * \param invert - if true, red is largest values and green is lowest
    */
-  void setMinMaxEdgeCost(const double& max_edge_cost, const double& min_edge_cost)
+  void setMinMaxEdgeCost(const double& min_edge_cost, const double& max_edge_cost, bool invert = false)
   {
-    max_edge_cost_ = max_edge_cost;
     min_edge_cost_ = min_edge_cost;
+    max_edge_cost_ = max_edge_cost;
+    invert_edge_cost_ = invert;
   }
 
   /**
@@ -372,6 +374,7 @@ private:
   // Set bounds on an edge's cost/weight/value for visualization purposes
   double max_edge_cost_;
   double min_edge_cost_;
+  bool invert_edge_cost_;
 
 }; // end class
 

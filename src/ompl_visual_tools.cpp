@@ -77,6 +77,7 @@ OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string
   , disable_3d_(false)
   , max_edge_cost_(100.0)
   , min_edge_cost_(0.0)
+  , invert_edge_cost_(false)
 {
 }
 
@@ -1129,8 +1130,16 @@ void OmplVisualTools::vizEdgeCallback(const ompl::base::State* stateA, const omp
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
   // Convert input cost
-  const double percent = (cost - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-  //std::cout << "cost: " << cost << " percent: " << percent << std::endl;
+  double percent = (cost - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+
+  // Swap colors
+  if (invert_edge_cost_)
+  {
+    percent = 1 - percent;
+  }
+
+  //std::cout << "cost: " << cost << " percent: " << percent << " min: " << min_edge_cost_
+  //<< " max: " << max_edge_cost_ << std::endl;
 
   rviz_visual_tools::scales scale;
   if (percent > 0.75)
