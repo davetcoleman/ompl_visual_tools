@@ -303,8 +303,8 @@ bool OmplVisualTools::interpolateLine(const geometry_msgs::Point& p1, const geom
   geometry_msgs::Point point_b = p2;
 
   // Get the heights
-  point_a.z = getCostHeight(point_a);
-  point_b.z = getCostHeight(point_b);
+  //point_a.z = getCostHeight(point_a);
+  //point_b.z = getCostHeight(point_b);
 
   // ROS_INFO_STREAM("a is: " << point_a);
   // ROS_INFO_STREAM("b is: " << point_b);
@@ -814,7 +814,7 @@ bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rviz_visu
 
   if (path.getStateCount() <= 0)
   {
-    ROS_WARN_STREAM_NAMED("publishPath", "No states found in path");
+    ROS_WARN_STREAM_NAMED(name_, "No states found in path");
     return false;
   }
 
@@ -828,7 +828,15 @@ bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rviz_visu
     this_vertex = stateToPointMsg(path.getState(i));
 
     // Publish line with interpolation
-    interpolateLine(last_vertex, this_vertex, &marker, marker.color);
+    //interpolateLine(last_vertex, this_vertex, &marker, marker.color);
+
+    // Add points
+    marker.points.push_back(last_vertex);
+    marker.points.push_back(this_vertex);
+
+    // Add colors
+    marker.colors.push_back(marker.color);
+    marker.colors.push_back(marker.color);
 
     // Save these coordinates for next line
     last_vertex = this_vertex;
@@ -856,12 +864,12 @@ geometry_msgs::Point OmplVisualTools::stateToPointMsg(const ob::State* state)
 
   if (!state)
   {
-    ROS_FATAL("No state found for vertex");
+    ROS_FATAL_NAMED(name_, "No state found for vertex");
     exit(1);
   }
 
   // Handle 2D world
-  if (si_->getStateSpace()->getDimension() == 2)
+  if (si_->getStateSpace()->getDimension() <= 3)
   {
     // Convert to RealVectorStateSpace
     const ob::RealVectorStateSpace::StateType* real_state =
@@ -870,7 +878,8 @@ geometry_msgs::Point OmplVisualTools::stateToPointMsg(const ob::State* state)
     // Create point
     temp_point_.x = real_state->values[0];
     temp_point_.y = real_state->values[1];
-    temp_point_.z = getCostHeight(temp_point_);
+    //temp_point_.z = getCostHeight(temp_point_);
+    temp_point_.z = real_state->values[2] * 10;
     return temp_point_;
   }
 
@@ -895,7 +904,7 @@ geometry_msgs::Point OmplVisualTools::stateToPointMsg(const ob::ScopedState<> st
   // Create point
   temp_point_.x = state[0];
   temp_point_.y = state[1];
-  temp_point_.z = getCostHeight(temp_point_);
+  temp_point_.z = state[2]; //getCostHeight(temp_point_);
   return temp_point_;
 }
 
@@ -926,7 +935,7 @@ bool OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, c
 {
   temp_point_.x = state_area[0];
   temp_point_.y = state_area[1];
-  temp_point_.z = getCostHeight(temp_point_);
+  temp_point_.z = state_area[2]; //getCostHeight(temp_point_);
 
   publishSphere(temp_point_, rviz_visual_tools::BLACK, rviz_visual_tools::REGULAR, "sample_region");  // mid point
   // outer sphere (x2 b/c its a radius, x0.1 to make it look nicer)
@@ -1048,7 +1057,7 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
   if (!checkSpaceInformation())
     return;
 
-  if (si_->getStateSpace()->getDimension() == 2)
+  if (si_->getStateSpace()->getDimension() <= 3)
   {
     geometry_msgs::Pose pose = convertPointToPose(stateToPointMsg(state));
     vizState2DCallback(pose, type, neighborRadius);
@@ -1085,7 +1094,7 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
         MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::BLACK);
         break;
       default:
-        ROS_ERROR_STREAM_NAMED("vizStateCallback", "Invalid state type value");
+        ROS_ERROR_STREAM_NAMED(name_, "Invalid state type value");
     }
 
     // Publish arrow
@@ -1121,7 +1130,7 @@ void OmplVisualTools::vizState2DCallback(const geometry_msgs::Pose& pose, std::s
       publishSphere(pose, rviz_visual_tools::BLACK, rviz_visual_tools::LARGE);
       break;
     default:
-      ROS_ERROR_STREAM_NAMED("vizStateCallback", "Invalid state type value");
+      ROS_ERROR_STREAM_NAMED(name_, "Invalid state type value");
   }
 }
 
