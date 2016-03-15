@@ -59,7 +59,7 @@
 #include <ompl_visual_tools/costs/cost_map_2d_optimization_objective.h>
 
 // For converting OMPL state to a MoveIt robot state
-#include <moveit/ompl/model_based_planning_context.h>
+#include <moveit_ompl/model_based_state_space.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/macros/deprecation.h>
 
