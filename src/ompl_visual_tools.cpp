@@ -599,18 +599,18 @@ bool OmplVisualTools::publishRobotState(const ompl::base::State* state)
   // Make sure a robot state is available
   loadSharedRobotState();
 
-  moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
     boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert to robot state
-  model_state_space->copyToRobotState(*shared_robot_state_, state);
+  mb_state_space->copyToRobotState(*shared_robot_state_, state);
 
   // Show the robot visualized in Rviz
   MoveItVisualTools::publishRobotState(shared_robot_state_);
 }
 
 bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
-                                       robot_model::JointModelGroup* joint_model_group,
+                                       robot_model::JointModelGroup* jmg,
                                        const std::vector<const robot_model::LinkModel*>& tips,
                                        bool show_trajectory_animated)
 {
@@ -626,13 +626,13 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
   std::vector<std::vector<geometry_msgs::Point> > paths_msgs(tips.size());  // each tip has its own path of points
   robot_trajectory::RobotTrajectoryPtr robot_trajectory;
 
-  moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
     boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Optionally save the trajectory
   if (show_trajectory_animated)
   {
-    robot_trajectory.reset(new robot_trajectory::RobotTrajectory(robot_model_, joint_model_group->getName()));
+    robot_trajectory.reset(new robot_trajectory::RobotTrajectory(robot_model_, jmg->getName()));
   }
 
   // Each state in the path
@@ -643,7 +643,7 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
       return false;
 
     // Convert to robot state
-    model_state_space->copyToRobotState(*shared_robot_state_, path->getVertex(state_id).getState());
+    mb_state_space->copyToRobotState(*shared_robot_state_, path->getVertex(state_id).getState());
     ROS_WARN_STREAM_NAMED("temp", "updateStateWithFakeBase disabled");
     // shared_robot_state_->updateStateWithFakeBase();
 
@@ -691,6 +691,40 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
   }
 
   return true;
+}
+
+robot_trajectory::RobotTrajectoryPtr OmplVisualTools::publishRobotPath(const og::PathGeometric& path,
+                                                                       const robot_model::JointModelGroup* jmg,
+                                                                       const bool wait_for_trajetory)
+{
+  // Error check
+  if (path.getStateCount() <= 0)
+  {
+    ROS_WARN_STREAM_NAMED(name_, "No states found in path");
+    return robot_trajectory::RobotTrajectoryPtr();
+  }
+
+  // New trajectory
+  robot_trajectory::RobotTrajectoryPtr traj(new robot_trajectory::RobotTrajectory(robot_model_, jmg));
+  moveit::core::RobotState state(*shared_robot_state_); // TODO(davetcoleman):do i need to copy this?
+
+  // Get correct type of space
+  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
+    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+
+  // Convert solution to MoveIt! format, reversing the solution
+  for (std::size_t i = path.getStateCount(); i > 0; --i)
+  {
+    // Convert format
+    mb_state_space->copyToRobotState(state, path.getState(i - 1));
+
+    // Add to trajectory
+    traj->addSuffixWayPoint(state, 0.25);
+  }
+
+  publishTrajectoryPath(*traj, wait_for_trajetory);
+
+  return traj;
 }
 
 bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
@@ -762,8 +796,15 @@ bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const 
   return publishPath(path, color, thickness, ns);
 }
 
+// TODO: deprecate
 bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
                                   const double thickness, const std::string& ns)
+{
+  return publish2DPath(path, color, thickness, ns);
+}
+
+bool OmplVisualTools::publish2DPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
+                                    const double thickness, const std::string& ns)
 {
   // Error check
   if (path.getStateCount() <= 0)
@@ -791,83 +832,6 @@ bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rviz_visu
 
   return true;
 }
-
-/*
-bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
-                                  const double thickness, const std::string& ns)
-{
-  visualization_msgs::Marker marker;
-  // Set the frame ID and timestamp.
-  marker.header.frame_id = base_frame_;
-  marker.header.stamp = ros::Time();
-
-  // Set the namespace and id for this marker.  This serves to create a unique ID
-  marker.ns = ns;
-
-  std_msgs::ColorRGBA this_color = getColor(color);
-
-  // Set the marker type.
-  marker.type = visualization_msgs::Marker::LINE_LIST;
-
-  // Set the marker action.  Options are ADD and DELETE
-  marker.action = visualization_msgs::Marker::ADD;
-
-  // Provide a new id every call to this function
-  static int result_id = 0;
-  marker.id = result_id++;
-
-  marker.pose.position.x = 0.0;
-  marker.pose.position.y = 0.0;
-  marker.pose.position.z = 0.0;
-
-  marker.pose.orientation.x = 0.0;
-  marker.pose.orientation.y = 0.0;
-  marker.pose.orientation.z = 0.0;
-  marker.pose.orientation.w = 1.0;
-
-  marker.scale.x = thickness;
-  marker.scale.y = 1.0;
-  marker.scale.z = 1.0;
-
-  marker.color = this_color;
-
-  geometry_msgs::Point last_vertex;
-  geometry_msgs::Point this_vertex;
-
-  if (path.getStateCount() <= 0)
-  {
-    ROS_WARN_STREAM_NAMED(name_, "No states found in path");
-    return false;
-  }
-
-  // Initialize first vertex
-  last_vertex = convertPoint(stateToPoint(path.getState(0)));
-
-  // Convert path coordinates
-  for (std::size_t i = 1; i < path.getStateCount(); ++i)
-  {
-    // Get current coordinates
-    this_vertex = convertPoint(stateToPoint(path.getState(i)));
-
-    // Publish line with interpolation
-    // interpolateLine(last_vertex, this_vertex, &marker, marker.color);
-
-    // Add points
-    marker.points.push_back(last_vertex);
-    marker.points.push_back(this_vertex);
-
-    // Add colors
-    marker.colors.push_back(marker.color);
-    marker.colors.push_back(marker.color);
-
-    // Save these coordinates for next line
-    last_vertex = this_vertex;
-  }
-
-  // Send to Rviz
-  return publishMarker(marker);
-}
-*/
 
 Eigen::Vector3d OmplVisualTools::stateToPoint(std::size_t vertex_id, ob::PlannerDataPtr planner_data)
 {
@@ -933,11 +897,11 @@ Eigen::Vector3d OmplVisualTools::stateToPointRobot(const ob::State* state)
   // Make sure a robot state is available
   loadSharedRobotState();
 
-  moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
     boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert to robot state
-  model_state_space->copyToRobotState(*shared_robot_state_, state);
+  mb_state_space->copyToRobotState(*shared_robot_state_, state);
 
   // Get pose
   Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
@@ -1032,7 +996,7 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
   Eigen::Affine3d pose;
 
   // Load information about the robot's geometry
-  moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
     boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Rows correspond to robot states
@@ -1043,7 +1007,7 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
   for (std::size_t state_id = 0; state_id < graph->numVertices(); ++state_id)
   {
     // Convert to robot state
-    model_state_space->copyToRobotState(*shared_robot_state_, graph->getVertex(state_id).getState());
+    mb_state_space->copyToRobotState(*shared_robot_state_, graph->getVertex(state_id).getState());
     ROS_WARN_STREAM_NAMED("temp", "updateStateWithFakeBase disabled");
     // shared_robot_state_->updateStateWithFakeBase();
 
@@ -1114,11 +1078,11 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
     // Make sure a robot state is available
     loadSharedRobotState();
 
-    moveit_ompl::ModelBasedStateSpacePtr model_state_space =
+    moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
       boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
     // Convert to robot state
-    model_state_space->copyToRobotState(*shared_robot_state_, state);
+    mb_state_space->copyToRobotState(*shared_robot_state_, state);
 
     // Show the joint limits in the console
     // MoveItVisualTools::showJointLimits(shared_robot_state_);

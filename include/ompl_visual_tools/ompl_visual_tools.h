@@ -228,8 +228,12 @@ public:
    * kinematics
    * \return true on success
    */
-  bool publishRobotPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* joint_model_group,
+  bool publishRobotPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* jmg,
                         const std::vector<const robot_model::LinkModel*>& tips, bool show_trajectory_animated);
+
+  robot_trajectory::RobotTrajectoryPtr publishRobotPath(const og::PathGeometric& path,
+                                                        const robot_model::JointModelGroup* jmg,
+                                                        const bool wait_for_trajetory);
 
   /**
    * \brief Display resulting graph from a planner, in the form of a planner_data object
@@ -252,6 +256,9 @@ public:
    * \return true on success
    */
   bool publishPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color, const double thickness = 0.4,
+                   const std::string& ns = "result_path");
+
+  bool publish2DPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color, const double thickness = 0.4,
                    const std::string& ns = "result_path");
 
   /**
