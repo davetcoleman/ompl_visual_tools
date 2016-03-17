@@ -335,6 +335,12 @@ public:
     invert_edge_cost_ = invert;
   }
 
+  void setMinMaxEdgeRadius(const double& min_edge_radius, const double& max_edge_radius)
+  {
+    min_edge_radius_ = min_edge_radius;
+    max_edge_radius_ = max_edge_radius;
+  }
+
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during
    * search
@@ -388,6 +394,8 @@ private:
   double max_edge_cost_;
   double min_edge_cost_;
   bool invert_edge_cost_;
+  double max_edge_radius_;
+  double min_edge_radius_;
 
 };  // end class
 

@@ -904,6 +904,7 @@ Eigen::Vector3d OmplVisualTools::stateToPointRobot(const ob::State* state)
   mb_state_space->copyToRobotState(*shared_robot_state_, state);
 
   // Get pose
+  // TODO(davetcoleman): do not hard code
   Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
   return pose.translation();
 }
@@ -1109,8 +1110,8 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
     }
 
     // Publish arrow
-    Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
-    publishZArrow(pose);
+    //Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
+    //publishZArrow(pose);
   }
 }
 
@@ -1158,10 +1159,11 @@ void OmplVisualTools::vizEdgeCallback(const ompl::base::State* stateA, const omp
     percent = 1 - percent;
   }
 
-  // std::cout << "cost: " << cost << " percent: " << percent << " min: " << min_edge_cost_
-  //<< " max: " << max_edge_cost_ << std::endl;
+  //const double radius = percent / 6.0 + 0.15;
+  const double radius = (max_edge_radius_ - min_edge_radius_) * percent + min_edge_radius_;
 
-  const double radius = percent / 6.0 + 0.15;
+  //std::cout << "cost: " << cost << " min_edge_cost_: " << min_edge_cost_ << " max_edge_cost_: " << max_edge_cost_
+  //<< " percent: " << percent << " radius: " << radius << std::endl;
 
   publishEdge(stateA, stateB, getColorScale(percent), radius);
 }
