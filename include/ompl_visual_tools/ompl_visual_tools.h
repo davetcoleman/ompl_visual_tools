@@ -231,9 +231,9 @@ public:
   bool publishRobotPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* jmg,
                         const std::vector<const robot_model::LinkModel*>& tips, bool show_trajectory_animated);
 
-  robot_trajectory::RobotTrajectoryPtr publishRobotPath(const og::PathGeometric& path,
-                                                        const robot_model::JointModelGroup* jmg,
-                                                        const bool wait_for_trajetory);
+  bool publishRobotPath(const og::PathGeometric& path,
+                        const robot_model::JointModelGroup* jmg,
+                        const bool wait_for_trajetory);
 
   /**
    * \brief Display resulting graph from a planner, in the form of a planner_data object
@@ -323,6 +323,11 @@ public:
   bool convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr& graph,
                                      const std::vector<const robot_model::LinkModel*>& tips,
                                      std::vector<std::vector<geometry_msgs::Point> >& vertex_tip_points);
+
+  /** \brief Convert path formats */
+  bool convertPath(const og::PathGeometric& path,
+                   const robot_model::JointModelGroup* jmg,
+                   robot_trajectory::RobotTrajectoryPtr& traj, double speed = 0.1);
 
   /**
    * \brief Set the range to visualize the edge costs

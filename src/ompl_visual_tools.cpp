@@ -693,38 +693,18 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
   return true;
 }
 
-robot_trajectory::RobotTrajectoryPtr OmplVisualTools::publishRobotPath(const og::PathGeometric& path,
-                                                                       const robot_model::JointModelGroup* jmg,
-                                                                       const bool wait_for_trajetory)
+bool OmplVisualTools::publishRobotPath(const og::PathGeometric& path,
+                                       const robot_model::JointModelGroup* jmg,
+                                       const bool wait_for_trajetory)
 {
-  // Error check
-  if (path.getStateCount() <= 0)
+  // Convert to MoveIt! format
+  robot_trajectory::RobotTrajectoryPtr traj;
+  if (!convertPath(path, jmg, traj))
   {
-    ROS_WARN_STREAM_NAMED(name_, "No states found in path");
-    return robot_trajectory::RobotTrajectoryPtr();
+    return false;
   }
 
-  // New trajectory
-  robot_trajectory::RobotTrajectoryPtr traj(new robot_trajectory::RobotTrajectory(robot_model_, jmg));
-  moveit::core::RobotState state(*shared_robot_state_); // TODO(davetcoleman):do i need to copy this?
-
-  // Get correct type of space
-  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-  // Convert solution to MoveIt! format, reversing the solution
-  for (std::size_t i = path.getStateCount(); i > 0; --i)
-  {
-    // Convert format
-    mb_state_space->copyToRobotState(state, path.getState(i - 1));
-
-    // Add to trajectory
-    traj->addSuffixWayPoint(state, 0.25);
-  }
-
-  publishTrajectoryPath(*traj, wait_for_trajetory);
-
-  return traj;
+  return MoveItVisualTools::publishTrajectoryPath(*traj, wait_for_trajetory);
 }
 
 bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
@@ -1025,6 +1005,37 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
   return true;
 }
 
+bool OmplVisualTools::convertPath(const og::PathGeometric& path,
+                                  const robot_model::JointModelGroup* jmg,
+                                  robot_trajectory::RobotTrajectoryPtr& traj, double speed)
+{
+  // Error check
+  if (path.getStateCount() <= 0)
+  {
+    ROS_WARN_STREAM_NAMED(name_, "No states found in path");
+    return false;
+  }
+
+  // New trajectory
+  traj.reset(new robot_trajectory::RobotTrajectory(robot_model_, jmg));
+  moveit::core::RobotState state(*shared_robot_state_); // TODO(davetcoleman):do i need to copy this?
+
+  // Get correct type of space
+  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
+    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+
+  // Convert solution to MoveIt! format, reversing the solution
+  //for (std::size_t i = path.getStateCount(); i > 0; --i)
+  for (std::size_t i = 0; i < path.getStateCount(); ++i)
+  {
+    // Convert format
+    mb_state_space->copyToRobotState(state, path.getState(i));
+
+    // Add to trajectory
+    traj->addSuffixWayPoint(state, speed);
+  }
+}
+
 void OmplVisualTools::vizTriggerCallback()
 {
   triggerBatchPublish();
@@ -1105,13 +1116,16 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
       case 5:  // Large node
         MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::BLACK);
         break;
+      case 6:  // Only show red sphere, no robot state
+        {
+          // Publish sphere
+          Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
+          publishSphere(pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR);
+        }
+        break;
       default:
         ROS_ERROR_STREAM_NAMED(name_, "Invalid state type value");
     }
-
-    // Publish arrow
-    //Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
-    //publishZArrow(pose);
   }
 }
 
