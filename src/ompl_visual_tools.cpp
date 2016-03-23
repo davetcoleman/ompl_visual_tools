@@ -77,6 +77,8 @@ OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string
   , disable_3d_(false)
   , max_edge_cost_(100.0)
   , min_edge_cost_(0.0)
+  , min_edge_radius_(0.1)
+  , max_edge_radius_(0.5)
   , invert_edge_cost_(false)
 {
 }
@@ -751,7 +753,7 @@ bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
   {
     const rviz_visual_tools::colors color = getRandColor();
-    std::cout << "Color is  " << color << std::endl;
+    //std::cout << "Color is  " << color << std::endl;
     MoveItVisualTools::publishGraph(graphs[tip_id], color, 0.005);
     ros::Duration(0.1).sleep();
 
@@ -823,17 +825,7 @@ Eigen::Vector3d OmplVisualTools::stateToPoint(std::size_t vertex_id, ob::Planner
 
 Eigen::Vector3d OmplVisualTools::stateToPoint(const ob::ScopedState<> state)
 {
-  // Handle 2D world
-  if (si_->getStateSpace()->getDimension() <= 3)
-  {
-    // Create point
-    temp_eigen_point_.x() = state[0];
-    temp_eigen_point_.y() = state[1];
-    ROS_WARN_STREAM_NAMED(name_, "z is broken here for some reason");
-    temp_eigen_point_.z() = state[2];
-    return temp_eigen_point_;
-  }
-  ROS_WARN_STREAM_NAMED(name_, "stateToPoint ScopedState not created for robot");
+  return stateToPoint(state.get());
 }
 
 Eigen::Vector3d OmplVisualTools::stateToPoint(const ob::State* state)
@@ -867,7 +859,6 @@ Eigen::Vector3d OmplVisualTools::stateToPoint2D(const ob::State* state)
   // Create point
   temp_eigen_point_.x() = real_state->values[0];
   temp_eigen_point_.y() = real_state->values[1];
-  // temp_eigen_point_.z = getCostHeight(temp_eigen_point_);
   temp_eigen_point_.z() = real_state->values[2] * 10;
   return temp_eigen_point_;
 }
@@ -1176,8 +1167,9 @@ void OmplVisualTools::vizEdgeCallback(const ompl::base::State* stateA, const omp
   //const double radius = percent / 6.0 + 0.15;
   const double radius = (max_edge_radius_ - min_edge_radius_) * percent + min_edge_radius_;
 
-  //std::cout << "cost: " << cost << " min_edge_cost_: " << min_edge_cost_ << " max_edge_cost_: " << max_edge_cost_
-  //<< " percent: " << percent << " radius: " << radius << std::endl;
+  if (false)
+    std::cout << "cost: " << cost << " min_edge_cost_: " << min_edge_cost_ << " max_edge_cost_: " << max_edge_cost_
+              << " percent: " << percent << " radius: " << radius << std::endl;
 
   publishEdge(stateA, stateB, getColorScale(percent), radius);
 }
