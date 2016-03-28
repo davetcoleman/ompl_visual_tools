@@ -1132,6 +1132,7 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
     case 1:  // Candidate COEVERAGE node to be added
       publishSphere(point, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL);
       break;
+    case 6:  // Simple
     case 2:  // Candidate CONNECTIVITY node to be added
       publishSphere(point, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL);
       break;
@@ -1154,6 +1155,13 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
 void OmplVisualTools::vizEdgeCallback(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
+
+  // Error check
+  if (si_->getStateSpace()->equalStates(stateA, stateB))
+  {
+    ROS_ERROR_STREAM_NAMED(name_, "Unable to visualize edge because states are the same");
+    return;
+  }
 
   // Convert input cost
   double percent = (cost - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
