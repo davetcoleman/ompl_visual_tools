@@ -229,7 +229,7 @@ bool OmplVisualTools::publishCostMap(PPMImage* image, bool static_id)
 
   marker.pose.position.x = 0;
   marker.pose.position.y = 0;
-  marker.pose.position.z = 0;
+  marker.pose.position.z = -0.25;
   marker.pose.orientation.x = 0.0;
   marker.pose.orientation.y = 0.0;
   marker.pose.orientation.z = 0.0;
