@@ -1147,6 +1147,18 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
     case 5:  // Large node
       publishSphere(point, rviz_visual_tools::BLACK, rviz_visual_tools::LARGE);
       break;
+      // case 6- see above
+    case 7:  // Publish sphere based on value between 0-100
+      {
+        const double percent = (neighborRadius - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+        const double radius = (max_edge_radius_ - min_edge_radius_) * percent + min_edge_radius_;
+        geometry_msgs::Vector3 scale;
+        scale.x = radius;
+        scale.y = radius;
+        scale.z = radius;
+        publishSphere(convertPointToPose(point), getColorScale(percent), scale);
+      }
+      break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "Invalid state type value");
   }
