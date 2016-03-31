@@ -79,6 +79,8 @@ OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string
   , min_edge_cost_(0.0)
   , min_edge_radius_(0.1)
   , max_edge_radius_(0.5)
+  , min_state_radius_(0.1)
+  , max_state_radius_(0.5)
   , invert_edge_cost_(false)
 {
 }
@@ -1066,7 +1068,7 @@ void OmplVisualTools::vizCallback(ompl::base::Planner* planner)
   ros::spinOnce();
 }
 
-void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size_t type, double neighborRadius)
+void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size_t type, double extra_data)
 {
   // Error check
   if (!checkSpaceInformation())
@@ -1074,7 +1076,7 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
 
   if (si_->getStateSpace()->getDimension() <= 3)
   {
-    vizState2DCallback(stateToPoint(state), type, neighborRadius);
+    vizState2DCallback(stateToPoint(state), type, extra_data);
   }
   else
   {
@@ -1092,16 +1094,16 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
 
     switch (type)
     {
-      case 1:  // Candidate COEVERAGE node to be added
+      case 1:  // Candidate COVERAGE node to be added
         MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::GREEN);
         break;
       case 2:  // Candidate CONNECTIVITY node to be added
         MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::BLUE);
         break;
-      case 3:  // sampled nearby node
+      case 3:  // sampled nearby node / INTERFACE
         MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::RED);
         break;
-      case 4:  // Candidate node has already been added
+      case 4:  // Candidate node has already been added / QUALITY
         MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::PURPLE);
         break;
       case 5:  // Large node
@@ -1120,7 +1122,7 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
   }
 }
 
-void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size_t type, double neighborRadius)
+void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size_t type, double extra_data)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
@@ -1142,7 +1144,7 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
     case 4:  // Candidate node has already been added
       publishSphere(point, rviz_visual_tools::PURPLE, rviz_visual_tools::REGULAR);
       // Outline with circle
-      publishSphere(point, rviz_visual_tools::TRANSLUCENT, neighborRadius * 2);
+      publishSphere(point, rviz_visual_tools::TRANSLUCENT_LIGHT, extra_data * 2);
       break;
     case 5:  // Large node
       publishSphere(point, rviz_visual_tools::BLACK, rviz_visual_tools::LARGE);
@@ -1150,8 +1152,8 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
       // case 6- see above
     case 7:  // Publish sphere based on value between 0-100
       {
-        const double percent = (neighborRadius - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-        const double radius = (max_edge_radius_ - min_edge_radius_) * percent + min_edge_radius_;
+        const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+        const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
         geometry_msgs::Vector3 scale;
         scale.x = radius;
         scale.y = radius;

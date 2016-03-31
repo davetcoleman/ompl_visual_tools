@@ -346,14 +346,20 @@ public:
     max_edge_radius_ = max_edge_radius;
   }
 
+  void setMinMaxStateRadius(const double& min_state_radius, const double& max_state_radius)
+  {
+    min_state_radius_ = min_state_radius;
+    max_state_radius_ = max_state_radius;
+  }
+
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during
    * search
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void vizTriggerCallback();
-  void vizStateCallback(const ompl::base::State* state, std::size_t type, double neighborRadius = 0);
-  void vizState2DCallback(const Eigen::Vector3d& point, std::size_t type, double neighborRadius = 0);
+  void vizStateCallback(const ompl::base::State* state, std::size_t type, double extra_data = 0);
+  void vizState2DCallback(const Eigen::Vector3d& point, std::size_t type, double extra_data = 0);
   /**
    * \brief Publish a line from state A to state B
    * \param value how red->green the line should be, where [0,1] 0 is red
@@ -401,6 +407,10 @@ private:
   bool invert_edge_cost_;
   double max_edge_radius_;
   double min_edge_radius_;
+
+  // Set bounds on an state's cost/weight/value for visualization purposes
+  double max_state_radius_;
+  double min_state_radius_;
 
 };  // end class
 
