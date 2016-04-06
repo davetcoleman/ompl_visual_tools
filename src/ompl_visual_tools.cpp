@@ -1074,6 +1074,14 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
   if (!checkSpaceInformation())
     return;
 
+  // Check for clear all visuals mode
+  if (type == 0)
+  {
+      deleteAllMarkers();
+      return;
+  }
+
+  // Determine which StateSpace to work in
   if (si_->getStateSpace()->getDimension() <= 3)
   {
     vizState2DCallback(stateToPoint(state), type, extra_data);
@@ -1128,9 +1136,6 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
 
   switch (type)
   {
-    case 0:  // This deletes all markers
-      deleteAllMarkers();
-      break;
     case 1:  // Candidate COEVERAGE node to be added
       publishSphere(point, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL);
       break;
