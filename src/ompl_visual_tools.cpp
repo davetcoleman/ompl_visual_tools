@@ -66,6 +66,7 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 namespace bnu = boost::numeric::ublas;
+namespace rvt = rviz_visual_tools;
 
 using namespace moveit_visual_tools;
 
@@ -239,7 +240,7 @@ bool OmplVisualTools::publishCostMap(PPMImage* image, bool static_id)
   marker.scale.x = 1.0;
   marker.scale.y = 1.0;
   marker.scale.z = 1.0;
-  marker.color = getColor(rviz_visual_tools::RED);
+  marker.color = getColor(rvt::RED);
 
   // Visualize Results -------------------------------------------------------------------------------------------------
   for (size_t marker_id = 0; marker_id < image->getSize(); ++marker_id)
@@ -329,8 +330,8 @@ bool OmplVisualTools::interpolateLine(const geometry_msgs::Point& p1, const geom
     marker->colors.push_back(color);
 
     // Show start and end point
-    publishSphere(point_a, rviz_visual_tools::GREEN);
-    publishSphere(point_b, rviz_visual_tools::RED);
+    publishSphere(point_a, rvt::GREEN);
+    publishSphere(point_b, rvt::RED);
   }
 
   // Interpolate the line ----------------------------------------------------------------------
@@ -385,19 +386,19 @@ bool OmplVisualTools::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, c
 {
   for (std::size_t i = 0; i < planner_data->numStartVertices(); ++i)
   {
-    publishSphere(convertPoint(stateToPoint(planner_data->getStartVertex(i).getState())), rviz_visual_tools::GREEN,
-                  rviz_visual_tools::REGULAR, ns);
+    publishSphere(convertPoint(stateToPoint(planner_data->getStartVertex(i).getState())), rvt::GREEN,
+                  rvt::REGULAR, ns);
   }
   for (std::size_t i = 0; i < planner_data->numGoalVertices(); ++i)
   {
-    publishSphere(convertPoint(stateToPoint(planner_data->getGoalVertex(i).getState())), rviz_visual_tools::RED,
-                  rviz_visual_tools::REGULAR, ns);
+    publishSphere(convertPoint(stateToPoint(planner_data->getGoalVertex(i).getState())), rvt::RED,
+                  rvt::REGULAR, ns);
   }
 
   return true;
 }
 
-bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rviz_visual_tools::colors& color,
+bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rvt::colors& color,
                                    const double thickness, const std::string& ns)
 {
   visualization_msgs::Marker marker;
@@ -462,8 +463,8 @@ bool OmplVisualTools::publishEdge(const ob::State* stateA, const ob::State* stat
   return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius);
 }
 
-bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
-                                       const rviz_visual_tools::scales scale, const std::string& ns)
+bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rvt::colors& color,
+                                       const rvt::scales scale, const std::string& ns)
 {
   // Create a small scale for font size
   geometry_msgs::Vector3 scale_msg;
@@ -490,8 +491,8 @@ bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rviz
   return true;
 }
 
-bool OmplVisualTools::publishSpheres(const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors& color,
-                                     const rviz_visual_tools::scales scale, const std::string& ns)
+bool OmplVisualTools::publishSpheres(const ob::PlannerDataPtr& planner_data, const rvt::colors& color,
+                                     const rvt::scales scale, const std::string& ns)
 {
   // Error check
   if (!checkSpaceInformation())
@@ -503,7 +504,7 @@ bool OmplVisualTools::publishSpheres(const ob::PlannerDataPtr& planner_data, con
   return publishSpheres(path, color, scale, ns);
 }
 
-bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rviz_visual_tools::colors& color, double scale,
+bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, double scale,
                                      const std::string& ns)
 {
   geometry_msgs::Vector3 scale_vector;
@@ -513,13 +514,13 @@ bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rviz_v
   publishSpheres(path, color, scale_vector, ns);
 }
 
-bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
-                                     const rviz_visual_tools::scales scale, const std::string& ns)
+bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
+                                     const rvt::scales scale, const std::string& ns)
 {
   publishSpheres(path, color, getScale(scale, false, 0.25), ns);
 }
 
-bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
+bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
                                      const geometry_msgs::Vector3& scale, const std::string& ns)
 {
   std::vector<geometry_msgs::Point> points;
@@ -529,7 +530,7 @@ bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rviz_v
   return MoveItVisualTools::publishSpheres(points, color, scale, ns);
 
   // Show the vertex ids
-  // publishSampleIDs( path, rviz_visual_tools::BLACK );
+  // publishSampleIDs( path, rvt::BLACK );
 }
 
 void OmplVisualTools::convertPlannerData(const ob::PlannerDataPtr planner_data, og::PathGeometric& path)
@@ -571,10 +572,10 @@ bool OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states
   marker.scale.y = 0.4;
   marker.scale.z = 0.4;
 
-  marker.color = getColor(rviz_visual_tools::RED);
+  marker.color = getColor(rvt::RED);
 
   // Make line color
-  std_msgs::ColorRGBA color = getColor(rviz_visual_tools::RED);
+  std_msgs::ColorRGBA color = getColor(rvt::RED);
 
   // Point
   geometry_msgs::Point point_a;
@@ -675,16 +676,16 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
       // Show goal state arrow
       if (state_id == path->numVertices() - 1)
       {
-        publishArrow(pose, rviz_visual_tools::BLACK);
+        publishArrow(pose, rvt::BLACK);
       }
     }
   }  // for each state
 
   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
   {
-    MoveItVisualTools::publishPath(paths_msgs[tip_id], rviz_visual_tools::RAND, rviz_visual_tools::SMALL);
+    MoveItVisualTools::publishPath(paths_msgs[tip_id], rvt::RAND, rvt::SMALL);
     ros::Duration(0.05).sleep();
-    MoveItVisualTools::publishSpheres(paths_msgs[tip_id], rviz_visual_tools::ORANGE, rviz_visual_tools::SMALL);
+    MoveItVisualTools::publishSpheres(paths_msgs[tip_id], rvt::ORANGE, rvt::SMALL);
     ros::Duration(0.05).sleep();
   }
 
@@ -754,12 +755,12 @@ bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
   // Now publish each tip graph
   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
   {
-    const rviz_visual_tools::colors color = getRandColor();
+    const rvt::colors color = getRandColor();
     //std::cout << "Color is  " << color << std::endl;
     MoveItVisualTools::publishGraph(graphs[tip_id], color, 0.005);
     ros::Duration(0.1).sleep();
 
-    MoveItVisualTools::publishSpheres(graphs[tip_id].nodes, rviz_visual_tools::ORANGE, rviz_visual_tools::SMALL);
+    MoveItVisualTools::publishSpheres(graphs[tip_id].nodes, rvt::ORANGE, rvt::SMALL);
     ros::Duration(0.1).sleep();
   }
 
@@ -767,7 +768,7 @@ bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
 }
 
 // Deprecated
-bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors& color,
+bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const rvt::colors& color,
                                   const double thickness, const std::string& ns)
 {
   // Error check
@@ -781,13 +782,13 @@ bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const 
 }
 
 // TODO: deprecate
-bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
+bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rvt::colors& color,
                                   const double thickness, const std::string& ns)
 {
   return publish2DPath(path, color, thickness, ns);
 }
 
-bool OmplVisualTools::publish2DPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
+bool OmplVisualTools::publish2DPath(const og::PathGeometric& path, const rvt::colors& color,
                                     const double thickness, const std::string& ns)
 {
   // Error check
@@ -887,31 +888,31 @@ int OmplVisualTools::natRound(double x)
   return static_cast<int>(floor(x + 0.5f));
 }
 
-bool OmplVisualTools::publishState(const ob::State* state, const rviz_visual_tools::colors& color,
-                                   const rviz_visual_tools::scales scale, const std::string& ns)
+bool OmplVisualTools::publishState(const ob::State* state, const rvt::colors& color,
+                                   const rvt::scales scale, const std::string& ns)
 {
   return publishSphere(stateToPoint(state), color, scale, ns);
 }
 
-bool OmplVisualTools::publishState(const ob::State* state, const rviz_visual_tools::colors& color,
+bool OmplVisualTools::publishState(const ob::State* state, const rvt::colors& color,
                                    const double scale, const std::string& ns)
 {
   return publishSphere(stateToPoint(state), color, scale, ns);
 }
 
-bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors& color,
-                                   const rviz_visual_tools::scales scale, const std::string& ns)
+bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rvt::colors& color,
+                                   const rvt::scales scale, const std::string& ns)
 {
   return publishSphere(stateToPoint(state), color, scale, ns);
 }
 
-bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors& color, double scale,
+bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rvt::colors& color, double scale,
                                    const std::string& ns)
 {
   return publishSphere(stateToPoint(state), color, scale, ns);
 }
 
-bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors& color,
+bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rvt::colors& color,
                                    const geometry_msgs::Vector3& scale, const std::string& ns)
 {
   return publishSphere(stateToPoint(state), color, scale.x, ns);
@@ -923,13 +924,13 @@ bool OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, c
   temp_point_.y = state_area[1];
   temp_point_.z = state_area[2];  // getCostHeight(temp_point_);
 
-  publishSphere(temp_point_, rviz_visual_tools::BLACK, rviz_visual_tools::REGULAR, "sample_region");  // mid point
+  publishSphere(temp_point_, rvt::BLACK, rvt::REGULAR, "sample_region");  // mid point
   // outer sphere (x2 b/c its a radius, x0.1 to make it look nicer)
-  return publishSphere(temp_point_, rviz_visual_tools::TRANSLUCENT, rviz_visual_tools::REGULAR, "sample_region");
+  return publishSphere(temp_point_, rvt::TRANSLUCENT, rvt::REGULAR, "sample_region");
 }
 
 bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::string& text,
-                                  const rviz_visual_tools::colors& color, bool static_id)
+                                  const rvt::colors& color, bool static_id)
 {
   geometry_msgs::Pose text_pose;
   text_pose.position = point;
@@ -938,7 +939,7 @@ bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::
 }
 
 bool OmplVisualTools::publishText(const geometry_msgs::Pose& pose, const std::string& text,
-                                  const rviz_visual_tools::colors& color, bool static_id)
+                                  const rvt::colors& color, bool static_id)
 {
   geometry_msgs::Vector3 scale;
   if (cost_)
@@ -949,7 +950,7 @@ bool OmplVisualTools::publishText(const geometry_msgs::Pose& pose, const std::st
     scale.z = size;
   }
   else
-    scale = getScale(rviz_visual_tools::REGULAR);  // TODO tune this
+    scale = getScale(rvt::REGULAR);  // TODO tune this
 
   // send to moveit_visual_tools
   return RvizVisualTools::publishText(pose, text, color, scale, static_id);
@@ -1034,40 +1035,6 @@ void OmplVisualTools::vizTriggerCallback()
   triggerBatchPublish();
 }
 
-// TODO: deprecate?
-void OmplVisualTools::vizCallback(ompl::base::Planner* planner)
-{
-  // Error check
-  if (!checkSpaceInformation())
-    return;
-
-  deleteAllMarkers();
-  ros::spinOnce();
-
-  ompl::base::PlannerDataPtr planner_data(new ompl::base::PlannerData(si_));
-  planner->getPlannerData(*planner_data);
-
-  std::cout << "vizCallback has states: " << planner_data->numVertices() << std::endl;
-
-  // Show edges of graph
-  publishGraph(planner_data, rviz_visual_tools::PURPLE);
-
-  // Convert planner data to path
-  og::PathGeometric path(si_);
-  convertPlannerData(planner_data, path);
-
-  // Show samples of graph
-  OmplVisualTools::publishSpheres(path, rviz_visual_tools::ORANGE, rviz_visual_tools::SMALL);
-
-  // Outline with circle
-  // double nn_radius = 3.46482;
-  // OmplVisualTools::publishSpheres( path, rviz_visual_tools::TRANSLUCENT, nn_radius*2 );
-
-  ros::Duration(0.1).sleep();
-
-  ros::spinOnce();
-}
-
 void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size_t type, double extra_data)
 {
   // Error check
@@ -1103,25 +1070,25 @@ void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size
     switch (type)
     {
       case 1:  // Candidate COVERAGE node to be added
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::GREEN);
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::GREEN);
         break;
       case 2:  // Candidate CONNECTIVITY node to be added
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::BLUE);
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::BLUE);
         break;
       case 3:  // sampled nearby node / INTERFACE
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::RED);
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::RED);
         break;
       case 4:  // Candidate node has already been added / QUALITY
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::PURPLE);
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::PURPLE);
         break;
       case 5:  // Large node
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rviz_visual_tools::BLACK);
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::BLACK);
         break;
       case 6:  // Only show red sphere, no robot state
         {
           // Publish sphere
           Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
-          publishSphere(pose, rviz_visual_tools::RED, rviz_visual_tools::REGULAR);
+          publishSphere(pose, rvt::RED, rvt::REGULAR);
         }
         break;
       default:
@@ -1137,22 +1104,22 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
   switch (type)
   {
     case 1:  // Candidate COEVERAGE node to be added
-      publishSphere(point, rviz_visual_tools::GREEN, rviz_visual_tools::SMALL);
+      publishSphere(point, rvt::GREEN, rvt::SMALL);
       break;
     case 6:  // Simple
     case 2:  // Candidate CONNECTIVITY node to be added
-      publishSphere(point, rviz_visual_tools::BLUE, rviz_visual_tools::SMALL);
+      publishSphere(point, rvt::BLUE, rvt::SMALL);
       break;
     case 3:  // sampled nearby node
-      publishSphere(point, rviz_visual_tools::RED, rviz_visual_tools::SMALL);
+      publishSphere(point, rvt::RED, rvt::SMALL);
       break;
     case 4:  // Candidate node has already been added
-      publishSphere(point, rviz_visual_tools::PURPLE, rviz_visual_tools::REGULAR);
+      publishSphere(point, rvt::PURPLE, rvt::REGULAR);
       // Outline with circle
-      publishSphere(point, rviz_visual_tools::TRANSLUCENT_LIGHT, extra_data * 2);
+      publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data * 2);
       break;
     case 5:  // Large node
-      publishSphere(point, rviz_visual_tools::BLACK, rviz_visual_tools::LARGE);
+      publishSphere(point, rvt::BLACK, rvt::LARGE);
       break;
       // case 6- see above
     case 7:  // Publish sphere based on value between 0-100
@@ -1199,6 +1166,28 @@ void OmplVisualTools::vizEdgeCallback(const ompl::base::State* stateA, const omp
               << " percent: " << percent << " radius: " << radius << std::endl;
 
   publishEdge(stateA, stateB, getColorScale(percent), radius);
+}
+
+void OmplVisualTools::vizPathCallback(const ompl::base::PathPtr path, std::size_t type)
+{
+  batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
+
+  // Convert
+  og::PathGeometric &geometric_path = static_cast<og::PathGeometric &>(*path);
+
+  switch (type)
+  {
+    case 1:  // Basic black line with vertiices
+      publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
+      publishSpheres(geometric_path, rvt::BLACK, rvt::SMALL);
+      break;
+    case 2:  // Basic black line with vertiices
+      publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
+      publishSpheres(geometric_path, rvt::GREEN, rvt::SMALL);
+      break;
+    default:
+      ROS_ERROR_STREAM_NAMED(name_, "Invalid path type value");
+  }
 }
 
 }  // end namespace

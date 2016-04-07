@@ -160,7 +160,7 @@ rosrun ompl_visual_tools rrt_demo cost_map.ppm
 The image must be in the PPM "Netpbm color image" format. To convert a jpg, png or any other image into this format on Linux simply use the "convert" command, as shown in the following example:
 
 ```
-sudo apt-get install convert
+sudo apt-get install imagemagick
 convert cost_map.png cost_map.ppm
 ```
 

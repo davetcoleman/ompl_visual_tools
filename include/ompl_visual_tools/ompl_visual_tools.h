@@ -367,8 +367,13 @@ public:
    */
   void vizEdgeCallback(const ompl::base::State* stateA, const ompl::base::State* stateB, double value);
 
-  // Deprecated
-  void vizCallback(ompl::base::Planner* planner);
+  /**
+   * \brief Publish a full path of multiple points and edges
+   * \param path
+   * \param type - the style to display the line as
+   * \return true on success
+   */
+  void vizPathCallback(const ompl::base::PathPtr path, std::size_t type);
 
   /**
    * \brief Helper to set an OMPL's planner to use the visualizer callback
@@ -385,6 +390,10 @@ public:
   ompl::base::VizEdgeCallback getVizEdgeCallback()
   {
     return boost::bind(&OmplVisualTools::vizEdgeCallback, this, _1, _2, _3);
+  }
+  ompl::base::VizPathCallback getVizPathCallback()
+  {
+    return boost::bind(&OmplVisualTools::vizPathCallback, this, _1, _2);
   }
 
 private:
