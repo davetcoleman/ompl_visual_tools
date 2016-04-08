@@ -1133,6 +1133,12 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
         publishSphere(convertPointToPose(point), getColorScale(percent), scale);
       }
       break;
+    case 8: // Large red sphere
+      publishSphere(point, rvt::RED, rvt::LARGE);
+      break;
+    case 9: // translucent small ball
+      publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
+      break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "Invalid state type value");
   }
