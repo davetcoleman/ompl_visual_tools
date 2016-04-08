@@ -46,7 +46,7 @@
 
 // OMPL
 #include <ompl/base/SpaceInformation.h>
-#include <ompl/base/Planner.h>
+#include <ompl/tools/bolt/Visualizer.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/base/ScopedState.h>
 
@@ -352,20 +352,29 @@ public:
     max_state_radius_ = max_state_radius;
   }
 
+  /** \brief Print to console a state */
+  void printState(ompl::base::State *state)
+  {
+    ob::RealVectorStateSpace::StateType *real_state = static_cast<ob::RealVectorStateSpace::StateType *>(state);
+    std::cout << "   " << real_state->values[0] << std::endl;
+    std::cout << "   " << real_state->values[1] << std::endl;
+    std::cout << "   " << real_state->values[2] << std::endl;
+  }
+
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during
    * search
    * \param pointer to the planner, to be used for getPlannerData()
    */
-  void vizTriggerCallback();
-  void vizStateCallback(const ompl::base::State* state, std::size_t type, double extra_data = 0);
+  void vizTrigger();
+  void vizState(const ompl::base::State* state, std::size_t type, double extra_data = 0);
   void vizState2DCallback(const Eigen::Vector3d& point, std::size_t type, double extra_data = 0);
   /**
    * \brief Publish a line from state A to state B
    * \param value how red->green the line should be, where [0,1] 0 is red
    * \return true on success
    */
-  void vizEdgeCallback(const ompl::base::State* stateA, const ompl::base::State* stateB, double value);
+  void vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double value);
 
   /**
    * \brief Publish a full path of multiple points and edges
@@ -373,27 +382,27 @@ public:
    * \param type - the style to display the line as
    * \return true on success
    */
-  void vizPathCallback(const ompl::base::PathPtr path, std::size_t type);
+  void vizPath(const ompl::base::PathPtr path, std::size_t type);
 
   /**
    * \brief Helper to set an OMPL's planner to use the visualizer callback
    * \return a callback function
    */
-  ompl::base::VizTriggerCallback getVizTriggerCallback()
+  ompl::base::VizTrigger getVizTriggerCallback()
   {
-    return boost::bind(&OmplVisualTools::vizTriggerCallback, this);
+    return boost::bind(&OmplVisualTools::vizTrigger, this);
   }
-  ompl::base::VizStateCallback getVizStateCallback()
+  ompl::base::VizState getVizStateCallback()
   {
-    return boost::bind(&OmplVisualTools::vizStateCallback, this, _1, _2, _3);
+    return boost::bind(&OmplVisualTools::vizState, this, _1, _2, _3);
   }
-  ompl::base::VizEdgeCallback getVizEdgeCallback()
+  ompl::base::VizEdge getVizEdgeCallback()
   {
-    return boost::bind(&OmplVisualTools::vizEdgeCallback, this, _1, _2, _3);
+    return boost::bind(&OmplVisualTools::vizEdge, this, _1, _2, _3);
   }
-  ompl::base::VizPathCallback getVizPathCallback()
+  ompl::base::VizPath getVizPathCallback()
   {
-    return boost::bind(&OmplVisualTools::vizPathCallback, this, _1, _2);
+    return boost::bind(&OmplVisualTools::vizPath, this, _1, _2);
   }
 
 private:

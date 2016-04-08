@@ -1030,12 +1030,12 @@ bool OmplVisualTools::convertPath(const og::PathGeometric& path,
   }
 }
 
-void OmplVisualTools::vizTriggerCallback()
+void OmplVisualTools::vizTrigger()
 {
   triggerBatchPublish();
 }
 
-void OmplVisualTools::vizStateCallback(const ompl::base::State* state, std::size_t type, double extra_data)
+void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type, double extra_data)
 {
   // Error check
   if (!checkSpaceInformation())
@@ -1144,7 +1144,7 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
   }
 }
 
-void OmplVisualTools::vizEdgeCallback(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
+void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
@@ -1174,7 +1174,7 @@ void OmplVisualTools::vizEdgeCallback(const ompl::base::State* stateA, const omp
   publishEdge(stateA, stateB, getColorScale(percent), radius);
 }
 
-void OmplVisualTools::vizPathCallback(const ompl::base::PathPtr path, std::size_t type)
+void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
