@@ -353,13 +353,7 @@ public:
   }
 
   /** \brief Print to console a state */
-  void printState(ompl::base::State *state)
-  {
-    ob::RealVectorStateSpace::StateType *real_state = static_cast<ob::RealVectorStateSpace::StateType *>(state);
-    std::cout << "   " << real_state->values[0] << std::endl;
-    std::cout << "   " << real_state->values[1] << std::endl;
-    std::cout << "   " << real_state->values[2] << std::endl;
-  }
+  void printState(ompl::base::State *state);
 
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during
@@ -368,7 +362,7 @@ public:
    */
   void vizTrigger();
   void vizState(const ompl::base::State* state, std::size_t type, double extra_data = 0);
-  void vizState2DCallback(const Eigen::Vector3d& point, std::size_t type, double extra_data = 0);
+  void vizState2D(const Eigen::Vector3d& point, std::size_t type, double extra_data = 0);
   /**
    * \brief Publish a line from state A to state B
    * \param value how red->green the line should be, where [0,1] 0 is red

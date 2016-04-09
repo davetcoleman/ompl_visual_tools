@@ -1030,9 +1030,22 @@ bool OmplVisualTools::convertPath(const og::PathGeometric& path,
   }
 }
 
+void OmplVisualTools::printState(ompl::base::State *state)
+{
+  ob::RealVectorStateSpace::StateType *real_state = static_cast<ob::RealVectorStateSpace::StateType *>(state);
+  std::cout << "   " << real_state->values[0] << ", " << real_state->values[1] << ", " << real_state->values[2] << std::endl;
+}
+
 void OmplVisualTools::vizTrigger()
 {
   triggerBatchPublish();
+
+  // Kill OMPL
+  if (!ros::ok())
+  {
+    ROS_ERROR_STREAM_NAMED(name_, "Shutting down process by request of ros::ok()");
+    exit(0);
+  }
 }
 
 void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type, double extra_data)
@@ -1051,7 +1064,7 @@ void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type,
   // Determine which StateSpace to work in
   if (si_->getStateSpace()->getDimension() <= 3)
   {
-    vizState2DCallback(stateToPoint(state), type, extra_data);
+    vizState2D(stateToPoint(state), type, extra_data);
   }
   else
   {
@@ -1097,32 +1110,31 @@ void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type,
   }
 }
 
-void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size_t type, double extra_data)
+void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type, double extra_data)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
   switch (type)
   {
-    case 1:  // Candidate COEVERAGE node to be added
+    case 1:  // Small green
       publishSphere(point, rvt::GREEN, rvt::SMALL);
       break;
-    case 6:  // Simple
-    case 2:  // Candidate CONNECTIVITY node to be added
+    case 6:
+    case 2:  // Small blue
       publishSphere(point, rvt::BLUE, rvt::SMALL);
       break;
-    case 3:  // sampled nearby node
+    case 3:  // Small red
       publishSphere(point, rvt::RED, rvt::SMALL);
       break;
-    case 4:  // Candidate node has already been added
+    case 4:  // Medium purple, translucent outline
       publishSphere(point, rvt::PURPLE, rvt::REGULAR);
-      // Outline with circle
       publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data * 2);
       break;
-    case 5:  // Large node
+    case 5:  // Large black
       publishSphere(point, rvt::BLACK, rvt::LARGE);
       break;
       // case 6- see above
-    case 7:  // Publish sphere based on value between 0-100
+    case 7:  // Display sphere based on value between 0-100
       {
         const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
         const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
@@ -1133,10 +1145,10 @@ void OmplVisualTools::vizState2DCallback(const Eigen::Vector3d& point, std::size
         publishSphere(convertPointToPose(point), getColorScale(percent), scale);
       }
       break;
-    case 8: // Large red sphere
+    case 8: // Large red
       publishSphere(point, rvt::RED, rvt::LARGE);
       break;
-    case 9: // translucent small ball
+    case 9: // Small translucent
       publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
       break;
     default:
