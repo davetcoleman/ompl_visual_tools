@@ -1043,7 +1043,10 @@ void OmplVisualTools::vizTrigger()
   // Kill OMPL
   if (!ros::ok())
   {
-    ROS_ERROR_STREAM_NAMED(name_, "Shutting down process by request of ros::ok()");
+    std::cout << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << "Shutting down process by request of ros::ok()" << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
     exit(0);
   }
 }
