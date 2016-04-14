@@ -362,6 +362,7 @@ public:
    */
   void vizTrigger();
   void vizState(const ompl::base::State* state, std::size_t type, double extra_data = 0);
+  void vizStateRobot(const ompl::base::State* state, std::size_t type, double extra_data);
   void vizState2D(const Eigen::Vector3d& point, std::size_t type, double extra_data = 0);
   /**
    * \brief Publish a line from state A to state B

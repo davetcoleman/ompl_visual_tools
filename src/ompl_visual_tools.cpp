@@ -1066,11 +1066,13 @@ void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type,
 
   // Determine which StateSpace to work in
   if (si_->getStateSpace()->getDimension() <= 3)
-  {
     vizState2D(stateToPoint(state), type, extra_data);
-  }
   else
-  {
+    vizStateRobot(state, type, extra_data);
+}
+
+void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t type, double extra_data)
+{
     // Make sure a robot state is available
     loadSharedRobotState();
 
@@ -1107,10 +1109,18 @@ void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type,
           publishSphere(pose, rvt::RED, rvt::REGULAR);
         }
         break;
+      case 7:
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::ORANGE);
+        break;
+      case 8:
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::RED);
+        break;
+      case 9:
+        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::TRANSLUCENT);
+        break;
       default:
-        ROS_ERROR_STREAM_NAMED(name_, "Invalid state type value");
-    }
-  }
+        ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
+    } // end switch
 }
 
 void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type, double extra_data)
@@ -1155,7 +1165,7 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type,
       publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
       break;
     default:
-      ROS_ERROR_STREAM_NAMED(name_, "Invalid state type value");
+      ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state type value");
   }
 }
 
