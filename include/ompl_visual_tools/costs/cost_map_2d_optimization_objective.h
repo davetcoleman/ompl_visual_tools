@@ -241,7 +241,7 @@ protected:
 
 };
 
-typedef boost::shared_ptr< CostMap2DOptimizationObjective > CostMap2DOptimizationObjectivePtr;
+typedef std::shared_ptr< CostMap2DOptimizationObjective > CostMap2DOptimizationObjectivePtr;
 }
 }
 

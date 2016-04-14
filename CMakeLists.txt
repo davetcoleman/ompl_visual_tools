@@ -30,6 +30,7 @@ catkin_package(
     roscpp
     roslib
     visualization_msgs
+    ompl_bolt
   INCLUDE_DIRS
     include
   LIBRARIES

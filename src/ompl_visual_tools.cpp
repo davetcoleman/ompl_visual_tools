@@ -1101,7 +1101,7 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
       case 5:  // Large node
         MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::BLACK);
         break;
-      case 6:  // Only show red sphere, no robot state
+      case 6:  // red arrow
         {
           // We must use the root_robot_state here so that the virtual_joint isn't affected
           mb_state_space->copyToRobotState(*root_robot_state_, state);
