@@ -460,7 +460,13 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rvt::c
 bool OmplVisualTools::publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA& color,
                                   const double radius)
 {
-  return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius);
+  //return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius);
+
+  // geometry_msgs::Vector3 scale;
+  // scale.x = radius;
+  // scale.y = radius;
+  // scale.z = radius;
+  return RvizVisualTools::publishLine(stateToPoint(stateA), stateToPoint(stateB), color, rvt::SMALL);
 }
 
 bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rvt::colors& color,
@@ -875,11 +881,11 @@ Eigen::Vector3d OmplVisualTools::stateToPointRobot(const ob::State* state)
     boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert to robot state
-  mb_state_space->copyToRobotState(*shared_robot_state_, state);
+  mb_state_space->copyToRobotState(*root_robot_state_, state);
 
   // Get pose
   // TODO(davetcoleman): do not hard code
-  Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
+  Eigen::Affine3d pose = root_robot_state_->getGlobalLinkTransform("right_gripper_target");
   return pose.translation();
 }
 
@@ -1104,9 +1110,13 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
         break;
       case 6:  // Only show red sphere, no robot state
         {
+          // We must use the root_robot_state here so that the virtual_joint isn't affected
+          mb_state_space->copyToRobotState(*root_robot_state_, state);
+
           // Publish sphere
-          Eigen::Affine3d pose = shared_robot_state_->getGlobalLinkTransform("right_gripper_target");
-          publishSphere(pose, rvt::RED, rvt::REGULAR);
+          Eigen::Affine3d pose = root_robot_state_->getGlobalLinkTransform("right_gripper_target");
+          //publishSphere(pose, rvt::RED, rvt::REGULAR);
+          publishArrow(pose, rvt::RED, rvt::SMALL, 0.005 /*length*/);
         }
         break;
       case 7:
