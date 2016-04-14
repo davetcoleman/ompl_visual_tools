@@ -1,4 +1,4 @@
-<package>
+<package format="2">
   <name>ompl_visual_tools</name>
   <version>2.3.2</version>
   <description>
@@ -16,23 +16,15 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>graph_msgs</build_depend>
-  <build_depend>moveit_visual_tools</build_depend>
-  <build_depend>moveit_ompl</build_depend>
-  <build_depend>moveit_core</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>roslib</build_depend>
-  <build_depend>visualization_msgs</build_depend>
-  <build_depend version_gte="0.14.0">ompl</build_depend>
-
-  <run_depend>graph_msgs</run_depend>
-  <run_depend>moveit_visual_tools</run_depend>
-  <run_depend>moveit_ompl</run_depend>
-  <run_depend>moveit_core</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>roslib</run_depend>
-  <run_depend>visualization_msgs</run_depend>
-  <run_depend version_gte="0.14.0">ompl</run_depend>
+  <depend>graph_msgs</depend>
+  <depend>moveit_visual_tools</depend>
+  <depend>moveit_ompl</depend>
+  <depend>moveit_core</depend>
+  <depend>roscpp</depend>
+  <depend>roslib</depend>
+  <depend>visualization_msgs</depend>
+  <depend version_gte="0.14.0">ompl</depend>
+  <depend>ompl_bolt</depend>
 
   <export>
   </export>

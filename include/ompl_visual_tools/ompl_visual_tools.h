@@ -64,14 +64,14 @@ namespace og = ompl::geometric;
 namespace bnu = boost::numeric::ublas;
 
 // Forward Declartions
-namespace ompl
-{
-namespace base
-{
-class PlannerData;
-typedef boost::shared_ptr<PlannerData> PlannerDataPtr;
-}
-}
+// namespace ompl
+// {
+// namespace base
+// {
+// class PlannerData;
+// typedef boost::shared_ptr<PlannerData> PlannerDataPtr;
+// }
+// }
 
 namespace ompl_interface
 {
@@ -412,18 +412,18 @@ private:
   Eigen::Vector3d temp_eigen_point_;
 
   // Mode that disables showing 3D in Rviz
-  bool disable_3d_;
+  bool disable_3d_ = false;
 
   // Set bounds on an edge's cost/weight/value for visualization purposes
-  double max_edge_cost_;
-  double min_edge_cost_;
-  bool invert_edge_cost_;
-  double max_edge_radius_;
-  double min_edge_radius_;
+  double max_edge_cost_ = 100.0;
+  double min_edge_cost_ = 0.0;
+  bool invert_edge_cost_ = false;
+  double max_edge_radius_ = 0.5;
+  double min_edge_radius_ = 0.1;
 
   // Set bounds on an state's cost/weight/value for visualization purposes
-  double max_state_radius_;
-  double min_state_radius_;
+  double max_state_radius_ = 0.1;
+  double min_state_radius_ = 0.5;
 
 };  // end class
 

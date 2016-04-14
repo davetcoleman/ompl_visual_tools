@@ -75,14 +75,6 @@ namespace ompl_visual_tools
 OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string& marker_topic,
                                  robot_model::RobotModelConstPtr robot_model)
   : MoveItVisualTools(base_link, marker_topic, robot_model)
-  , disable_3d_(false)
-  , max_edge_cost_(100.0)
-  , min_edge_cost_(0.0)
-  , min_edge_radius_(0.1)
-  , max_edge_radius_(0.5)
-  , min_state_radius_(0.1)
-  , max_state_radius_(0.5)
-  , invert_edge_cost_(false)
 {
 }
 
@@ -517,13 +509,13 @@ bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::c
   scale_vector.x = scale;
   scale_vector.y = scale;
   scale_vector.z = scale;
-  publishSpheres(path, color, scale_vector, ns);
+  return publishSpheres(path, color, scale_vector, ns);
 }
 
 bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
                                      const rvt::scales scale, const std::string& ns)
 {
-  publishSpheres(path, color, getScale(scale, false, 0.25), ns);
+  return publishSpheres(path, color, getScale(scale, false, 0.25), ns);
 }
 
 bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
@@ -611,13 +603,13 @@ bool OmplVisualTools::publishRobotState(const ompl::base::State* state)
   loadSharedRobotState();
 
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert to robot state
   mb_state_space->copyToRobotState(*shared_robot_state_, state);
 
   // Show the robot visualized in Rviz
-  MoveItVisualTools::publishRobotState(shared_robot_state_);
+  return MoveItVisualTools::publishRobotState(shared_robot_state_);
 }
 
 bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
@@ -638,7 +630,7 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
   robot_trajectory::RobotTrajectoryPtr robot_trajectory;
 
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Optionally save the trajectory
   if (show_trajectory_animated)
@@ -878,7 +870,7 @@ Eigen::Vector3d OmplVisualTools::stateToPointRobot(const ob::State* state)
   loadSharedRobotState();
 
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert to robot state
   mb_state_space->copyToRobotState(*root_robot_state_, state);
@@ -978,7 +970,7 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
 
   // Load information about the robot's geometry
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Rows correspond to robot states
   vertex_tip_points.clear();
@@ -1022,7 +1014,7 @@ bool OmplVisualTools::convertPath(const og::PathGeometric& path,
 
   // Get correct type of space
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert solution to MoveIt! format, reversing the solution
   //for (std::size_t i = path.getStateCount(); i > 0; --i)
@@ -1034,6 +1026,7 @@ bool OmplVisualTools::convertPath(const og::PathGeometric& path,
     // Add to trajectory
     traj->addSuffixWayPoint(state, speed);
   }
+  return true;
 }
 
 void OmplVisualTools::printState(ompl::base::State *state)
@@ -1083,7 +1076,7 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
     loadSharedRobotState();
 
     moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-      boost::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
     // Convert to robot state
     mb_state_space->copyToRobotState(*shared_robot_state_, state);
