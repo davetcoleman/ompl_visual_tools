@@ -453,12 +453,7 @@ bool OmplVisualTools::publishEdge(const ob::State* stateA, const ob::State* stat
                                   const double radius)
 {
   //return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius);
-
-  // geometry_msgs::Vector3 scale;
-  // scale.x = radius;
-  // scale.y = radius;
-  // scale.z = radius;
-  return RvizVisualTools::publishLine(stateToPoint(stateA), stateToPoint(stateB), color, rvt::SMALL);
+  return RvizVisualTools::publishLine(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
 }
 
 bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rvt::colors& color,
@@ -1079,50 +1074,56 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
       std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
     // Convert to robot state
-    mb_state_space->copyToRobotState(*shared_robot_state_, state);
+    //mb_state_space->copyToRobotState(*shared_robot_state_, state);
+    //MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::GREEN);
 
     // Show the joint limits in the console
     // MoveItVisualTools::showJointLimits(shared_robot_state_);
 
+    // We must use the root_robot_state here so that the virtual_joint isn't affected
+    mb_state_space->copyToRobotState(*root_robot_state_, state);
+    Eigen::Affine3d pose = root_robot_state_->getGlobalLinkTransform("right_gripper_target");
+
     switch (type)
     {
-      case 1:  // Candidate COVERAGE node to be added
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::GREEN);
-        break;
-      case 2:  // Candidate CONNECTIVITY node to be added
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::BLUE);
-        break;
-      case 3:  // sampled nearby node / INTERFACE
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::RED);
-        break;
-      case 4:  // Candidate node has already been added / QUALITY
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::PURPLE);
-        break;
-      case 5:  // Large node
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::BLACK);
-        break;
-      case 6:  // red arrow
-        {
-          // We must use the root_robot_state here so that the virtual_joint isn't affected
-          mb_state_space->copyToRobotState(*root_robot_state_, state);
-
-          // Publish sphere
-          Eigen::Affine3d pose = root_robot_state_->getGlobalLinkTransform("right_gripper_target");
-          //publishSphere(pose, rvt::RED, rvt::REGULAR);
-          publishArrow(pose, rvt::RED, rvt::SMALL, 0.005 /*length*/);
-        }
-        break;
-      case 7:
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::ORANGE);
-        break;
-      case 8:
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::RED);
-        break;
-      case 9:
-        MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::TRANSLUCENT);
-        break;
-      default:
-        ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
+    case 1:  // Small green
+      publishSphere(pose, rvt::GREEN, rvt::SMALL);
+      break;
+    case 2:  // Small blue
+      publishSphere(pose, rvt::BLUE, rvt::SMALL);
+      break;
+    case 3:  // Small red
+      publishSphere(pose, rvt::RED, rvt::SMALL);
+      break;
+    case 4:  // Medium purple, translucent outline
+      publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
+      //publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, extra_data * 2);
+      break;
+    case 5:  // Large black
+      publishSphere(pose, rvt::BLACK, rvt::LARGE);
+      break;
+    case 6:  // Small blue TODO change this
+      publishSphere(pose, rvt::BLUE, rvt::SMALL);
+      break;
+    case 7:  // Display sphere based on value between 0-100
+      {
+        const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+        const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+        geometry_msgs::Vector3 scale;
+        scale.x = radius;
+        scale.y = radius;
+        scale.z = radius;
+        publishSphere(pose, getColorScale(percent), scale);
+      }
+      break;
+    case 8: // Large red
+      publishSphere(pose, rvt::RED, rvt::LARGE);
+      break;
+    case 9: // Small translucent
+      publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, rvt::REGULAR); //extra_data);
+      break;
+    default:
+      ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
     } // end switch
 }
 
@@ -1135,7 +1136,6 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type,
     case 1:  // Small green
       publishSphere(point, rvt::GREEN, rvt::SMALL);
       break;
-    case 6:
     case 2:  // Small blue
       publishSphere(point, rvt::BLUE, rvt::SMALL);
       break;
@@ -1149,7 +1149,9 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type,
     case 5:  // Large black
       publishSphere(point, rvt::BLACK, rvt::LARGE);
       break;
-      // case 6- see above
+    case 6: // Small blue TODO change this
+      publishSphere(point, rvt::BLUE, rvt::SMALL);
+      break;
     case 7:  // Display sphere based on value between 0-100
       {
         const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
