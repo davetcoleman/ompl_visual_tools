@@ -228,12 +228,25 @@ public:
    * kinematics
    * \return true on success
    */
+  RVIZ_VISUAL_TOOLS_DEPRECATED
   bool publishRobotPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* jmg,
-                        const std::vector<const robot_model::LinkModel*>& tips, bool show_trajectory_animated);
+                        const std::vector<const robot_model::LinkModel*>& tips, bool show_trajectory_animated)
+  {
+    return publishTrajectoryPath(path, jmg, tips, show_trajectory_animated);
+  }
 
-  bool publishRobotPath(const og::PathGeometric& path,
-                        const robot_model::JointModelGroup* jmg,
-                        const bool wait_for_trajetory);
+  RVIZ_VISUAL_TOOLS_DEPRECATED
+  bool publishRobotPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
+                        const bool blocking)
+  {
+    return publishTrajectoryPath(path, jmg, blocking);
+  }
+
+  bool publishTrajectoryPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* jmg,
+                             const std::vector<const robot_model::LinkModel*>& tips, bool show_trajectory_animated);
+
+  bool publishTrajectoryPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
+                             const bool blocking);
 
   /**
    * \brief Display resulting graph from a planner, in the form of a planner_data object
@@ -258,8 +271,8 @@ public:
   bool publishPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color, const double thickness = 0.4,
                    const std::string& ns = "result_path");
 
-  bool publish2DPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color, const double thickness = 0.4,
-                   const std::string& ns = "result_path");
+  bool publish2DPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color,
+                     const double thickness = 0.4, const std::string& ns = "result_path");
 
   /**
    * \brief Helper Function: gets the x,y coordinates for a given vertex id
@@ -288,8 +301,8 @@ public:
   bool publishState(const ob::State* state, const rviz_visual_tools::colors& color,
                     const rviz_visual_tools::scales scale = rviz_visual_tools::REGULAR,
                     const std::string& ns = "state_sphere");
-  bool publishState(const ob::State* state, const rviz_visual_tools::colors& color,
-                    const double scale = 0.1, const std::string& ns = "state_sphere");
+  bool publishState(const ob::State* state, const rviz_visual_tools::colors& color, const double scale = 0.1,
+                    const std::string& ns = "state_sphere");
   bool publishState(const ob::ScopedState<> state, const rviz_visual_tools::colors& color,
                     const rviz_visual_tools::scales scale = rviz_visual_tools::REGULAR,
                     const std::string& ns = "state_sphere");
@@ -325,8 +338,7 @@ public:
                                      std::vector<std::vector<geometry_msgs::Point> >& vertex_tip_points);
 
   /** \brief Convert path formats */
-  bool convertPath(const og::PathGeometric& path,
-                   const robot_model::JointModelGroup* jmg,
+  bool convertPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
                    robot_trajectory::RobotTrajectoryPtr& traj, double speed = 0.1);
 
   /**
@@ -353,7 +365,7 @@ public:
   }
 
   /** \brief Print to console a state */
-  void printState(ompl::base::State *state);
+  void printState(ompl::base::State* state);
 
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during
@@ -400,12 +412,27 @@ public:
     return boost::bind(&OmplVisualTools::vizPath, this, _1, _2);
   }
 
+  /** \brief Getter for JointModelGroup */
+  const robot_model::JointModelGroup* getJointModelGroup() const
+  {
+    return jmg_;
+  }
+
+  /** \brief Setter for JointModelGroup */
+  void setJointModelGroup(const robot_model::JointModelGroup* jmg)
+  {
+    jmg_ = jmg;
+  }
+
 private:
   // Keep a pointer to an optional cost map
   intMatrixPtr cost_;
 
   // Remember what space we are working in
   ompl::base::SpaceInformationPtr si_;
+
+  // Remember what joint model group we care about so that calls from OMPL don't have to
+  const robot_model::JointModelGroup* jmg_;
 
   // Cached Point object to reduce memory loading
   geometry_msgs::Point temp_point_;

@@ -378,20 +378,18 @@ bool OmplVisualTools::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, c
 {
   for (std::size_t i = 0; i < planner_data->numStartVertices(); ++i)
   {
-    publishSphere(convertPoint(stateToPoint(planner_data->getStartVertex(i).getState())), rvt::GREEN,
-                  rvt::REGULAR, ns);
+    publishSphere(convertPoint(stateToPoint(planner_data->getStartVertex(i).getState())), rvt::GREEN, rvt::REGULAR, ns);
   }
   for (std::size_t i = 0; i < planner_data->numGoalVertices(); ++i)
   {
-    publishSphere(convertPoint(stateToPoint(planner_data->getGoalVertex(i).getState())), rvt::RED,
-                  rvt::REGULAR, ns);
+    publishSphere(convertPoint(stateToPoint(planner_data->getGoalVertex(i).getState())), rvt::RED, rvt::REGULAR, ns);
   }
 
   return true;
 }
 
-bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rvt::colors& color,
-                                   const double thickness, const std::string& ns)
+bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rvt::colors& color, const double thickness,
+                                   const std::string& ns)
 {
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
@@ -452,12 +450,12 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rvt::c
 bool OmplVisualTools::publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA& color,
                                   const double radius)
 {
-  //return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius);
+  // return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius);
   return RvizVisualTools::publishLine(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
 }
 
-bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rvt::colors& color,
-                                       const rvt::scales scale, const std::string& ns)
+bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rvt::colors& color, const rvt::scales scale,
+                                       const std::string& ns)
 {
   // Create a small scale for font size
   geometry_msgs::Vector3 scale_msg;
@@ -507,8 +505,8 @@ bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::c
   return publishSpheres(path, color, scale_vector, ns);
 }
 
-bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
-                                     const rvt::scales scale, const std::string& ns)
+bool OmplVisualTools::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, const rvt::scales scale,
+                                     const std::string& ns)
 {
   return publishSpheres(path, color, getScale(scale, false, 0.25), ns);
 }
@@ -598,7 +596,7 @@ bool OmplVisualTools::publishRobotState(const ompl::base::State* state)
   loadSharedRobotState();
 
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert to robot state
   mb_state_space->copyToRobotState(*shared_robot_state_, state);
@@ -607,10 +605,9 @@ bool OmplVisualTools::publishRobotState(const ompl::base::State* state)
   return MoveItVisualTools::publishRobotState(shared_robot_state_);
 }
 
-bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
-                                       robot_model::JointModelGroup* jmg,
-                                       const std::vector<const robot_model::LinkModel*>& tips,
-                                       bool show_trajectory_animated)
+bool OmplVisualTools::publishTrajectoryPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* jmg,
+                                            const std::vector<const robot_model::LinkModel*>& tips,
+                                            bool show_trajectory_animated)
 {
   // Error check
   if (!checkSpaceInformation())
@@ -625,7 +622,7 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
   robot_trajectory::RobotTrajectoryPtr robot_trajectory;
 
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Optionally save the trajectory
   if (show_trajectory_animated)
@@ -685,15 +682,14 @@ bool OmplVisualTools::publishRobotPath(const ompl::base::PlannerDataPtr& path,
   // Debugging - Convert to trajectory
   if (show_trajectory_animated)
   {
-    publishTrajectoryPath(*robot_trajectory, true);
+    MoveItVisualTools::publishTrajectoryPath(*robot_trajectory, true);
   }
 
   return true;
 }
 
-bool OmplVisualTools::publishRobotPath(const og::PathGeometric& path,
-                                       const robot_model::JointModelGroup* jmg,
-                                       const bool wait_for_trajetory)
+bool OmplVisualTools::publishTrajectoryPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
+                                            const bool blocking)
 {
   // Convert to MoveIt! format
   robot_trajectory::RobotTrajectoryPtr traj;
@@ -702,7 +698,7 @@ bool OmplVisualTools::publishRobotPath(const og::PathGeometric& path,
     return false;
   }
 
-  return MoveItVisualTools::publishTrajectoryPath(*traj, wait_for_trajetory);
+  return MoveItVisualTools::publishTrajectoryPath(*traj, blocking);
 }
 
 bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
@@ -749,7 +745,7 @@ bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
   {
     const rvt::colors color = getRandColor();
-    //std::cout << "Color is  " << color << std::endl;
+    // std::cout << "Color is  " << color << std::endl;
     MoveItVisualTools::publishGraph(graphs[tip_id], color, 0.005);
     ros::Duration(0.1).sleep();
 
@@ -775,14 +771,14 @@ bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const 
 }
 
 // TODO: deprecate
-bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rvt::colors& color,
-                                  const double thickness, const std::string& ns)
+bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,
+                                  const std::string& ns)
 {
   return publish2DPath(path, color, thickness, ns);
 }
 
-bool OmplVisualTools::publish2DPath(const og::PathGeometric& path, const rvt::colors& color,
-                                    const double thickness, const std::string& ns)
+bool OmplVisualTools::publish2DPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,
+                                    const std::string& ns)
 {
   // Error check
   if (path.getStateCount() <= 0)
@@ -850,7 +846,7 @@ Eigen::Vector3d OmplVisualTools::stateToPoint2D(const ob::State* state)
 {
   // Convert to RealVectorStateSpace
   const ob::RealVectorStateSpace::StateType* real_state =
-    static_cast<const ob::RealVectorStateSpace::StateType*>(state);
+      static_cast<const ob::RealVectorStateSpace::StateType*>(state);
 
   // Create point
   temp_eigen_point_.x() = real_state->values[0];
@@ -865,7 +861,7 @@ Eigen::Vector3d OmplVisualTools::stateToPointRobot(const ob::State* state)
   loadSharedRobotState();
 
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert to robot state
   mb_state_space->copyToRobotState(*root_robot_state_, state);
@@ -881,20 +877,20 @@ int OmplVisualTools::natRound(double x)
   return static_cast<int>(floor(x + 0.5f));
 }
 
-bool OmplVisualTools::publishState(const ob::State* state, const rvt::colors& color,
-                                   const rvt::scales scale, const std::string& ns)
+bool OmplVisualTools::publishState(const ob::State* state, const rvt::colors& color, const rvt::scales scale,
+                                   const std::string& ns)
 {
   return publishSphere(stateToPoint(state), color, scale, ns);
 }
 
-bool OmplVisualTools::publishState(const ob::State* state, const rvt::colors& color,
-                                   const double scale, const std::string& ns)
+bool OmplVisualTools::publishState(const ob::State* state, const rvt::colors& color, const double scale,
+                                   const std::string& ns)
 {
   return publishSphere(stateToPoint(state), color, scale, ns);
 }
 
-bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rvt::colors& color,
-                                   const rvt::scales scale, const std::string& ns)
+bool OmplVisualTools::publishState(const ob::ScopedState<> state, const rvt::colors& color, const rvt::scales scale,
+                                   const std::string& ns)
 {
   return publishSphere(stateToPoint(state), color, scale, ns);
 }
@@ -922,8 +918,8 @@ bool OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, c
   return publishSphere(temp_point_, rvt::TRANSLUCENT, rvt::REGULAR, "sample_region");
 }
 
-bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::string& text,
-                                  const rvt::colors& color, bool static_id)
+bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::string& text, const rvt::colors& color,
+                                  bool static_id)
 {
   geometry_msgs::Pose text_pose;
   text_pose.position = point;
@@ -931,8 +927,8 @@ bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::
   return publishText(text_pose, text, color, static_id);
 }
 
-bool OmplVisualTools::publishText(const geometry_msgs::Pose& pose, const std::string& text,
-                                  const rvt::colors& color, bool static_id)
+bool OmplVisualTools::publishText(const geometry_msgs::Pose& pose, const std::string& text, const rvt::colors& color,
+                                  bool static_id)
 {
   geometry_msgs::Vector3 scale;
   if (cost_)
@@ -965,7 +961,7 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
 
   // Load information about the robot's geometry
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Rows correspond to robot states
   vertex_tip_points.clear();
@@ -992,8 +988,7 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
   return true;
 }
 
-bool OmplVisualTools::convertPath(const og::PathGeometric& path,
-                                  const robot_model::JointModelGroup* jmg,
+bool OmplVisualTools::convertPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
                                   robot_trajectory::RobotTrajectoryPtr& traj, double speed)
 {
   // Error check
@@ -1005,14 +1000,14 @@ bool OmplVisualTools::convertPath(const og::PathGeometric& path,
 
   // New trajectory
   traj.reset(new robot_trajectory::RobotTrajectory(robot_model_, jmg));
-  moveit::core::RobotState state(*shared_robot_state_); // TODO(davetcoleman):do i need to copy this?
+  moveit::core::RobotState state(*shared_robot_state_);  // TODO(davetcoleman):do i need to copy this?
 
   // Get correct type of space
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-    std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
   // Convert solution to MoveIt! format, reversing the solution
-  //for (std::size_t i = path.getStateCount(); i > 0; --i)
+  // for (std::size_t i = path.getStateCount(); i > 0; --i)
   for (std::size_t i = 0; i < path.getStateCount(); ++i)
   {
     // Convert format
@@ -1024,10 +1019,11 @@ bool OmplVisualTools::convertPath(const og::PathGeometric& path,
   return true;
 }
 
-void OmplVisualTools::printState(ompl::base::State *state)
+void OmplVisualTools::printState(ompl::base::State* state)
 {
-  ob::RealVectorStateSpace::StateType *real_state = static_cast<ob::RealVectorStateSpace::StateType *>(state);
-  std::cout << "   " << real_state->values[0] << ", " << real_state->values[1] << ", " << real_state->values[2] << std::endl;
+  ob::RealVectorStateSpace::StateType* real_state = static_cast<ob::RealVectorStateSpace::StateType*>(state);
+  std::cout << "   " << real_state->values[0] << ", " << real_state->values[1] << ", " << real_state->values[2]
+            << std::endl;
 }
 
 void OmplVisualTools::vizTrigger()
@@ -1054,8 +1050,8 @@ void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type,
   // Check for clear all visuals mode
   if (type == 0)
   {
-      deleteAllMarkers();
-      return;
+    deleteAllMarkers();
+    return;
   }
 
   // Determine which StateSpace to work in
@@ -1067,25 +1063,25 @@ void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type,
 
 void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t type, double extra_data)
 {
-    // Make sure a robot state is available
-    loadSharedRobotState();
+  // Make sure a robot state is available
+  loadSharedRobotState();
 
-    moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
+  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
       std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
-    // Convert to robot state
-    //mb_state_space->copyToRobotState(*shared_robot_state_, state);
-    //MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::GREEN);
+  // Convert to robot state
+  // mb_state_space->copyToRobotState(*shared_robot_state_, state);
+  // MoveItVisualTools::publishRobotState(shared_robot_state_, rvt::GREEN);
 
-    // Show the joint limits in the console
-    // MoveItVisualTools::showJointLimits(shared_robot_state_);
+  // Show the joint limits in the console
+  // MoveItVisualTools::showJointLimits(shared_robot_state_);
 
-    // We must use the root_robot_state here so that the virtual_joint isn't affected
-    mb_state_space->copyToRobotState(*root_robot_state_, state);
-    Eigen::Affine3d pose = root_robot_state_->getGlobalLinkTransform("right_gripper_target");
+  // We must use the root_robot_state here so that the virtual_joint isn't affected
+  mb_state_space->copyToRobotState(*root_robot_state_, state);
+  Eigen::Affine3d pose = root_robot_state_->getGlobalLinkTransform("right_gripper_target");
 
-    switch (type)
-    {
+  switch (type)
+  {
     case 1:  // Small green
       publishSphere(pose, rvt::GREEN, rvt::SMALL);
       break;
@@ -1097,7 +1093,7 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
       break;
     case 4:  // Medium purple, translucent outline
       publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
-      //publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, extra_data * 2);
+      // publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, extra_data * 2);
       break;
     case 5:  // Large black
       publishSphere(pose, rvt::BLACK, rvt::LARGE);
@@ -1106,25 +1102,25 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
       publishSphere(pose, rvt::BLUE, rvt::SMALL);
       break;
     case 7:  // Display sphere based on value between 0-100
-      {
-        const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-        const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
-        geometry_msgs::Vector3 scale;
-        scale.x = radius;
-        scale.y = radius;
-        scale.z = radius;
-        publishSphere(pose, getColorScale(percent), scale);
-      }
-      break;
-    case 8: // Large red
+    {
+      const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+      geometry_msgs::Vector3 scale;
+      scale.x = radius;
+      scale.y = radius;
+      scale.z = radius;
+      publishSphere(pose, getColorScale(percent), scale);
+    }
+    break;
+    case 8:  // Large red
       publishSphere(pose, rvt::RED, rvt::LARGE);
       break;
-    case 9: // Small translucent
-      publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, rvt::REGULAR); //extra_data);
+    case 9:  // Small translucent
+      publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, rvt::REGULAR);  // extra_data);
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
-    } // end switch
+  }  // end switch
 }
 
 void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type, double extra_data)
@@ -1149,24 +1145,24 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type,
     case 5:  // Large black
       publishSphere(point, rvt::BLACK, rvt::LARGE);
       break;
-    case 6: // Small blue TODO change this
+    case 6:  // Small blue TODO change this
       publishSphere(point, rvt::BLUE, rvt::SMALL);
       break;
     case 7:  // Display sphere based on value between 0-100
-      {
-        const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-        const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
-        geometry_msgs::Vector3 scale;
-        scale.x = radius;
-        scale.y = radius;
-        scale.z = radius;
-        publishSphere(convertPointToPose(point), getColorScale(percent), scale);
-      }
-      break;
-    case 8: // Large red
+    {
+      const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+      geometry_msgs::Vector3 scale;
+      scale.x = radius;
+      scale.y = radius;
+      scale.z = radius;
+      publishSphere(convertPointToPose(point), getColorScale(percent), scale);
+    }
+    break;
+    case 8:  // Large red
       publishSphere(point, rvt::RED, rvt::LARGE);
       break;
-    case 9: // Small translucent
+    case 9:  // Small translucent
       publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
       break;
     default:
@@ -1194,7 +1190,7 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
     percent = 1 - percent;
   }
 
-  //const double radius = percent / 6.0 + 0.15;
+  // const double radius = percent / 6.0 + 0.15;
   const double radius = (max_edge_radius_ - min_edge_radius_) * percent + min_edge_radius_;
 
   if (false)
@@ -1209,17 +1205,29 @@ void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
   // Convert
-  og::PathGeometric &geometric_path = static_cast<og::PathGeometric &>(*path);
+  og::PathGeometric& geometric_path = static_cast<og::PathGeometric&>(*path);
 
   switch (type)
   {
     case 1:  // Basic black line with vertiices
-      publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
+      // 2D world: publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
+      publishPath(geometric_path, rvt::BLUE, /*thickness*/ 0.01);
       publishSpheres(geometric_path, rvt::BLACK, rvt::SMALL);
       break;
-    case 2:  // Basic black line with vertiices
-      publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
+    case 2:  // Basic green line with vertiices
+      // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
+      publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.01);
       publishSpheres(geometric_path, rvt::GREEN, rvt::SMALL);
+      break;
+    case 3:  // Playback motion for real robot
+      // Check that jmg_ was set
+      if (!jmg_)
+        ROS_ERROR_STREAM_NAMED(name_, "Joint model group has not been set");
+
+      std::cout << "publishing trajectory path " << std::endl;
+      // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
+      publishTrajectoryPath(geometric_path, jmg_, false /*wait_for_trajectory*/);
+      //publishSpheres(geometric_path, rvt::GREEN, rvt::SMALL);
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "Invalid path type value");
