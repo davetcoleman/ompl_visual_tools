@@ -424,6 +424,9 @@ public:
     jmg_ = jmg;
   }
 
+  /** \brief Convert a number to an rviz_visual_tools color enum */
+  rviz_visual_tools::colors intToColor(std::size_t color);
+
 private:
   // Keep a pointer to an optional cost map
   intMatrixPtr cost_;
