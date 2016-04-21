@@ -23,7 +23,7 @@
   <depend>roscpp</depend>
   <depend>roslib</depend>
   <depend>visualization_msgs</depend>
-  <depend version_gte="0.14.0">ompl</depend>
+  <depend>ompl</depend>
   <depend>ompl_bolt</depend>
 
   <export>

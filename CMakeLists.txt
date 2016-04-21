@@ -16,10 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-find_package(OMPL REQUIRED)
+find_package(ompl REQUIRED)
 find_package(Boost)
-
-include_directories(${Boost_INCLUDE_DIRS} ${OMPL_INCLUDE_DIRS})
 
 catkin_package(
   CATKIN_DEPENDS
@@ -38,13 +36,20 @@ catkin_package(
     ${PROJECT_NAME}_ppm
 )
 
-include_directories(
-  ${catkin_INCLUDE_DIRS}
+###########
+## Build ##
+###########
+
+include_directories(SYSTEM
+  ${Boost_INCLUDE_DIRS}
   ${OMPL_INCLUDE_DIRS}
-  include
 )
 
-## Build
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${OMPL_INCLUDE_DIRS}
+)
 
 # PPM Library for loading images
 add_library(${PROJECT_NAME}_ppm
@@ -59,7 +64,9 @@ add_library(${PROJECT_NAME}
   src/ompl_visual_tools.cpp
 )
 target_link_libraries(${PROJECT_NAME}
-  ${PROJECT_NAME}_ppm ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+  ${PROJECT_NAME}_ppm
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
 )
 
 # Executable for Demos and Testing

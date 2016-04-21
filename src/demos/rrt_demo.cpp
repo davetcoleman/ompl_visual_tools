@@ -466,11 +466,11 @@ int main( int argc, char** argv )
   bool verbose = false;
   bool use_visuals = true;
   std::string image_path;
-  int runs = 1;
+  std::size_t runs = 1;
 
   if (argc > 1)
   {
-    for (std::size_t i = 0; i < argc; ++i)
+    for (std::size_t i = 0; i < std::size_t(argc); ++i)
     {
       // Help mode
       if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
