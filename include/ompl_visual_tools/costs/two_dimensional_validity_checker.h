@@ -50,56 +50,54 @@ namespace ob = ompl::base;
 
 namespace ompl_visual_tools
 {
-  typedef boost::numeric::ublas::matrix<int> intMatrix;
-  typedef boost::shared_ptr<intMatrix> intMatrixPtr;
+typedef boost::numeric::ublas::matrix<int> intMatrix;
+typedef boost::shared_ptr<intMatrix> intMatrixPtr;
 }
 
 namespace ompl
 {
 namespace base
 {
-
 // Nat_Rounding helper function to make readings from cost map more accurate
 int nat_round(double x)
 {
-    return static_cast<int>(floor(x + 0.5f));
+  return static_cast<int>(floor(x + 0.5f));
 }
 
 class TwoDimensionalValidityChecker : public ob::StateValidityChecker
 {
 private:
-    ompl_visual_tools::intMatrixPtr cost_;
-    double max_threshold_;
+  ompl_visual_tools::intMatrixPtr cost_;
+  double max_threshold_;
 
 public:
+  /** \brief Constructor */
+  TwoDimensionalValidityChecker(const ob::SpaceInformationPtr &si, ompl_visual_tools::intMatrixPtr cost,
+                                double max_threshold)
+    : StateValidityChecker(si)
+  {
+    cost_ = cost;
+    max_threshold_ = max_threshold;
+  }
 
-    /** \brief Constructor */
-    TwoDimensionalValidityChecker( const ob::SpaceInformationPtr& si, ompl_visual_tools::intMatrixPtr cost,
-        double max_threshold ) :
-        StateValidityChecker(si)
-    {
-        cost_ = cost;
-        max_threshold_ = max_threshold;
-    }
-
-    /** \brief Obstacle checker */
-    virtual bool isValid(const ob::State *state ) const
-    {
-        return cost(state) < max_threshold_ && cost(state) > 1;
-    }
+  /** \brief Obstacle checker */
+  virtual bool isValid(const ob::State *state) const
+  {
+    return cost(state) < max_threshold_ && cost(state) > 1;
+  }
 
 private:
+  // Note: this cost function is not the one used for the optimization objective, it is only a helper function for
+  // isValid
+  double cost(const ob::State *state) const
+  {
+    const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
 
-    // Note: this cost function is not the one used for the optimization objective, it is only a helper function for isValid
-    double cost(const ob::State *state) const
-    {
-        const double *coords = state->as<ob::RealVectorStateSpace::StateType>()->values;
+    // Return the cost from the matrix at the current dimensions
+    double cost = (*cost_)(nat_round(coords[1]), nat_round(coords[0]));
 
-        // Return the cost from the matrix at the current dimensions
-        double cost = (*cost_)( nat_round(coords[1]), nat_round(coords[0]) );
-
-        return cost;
-    }
+    return cost;
+  }
 };
 }
 }
