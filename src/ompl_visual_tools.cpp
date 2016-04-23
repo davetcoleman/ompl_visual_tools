@@ -693,7 +693,8 @@ bool OmplVisualTools::publishTrajectoryPath(const og::PathGeometric& path, const
 {
   // Convert to MoveIt! format
   robot_trajectory::RobotTrajectoryPtr traj;
-  if (!convertPath(path, jmg, traj))
+  double speed = 0.01;
+  if (!convertPath(path, jmg, traj, speed))
   {
     return false;
   }
@@ -1215,12 +1216,14 @@ void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
   {
     case 1:  // Basic black line with vertiices
       // 2D world: publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
-      publishPath(geometric_path, rvt::BLUE, /*thickness*/ 0.01);
+      //publishPath(geometric_path, rvt::BLUE, /*thickness*/ 0.01);
+      publishPath(geometric_path, rvt::BLUE, /*thickness*/ min_edge_radius_);
       publishSpheres(geometric_path, rvt::BLACK, rvt::SMALL);
       break;
     case 2:  // Basic green line with vertiices
       // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
-      publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.01);
+      //publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.01);
+      publishPath(geometric_path, rvt::GREEN, /*thickness*/ min_edge_radius_);
       publishSpheres(geometric_path, rvt::GREEN, rvt::SMALL);
       break;
     case 3:  // Playback motion for real robot
@@ -1228,10 +1231,7 @@ void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
       if (!jmg_)
         ROS_ERROR_STREAM_NAMED(name_, "Joint model group has not been set");
 
-      std::cout << "publishing trajectory path " << std::endl;
-      // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
-      publishTrajectoryPath(geometric_path, jmg_, false /*wait_for_trajectory*/);
-      //publishSpheres(geometric_path, rvt::GREEN, rvt::SMALL);
+      publishTrajectoryPath(geometric_path, jmg_, true /*wait_for_trajectory*/);
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "Invalid path type value");
