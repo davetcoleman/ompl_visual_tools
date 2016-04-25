@@ -24,7 +24,6 @@
   <depend>roslib</depend>
   <depend>visualization_msgs</depend>
   <depend>ompl</depend>
-  <depend>ompl_bolt</depend>
 
   <export>
   </export>

@@ -46,7 +46,7 @@
 
 // OMPL
 #include <ompl/base/SpaceInformation.h>
-#include <ompl/tools/bolt/Visualizer.h>
+#include <ompl/tools/debug/Visualizer.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/base/ScopedState.h>
 
@@ -321,11 +321,11 @@ public:
   /**
    * \brief Publish text to rviz at a given location
    */
-  bool publishText(const geometry_msgs::Point& point, const std::string& text,
-                   const rviz_visual_tools::colors& color = rviz_visual_tools::BLACK, bool static_id = true);
+  // bool publishText(const geometry_msgs::Point& point, const std::string& text,
+  //                  const rviz_visual_tools::colors& color = rviz_visual_tools::BLACK, bool static_id = true);
 
-  bool publishText(const geometry_msgs::Pose& pose, const std::string& text,
-                   const rviz_visual_tools::colors& color = rviz_visual_tools::BLACK, bool static_id = true);
+  // bool publishText(const geometry_msgs::Pose& pose, const std::string& text,
+  //                  const rviz_visual_tools::colors& color = rviz_visual_tools::BLACK, bool static_id = true);
 
   /**
    * \brief Convet each vertex in a graph into a list of tip locations, as desired
@@ -373,9 +373,9 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void vizTrigger();
-  void vizState(const ompl::base::State* state, std::size_t type, double extra_data = 0);
-  void vizStateRobot(const ompl::base::State* state, std::size_t type, double extra_data);
-  void vizState2D(const Eigen::Vector3d& point, std::size_t type, double extra_data = 0);
+  void vizState(const ompl::base::State* state, std::size_t type, std::size_t color, double extra_data = 0);
+  void vizStateRobot(const ompl::base::State* state, std::size_t type, std::size_t color, double extra_data);
+  void vizState2D(const Eigen::Vector3d& point, std::size_t type, std::size_t color, double extra_data = 0);
   /**
    * \brief Publish a line from state A to state B
    * \param value how red->green the line should be, where [0,1] 0 is red
@@ -395,19 +395,19 @@ public:
    * \brief Helper to set an OMPL's planner to use the visualizer callback
    * \return a callback function
    */
-  ompl::base::VizTrigger getVizTriggerCallback()
+  ompl::tools::VizTrigger getVizTriggerCallback()
   {
     return boost::bind(&OmplVisualTools::vizTrigger, this);
   }
-  ompl::base::VizState getVizStateCallback()
+  ompl::tools::VizState getVizStateCallback()
   {
-    return boost::bind(&OmplVisualTools::vizState, this, _1, _2, _3);
+    return boost::bind(&OmplVisualTools::vizState, this, _1, _2, _3, _4);
   }
-  ompl::base::VizEdge getVizEdgeCallback()
+  ompl::tools::VizEdge getVizEdgeCallback()
   {
     return boost::bind(&OmplVisualTools::vizEdge, this, _1, _2, _3);
   }
-  ompl::base::VizPath getVizPathCallback()
+  ompl::tools::VizPath getVizPathCallback()
   {
     return boost::bind(&OmplVisualTools::vizPath, this, _1, _2);
   }

@@ -919,32 +919,32 @@ bool OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, c
   return publishSphere(temp_point_, rvt::TRANSLUCENT, rvt::REGULAR, "sample_region");
 }
 
-bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::string& text, const rvt::colors& color,
-                                  bool static_id)
-{
-  geometry_msgs::Pose text_pose;
-  text_pose.position = point;
+// bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::string& text, const rvt::colors& color,
+//                                   bool static_id)
+// {
+//   geometry_msgs::Pose text_pose;
+//   text_pose.position = point;
 
-  return publishText(text_pose, text, color, static_id);
-}
+//   return publishText(text_pose, text, color, static_id);
+// }
 
-bool OmplVisualTools::publishText(const geometry_msgs::Pose& pose, const std::string& text, const rvt::colors& color,
-                                  bool static_id)
-{
-  geometry_msgs::Vector3 scale;
-  if (cost_)
-  {
-    int size = ceil(cost_->size1() / 20.0);  // only z is required (size of an "A")
-    scale.x = size;
-    scale.y = size;
-    scale.z = size;
-  }
-  else
-    scale = getScale(rvt::REGULAR);  // TODO tune this
+// bool OmplVisualTools::publishText(const geometry_msgs::Pose& pose, const std::string& text, const rvt::colors& color,
+//                                   bool static_id)
+// {
+//   geometry_msgs::Vector3 scale;
+//   if (cost_)
+//   {
+//     int size = ceil(cost_->size1() / 20.0);  // only z is required (size of an "A")
+//     scale.x = size;
+//     scale.y = size;
+//     scale.z = size;
+//   }
+//   else
+//     scale = getScale(rvt::REGULAR);  // TODO tune this
 
-  // send to moveit_visual_tools
-  return RvizVisualTools::publishText(pose, text, color, scale, static_id);
-}
+//   // send to moveit_visual_tools
+//   return RvizVisualTools::publishText(pose, text, color, scale, static_id);
+// }
 
 bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr& graph,
                                                     const std::vector<const robot_model::LinkModel*>& tips,
@@ -1042,7 +1042,7 @@ void OmplVisualTools::vizTrigger()
   }
 }
 
-void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type, double extra_data)
+void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type, std::size_t color, double extra_data)
 {
   // Error check
   if (!checkSpaceInformation())
@@ -1057,12 +1057,12 @@ void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type,
 
   // Determine which StateSpace to work in
   if (si_->getStateSpace()->getDimension() <= 3)
-    vizState2D(stateToPoint(state), type, extra_data);
+    vizState2D(stateToPoint(state), type, color, extra_data);
   else
-    vizStateRobot(state, type, extra_data);
+    vizStateRobot(state, type, color, extra_data);
 }
 
-void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t type, double extra_data)
+void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t type, std::size_t color, double extra_data)
 {
   // Make sure a robot state is available
   loadSharedRobotState();
@@ -1119,19 +1119,51 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
     case 9:  // Small translucent
       publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, rvt::REGULAR);  // extra_data);
       break;
-    case 10:  // Show actual robot in color specified by extra_data
+    case 10:  // Show actual robot in custom color
       mb_state_space->copyToRobotState(*shared_robot_state_, state);
-      MoveItVisualTools::publishRobotState(shared_robot_state_, intToColor(extra_data));
+      MoveItVisualTools::publishRobotState(shared_robot_state_, intToColor(color));
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
   }  // end switch
 }
 
-void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type, double extra_data)
+void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type, std::size_t color, double extra_data)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
+  switch (type)
+  {
+    case 1:  // Small
+      publishSphere(point, intToColor(color), rvt::SMALL);
+      break;
+    case 2:  // Medium
+      publishSphere(point, intToColor(color), rvt::REGULAR);
+    case 3:  // Large
+      publishSphere(point, intToColor(color), rvt::LARGE);
+    case 4:  // Medium, translucent outline
+      publishSphere(point, intToColor(color), rvt::REGULAR);
+      publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data * 2);
+      break;
+    case 7:  // Display sphere based on value between 0-100
+    {
+      const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+      geometry_msgs::Vector3 scale;
+      scale.x = radius;
+      scale.y = radius;
+      scale.z = radius;
+      publishSphere(convertPointToPose(point), getColorScale(percent), scale);
+    }
+    break;
+    case 9:  // Small translucent
+      publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
+      break;
+    default:
+      ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state type value");
+  }
+
+  /*
   switch (type)
   {
     case 1:  // Small green
@@ -1173,6 +1205,7 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type,
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state type value");
   }
+  */
 }
 
 void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)

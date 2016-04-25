@@ -10,7 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_visual_tools
   moveit_core
   moveit_ompl
-  ompl_bolt
   roscpp
   roslib
   visualization_msgs
@@ -28,7 +27,6 @@ catkin_package(
     roscpp
     roslib
     visualization_msgs
-    ompl_bolt
   INCLUDE_DIRS
     include
   LIBRARIES
