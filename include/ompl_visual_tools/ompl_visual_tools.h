@@ -373,9 +373,9 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void vizTrigger();
-  void vizState(const ompl::base::State* state, std::size_t type, std::size_t color, double extra_data = 0);
-  void vizStateRobot(const ompl::base::State* state, std::size_t type, std::size_t color, double extra_data);
-  void vizState2D(const Eigen::Vector3d& point, std::size_t type, std::size_t color, double extra_data = 0);
+  void vizState(const ompl::base::State* state, ompl::tools::sizes type, ompl::tools::colors color, double extra_data = 0);
+  void vizStateRobot(const ompl::base::State* state, ompl::tools::sizes type, ompl::tools::colors color, double extra_data);
+  void vizState2D(const Eigen::Vector3d& point, ompl::tools::sizes type, ompl::tools::colors color, double extra_data = 0);
   /**
    * \brief Publish a line from state A to state B
    * \param value how red->green the line should be, where [0,1] 0 is red

@@ -919,7 +919,8 @@ bool OmplVisualTools::publishSampleRegion(const ob::ScopedState<>& state_area, c
   return publishSphere(temp_point_, rvt::TRANSLUCENT, rvt::REGULAR, "sample_region");
 }
 
-// bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::string& text, const rvt::colors& color,
+// bool OmplVisualTools::publishText(const geometry_msgs::Point& point, const std::string& text, const rvt::colors&
+// color,
 //                                   bool static_id)
 // {
 //   geometry_msgs::Pose text_pose;
@@ -1042,7 +1043,8 @@ void OmplVisualTools::vizTrigger()
   }
 }
 
-void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type, std::size_t color, double extra_data)
+void OmplVisualTools::vizState(const ompl::base::State* state, ompl::tools::sizes type, ompl::tools::colors color,
+                               double extra_data)
 {
   // Error check
   if (!checkSpaceInformation())
@@ -1062,7 +1064,8 @@ void OmplVisualTools::vizState(const ompl::base::State* state, std::size_t type,
     vizStateRobot(state, type, color, extra_data);
 }
 
-void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t type, std::size_t color, double extra_data)
+void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools::sizes type, ompl::tools::colors color,
+                                    double extra_data)
 {
   // Make sure a robot state is available
   loadSharedRobotState();
@@ -1083,26 +1086,20 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
 
   switch (type)
   {
-    case 1:  // Small green
+    case ompl::tools::SMALL:
       publishSphere(pose, rvt::GREEN, rvt::SMALL);
       break;
-    case 2:  // Small blue
-      publishSphere(pose, rvt::BLUE, rvt::SMALL);
+    case ompl::tools::MEDIUM:
+      publishSphere(pose, rvt::BLUE, rvt::REGULAR);
       break;
-    case 3:  // Small red
-      publishSphere(pose, rvt::RED, rvt::SMALL);
+    case ompl::tools::LARGE:
+      publishSphere(pose, rvt::RED, rvt::LARGE);
       break;
-    case 4:  // Medium purple, translucent outline
+    case ompl::tools::VARIABLE_SIZE:  // Medium purple, translucent outline
       publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
       // publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, extra_data * 2);
       break;
-    case 5:  // Large black
-      publishSphere(pose, rvt::BLACK, rvt::LARGE);
-      break;
-    case 6:  // Small blue TODO change this
-      publishSphere(pose, rvt::BLUE, rvt::SMALL);
-      break;
-    case 7:  // Display sphere based on value between 0-100
+    case ompl::tools::SCALE:  // Display sphere based on value between 0-100
     {
       const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
       const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
@@ -1113,13 +1110,7 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
       publishSphere(pose, getColorScale(percent), scale);
     }
     break;
-    case 8:  // Large red
-      publishSphere(pose, rvt::RED, rvt::LARGE);
-      break;
-    case 9:  // Small translucent
-      publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, rvt::REGULAR);  // extra_data);
-      break;
-    case 10:  // Show actual robot in custom color
+    case ompl::tools::ROBOT:  // Show actual robot in custom color
       mb_state_space->copyToRobotState(*shared_robot_state_, state);
       MoveItVisualTools::publishRobotState(shared_robot_state_, intToColor(color));
       break;
@@ -1128,24 +1119,26 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, std::size_t 
   }  // end switch
 }
 
-void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type, std::size_t color, double extra_data)
+void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::sizes type, ompl::tools::colors color,
+                                 double extra_data)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
   switch (type)
   {
-    case 1:  // Small
+    case ompl::tools::SMALL:
       publishSphere(point, intToColor(color), rvt::SMALL);
       break;
-    case 2:  // Medium
+    case ompl::tools::MEDIUM:
       publishSphere(point, intToColor(color), rvt::REGULAR);
-    case 3:  // Large
+      break;
+    case ompl::tools::LARGE:
       publishSphere(point, intToColor(color), rvt::LARGE);
-    case 4:  // Medium, translucent outline
-      publishSphere(point, intToColor(color), rvt::REGULAR);
-      publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data * 2);
       break;
-    case 7:  // Display sphere based on value between 0-100
+    case ompl::tools::VARIABLE_SIZE:
+      publishSphere(point, intToColor(color), extra_data * 2);
+      break;
+    case ompl::tools::SCALE:
     {
       const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
       const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
@@ -1156,56 +1149,12 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, std::size_t type,
       publishSphere(convertPointToPose(point), getColorScale(percent), scale);
     }
     break;
-    case 9:  // Small translucent
+    case ompl::tools::SMALL_TRANSLUCENT:
       publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state type value");
   }
-
-  /*
-  switch (type)
-  {
-    case 1:  // Small green
-      publishSphere(point, rvt::GREEN, rvt::SMALL);
-      break;
-    case 2:  // Small blue
-      publishSphere(point, rvt::BLUE, rvt::SMALL);
-      break;
-    case 3:  // Small red
-      publishSphere(point, rvt::RED, rvt::SMALL);
-      break;
-    case 4:  // Medium purple, translucent outline
-      publishSphere(point, rvt::PURPLE, rvt::REGULAR);
-      publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data * 2);
-      break;
-    case 5:  // Large black
-      publishSphere(point, rvt::BLACK, rvt::LARGE);
-      break;
-    case 6:  // Small blue TODO change this
-      publishSphere(point, rvt::BLUE, rvt::SMALL);
-      break;
-    case 7:  // Display sphere based on value between 0-100
-    {
-      const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
-      geometry_msgs::Vector3 scale;
-      scale.x = radius;
-      scale.y = radius;
-      scale.z = radius;
-      publishSphere(convertPointToPose(point), getColorScale(percent), scale);
-    }
-    break;
-    case 8:  // Large red
-      publishSphere(point, rvt::RED, rvt::LARGE);
-      break;
-    case 9:  // Small translucent
-      publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
-      break;
-    default:
-      ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state type value");
-  }
-  */
 }
 
 void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
@@ -1248,14 +1197,14 @@ void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
   switch (type)
   {
     case 1:  // Basic black line with vertiices
-      // 2D world: publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
-      //publishPath(geometric_path, rvt::BLUE, /*thickness*/ 0.01);
+             // 2D world: publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
+      // publishPath(geometric_path, rvt::BLUE, /*thickness*/ 0.01);
       publishPath(geometric_path, rvt::BLUE, /*thickness*/ min_edge_radius_);
       publishSpheres(geometric_path, rvt::BLACK, rvt::SMALL);
       break;
     case 2:  // Basic green line with vertiices
-      // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
-      //publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.01);
+             // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
+      // publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.01);
       publishPath(geometric_path, rvt::GREEN, /*thickness*/ min_edge_radius_);
       publishSpheres(geometric_path, rvt::GREEN, rvt::SMALL);
       break;
