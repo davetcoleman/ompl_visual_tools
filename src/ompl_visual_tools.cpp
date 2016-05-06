@@ -235,7 +235,7 @@ bool OmplVisualTools::publishCostMap(PPMImage* image, bool static_id)
   marker.color = getColor(rvt::RED);
 
   // Visualize Results -------------------------------------------------------------------------------------------------
-  for (size_t marker_id = 0; marker_id < image->getSize(); ++marker_id)
+  for (std::size_t marker_id = 0; marker_id < image->getSize(); ++marker_id)
   {
     unsigned int x = marker_id % image->x;  // Map index back to coordinates
     unsigned int y = marker_id / image->x;  // Map index back to coordinates
@@ -272,7 +272,7 @@ bool OmplVisualTools::publishTriangle(int x, int y, visualization_msgs::Marker* 
   temp_point_.x = x;
   temp_point_.y = y;
   if (disable_3d_)
-    temp_point_.z = 0;  // all costs become zero in flat world
+    temp_point_.z = 0.1;  // all costs become zero in flat world
   else
     temp_point_.z = getCost(temp_point_);  // to speed things up, we know is always whole number
 
@@ -282,7 +282,10 @@ bool OmplVisualTools::publishTriangle(int x, int y, visualization_msgs::Marker* 
   color.r = image->data[image->getID(x, y)].red / 255.0;
   color.g = image->data[image->getID(x, y)].green / 255.0;
   color.b = image->data[image->getID(x, y)].blue / 255.0;
-  color.a = 1.0;
+  if (color.r + color.g + color.b == 3.0)
+    color.a = 0.0; // transparent
+  else
+    color.a = 1.0;
 
   marker->colors.push_back(color);
 
@@ -1165,6 +1168,11 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
   if (si_->getStateSpace()->equalStates(stateA, stateB))
   {
     ROS_ERROR_STREAM_NAMED(name_, "Unable to visualize edge because states are the same");
+
+    publishSphere(stateToPoint(stateA), rvt::RED, rvt::LARGE);
+    triggerBatchPublish();
+
+    throw;
     return;
   }
 
@@ -1199,7 +1207,7 @@ void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
     case 1:  // Basic black line with vertiices
              // 2D world: publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
       // publishPath(geometric_path, rvt::BLUE, /*thickness*/ 0.01);
-      publishPath(geometric_path, rvt::BLUE, /*thickness*/ min_edge_radius_);
+      publishPath(geometric_path, rvt::BLACK, /*thickness*/ min_edge_radius_);
       publishSpheres(geometric_path, rvt::BLACK, rvt::SMALL);
       break;
     case 2:  // Basic green line with vertiices
@@ -1215,6 +1223,13 @@ void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
 
       publishTrajectoryPath(geometric_path, jmg_, true /*wait_for_trajectory*/);
       break;
+    case 4:  // Basic red line with vertiices
+             // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
+      // publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.01);
+      publishPath(geometric_path, rvt::RED, /*thickness*/ min_edge_radius_);
+      publishSpheres(geometric_path, rvt::RED, rvt::SMALL);
+      break;
+
     default:
       ROS_ERROR_STREAM_NAMED(name_, "Invalid path type value");
   }
