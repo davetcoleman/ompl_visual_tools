@@ -453,8 +453,8 @@ bool OmplVisualTools::publishGraph(ob::PlannerDataPtr planner_data, const rvt::c
 bool OmplVisualTools::publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA& color,
                                   const double radius)
 {
-  // return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius);
-  return RvizVisualTools::publishLine(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
+  return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
+  //return RvizVisualTools::publishLine(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
 }
 
 bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rvt::colors& color, const rvt::scales scale,
@@ -855,7 +855,12 @@ Eigen::Vector3d OmplVisualTools::stateToPoint2D(const ob::State* state)
   // Create point
   temp_eigen_point_.x() = real_state->values[0];
   temp_eigen_point_.y() = real_state->values[1];
-  temp_eigen_point_.z() = real_state->values[2] * 10;
+
+  if (si_->getStateSpace()->getDimension() == 2)
+    temp_eigen_point_.z() = 0.0;
+  else
+    temp_eigen_point_.z() = real_state->values[2];
+
   return temp_eigen_point_;
 }
 
@@ -1167,12 +1172,10 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
   // Error check
   if (si_->getStateSpace()->equalStates(stateA, stateB))
   {
-    ROS_ERROR_STREAM_NAMED(name_, "Unable to visualize edge because states are the same");
-
+    ROS_WARN_STREAM_NAMED(name_, "Unable to visualize edge because states are the same");
     publishSphere(stateToPoint(stateA), rvt::RED, rvt::LARGE);
     triggerBatchPublish();
-
-    throw;
+    ros::Duration(0.01).sleep();
     return;
   }
 

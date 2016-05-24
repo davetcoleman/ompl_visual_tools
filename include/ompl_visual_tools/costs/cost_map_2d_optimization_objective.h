@@ -216,6 +216,14 @@ public:
             else if( image_->data[ i ].red < min_pixel_ )
                 min_pixel_ = image_->data[ i ].red;
         }
+
+        // Override for blank images
+        if (max_pixel_ == 0)
+        {
+          std::cout << "BLANK IMAGE - cost_map_2d_opt... " << std::endl;
+          min_pixel_ = 0;
+          max_pixel_ = 255;
+        }
     }
 
     // The RGB image data
