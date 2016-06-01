@@ -389,7 +389,7 @@ public:
    * \param type - the style to display the line as
    * \return true on success
    */
-  void vizPath(const ompl::base::PathPtr path, std::size_t type, ompl::tools::colors color);
+  void vizPath(const ompl::geometric::PathGeometric* path, std::size_t type, ompl::tools::colors color);
 
   /**
    * \brief Helper to set an OMPL's planner to use the visualizer callback

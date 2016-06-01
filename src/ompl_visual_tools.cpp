@@ -1201,12 +1201,12 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
   publishEdge(stateA, stateB, getColorScale(percent), radius);
 }
 
-void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type, ompl::tools::colors color)
+void OmplVisualTools::vizPath(const og::PathGeometric* path, std::size_t type, ompl::tools::colors color)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
   // Convert
-  og::PathGeometric& geometric_path = static_cast<og::PathGeometric&>(*path);
+  const og::PathGeometric& geometric_path = *path; //static_cast<og::PathGeometric&>(*path);
 
   switch (type)
   {
