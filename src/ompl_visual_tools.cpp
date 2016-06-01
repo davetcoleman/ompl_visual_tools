@@ -1132,19 +1132,22 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::size
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
+  Eigen::Vector3d point2 = point;
+  point2.z() += 0.5;
+
   switch (type)
   {
     case ompl::tools::SMALL:
-      publishSphere(point, intToColor(color), rvt::SMALL);
+      publishSphere(point2, intToColor(color), rvt::SMALL);
       break;
     case ompl::tools::MEDIUM:
-      publishSphere(point, intToColor(color), rvt::REGULAR);
+      publishSphere(point2, intToColor(color), rvt::REGULAR);
       break;
     case ompl::tools::LARGE:
-      publishSphere(point, intToColor(color), rvt::LARGE);
+      publishSphere(point2, intToColor(color), rvt::LARGE);
       break;
     case ompl::tools::VARIABLE_SIZE:
-      publishSphere(point, intToColor(color), extra_data * 2);
+      publishSphere(point2, intToColor(color), extra_data * 2);
       break;
     case ompl::tools::SCALE:
     {
@@ -1154,11 +1157,11 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::size
       scale.x = radius;
       scale.y = radius;
       scale.z = radius;
-      publishSphere(convertPointToPose(point), getColorScale(percent), scale);
+      publishSphere(convertPointToPose(point2), getColorScale(percent), scale);
     }
     break;
     case ompl::tools::SMALL_TRANSLUCENT:
-      publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
+      publishSphere(point2, rvt::TRANSLUCENT_LIGHT, extra_data);
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state type value");
@@ -1198,7 +1201,7 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
   publishEdge(stateA, stateB, getColorScale(percent), radius);
 }
 
-void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
+void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type, ompl::tools::colors color)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
@@ -1210,14 +1213,8 @@ void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
     case 1:  // Basic black line with vertiices
              // 2D world: publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
       // publishPath(geometric_path, rvt::BLUE, /*thickness*/ 0.01);
-      publishPath(geometric_path, rvt::BLACK, /*thickness*/ min_edge_radius_);
-      publishSpheres(geometric_path, rvt::BLACK, rvt::SMALL);
-      break;
-    case 2:  // Basic green line with vertiices
-             // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
-      // publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.01);
-      publishPath(geometric_path, rvt::GREEN, /*thickness*/ min_edge_radius_);
-      publishSpheres(geometric_path, rvt::GREEN, rvt::SMALL);
+      publishPath(geometric_path, intToColor(color), /*thickness*/ min_edge_radius_);
+      publishSpheres(geometric_path, intToColor(color), rvt::SMALL);
       break;
     case 3:  // Playback motion for real robot
       // Check that jmg_ was set
@@ -1226,15 +1223,8 @@ void OmplVisualTools::vizPath(const ompl::base::PathPtr path, std::size_t type)
 
       publishTrajectoryPath(geometric_path, jmg_, true /*wait_for_trajectory*/);
       break;
-    case 4:  // Basic red line with vertiices
-             // 2D world: publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.225);
-      // publishPath(geometric_path, rvt::GREEN, /*thickness*/ 0.01);
-      publishPath(geometric_path, rvt::RED, /*thickness*/ min_edge_radius_);
-      publishSpheres(geometric_path, rvt::RED, rvt::SMALL);
-      break;
-
     default:
-      ROS_ERROR_STREAM_NAMED(name_, "Invalid path type value");
+      ROS_ERROR_STREAM_NAMED(name_, "Invalid vizPath type value " << type);
   }
 }
 
