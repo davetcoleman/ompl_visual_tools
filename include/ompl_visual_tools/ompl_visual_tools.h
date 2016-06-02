@@ -364,9 +364,6 @@ public:
     max_state_radius_ = max_state_radius;
   }
 
-  /** \brief Print to console a state */
-  void printState(ompl::base::State* state);
-
   /**
    * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during
    * search

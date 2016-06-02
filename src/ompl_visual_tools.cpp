@@ -1029,13 +1029,6 @@ bool OmplVisualTools::convertPath(const og::PathGeometric& path, const robot_mod
   return true;
 }
 
-void OmplVisualTools::printState(ompl::base::State* state)
-{
-  ob::RealVectorStateSpace::StateType* real_state = static_cast<ob::RealVectorStateSpace::StateType*>(state);
-  std::cout << "   " << real_state->values[0] << ", " << real_state->values[1] << ", " << real_state->values[2]
-            << std::endl;
-}
-
 void OmplVisualTools::vizTrigger()
 {
   triggerBatchPublish();
@@ -1176,7 +1169,7 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
   if (si_->getStateSpace()->equalStates(stateA, stateB))
   {
     ROS_WARN_STREAM_NAMED(name_, "Unable to visualize edge because states are the same");
-    publishSphere(stateToPoint(stateA), rvt::RED, rvt::LARGE);
+    publishSphere(stateToPoint(stateA), rvt::RED, rvt::XLARGE);
     triggerBatchPublish();
     ros::Duration(0.01).sleep();
     return;
