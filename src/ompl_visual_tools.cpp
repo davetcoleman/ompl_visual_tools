@@ -1081,7 +1081,10 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::VizS
                                  double extra_data)
 {
   Eigen::Vector3d point2 = point;
-  point2.z() += 0.5;
+
+  // Optional - show state above lines - looks good in 2D but not 3D TODO(davetcoleman): how to auto choose this
+  if (false)
+    point2.z() += 0.5;
 
   switch (size)
   {

@@ -87,6 +87,8 @@ private:
 
   /** \brief Remember what space we are working in */
   ompl::base::SpaceInformationPtr si_;
+
+  double z_scale_;
 };
 
 typedef std::shared_ptr<ROSVizWindow> ROSVizWindowPtr;

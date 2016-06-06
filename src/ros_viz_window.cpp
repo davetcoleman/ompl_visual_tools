@@ -46,7 +46,7 @@ namespace bnu = boost::numeric::ublas;
 namespace ompl_visual_tools
 {
 ROSVizWindow::ROSVizWindow(ompl_visual_tools::OmplVisualToolsPtr visual_tools)
-  : name_("ros_viz_window"), visual_tools_(visual_tools), si_(visual_tools_->getSpaceInformation())
+  : name_("ros_viz_window"), visual_tools_(visual_tools), si_(visual_tools_->getSpaceInformation()), z_scale_(30.0)
 {
   ROS_DEBUG_STREAM_NAMED(name_, "Initializing ROSVizWindow()");
 }
@@ -67,7 +67,7 @@ void ROSVizWindow::state(const ompl::base::State* state, std::size_t level, ot::
   if (si_->getStateSpace()->getDimension() == 2)
   {
     Eigen::Vector3d point = visual_tools_->stateToPoint(state);
-    point.z() = level;
+    point.z() = level * z_scale_;
     visual_tools_->vizState2D(point, size, color, extra_data);
   }
   else
@@ -86,10 +86,10 @@ void ROSVizWindow::edge(const ompl::base::State* stateA, std::size_t levelA, con
                         std::size_t levelB, ot::VizSizes size, ot::VizColors color)
 {
   Eigen::Vector3d pointA = visual_tools_->stateToPoint(stateA);
-  pointA.z() = levelA;
+  pointA.z() = levelA * z_scale_;
 
   Eigen::Vector3d pointB = visual_tools_->stateToPoint(stateB);
-  pointB.z() = levelB;
+  pointB.z() = levelB * z_scale_;
 
   double radius;
   switch (size)
