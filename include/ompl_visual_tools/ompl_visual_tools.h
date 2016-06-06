@@ -371,27 +371,6 @@ public:
    */
   void vizPath(const ompl::geometric::PathGeometric* path, std::size_t type, ompl::tools::VizColors color);
 
-  /**
-   * \brief Helper to set an OMPL's planner to use the visualizer callback
-   * \return a callback function
-   */
-  ompl::tools::VizTrigger getVizTriggerCallback()
-  {
-    return boost::bind(&OmplVisualTools::vizTrigger, this);
-  }
-  ompl::tools::VizState getVizStateCallback()
-  {
-    return boost::bind(&OmplVisualTools::vizState, this, _1, _2, _3, _4);
-  }
-  ompl::tools::VizEdge getVizEdgeCallback()
-  {
-    return boost::bind(&OmplVisualTools::vizEdge, this, _1, _2, _3);
-  }
-  ompl::tools::VizPath getVizPathCallback()
-  {
-    return boost::bind(&OmplVisualTools::vizPath, this, _1, _2, _3);
-  }
-
   /** \brief Getter for JointModelGroup */
   const robot_model::JointModelGroup* getJointModelGroup() const
   {
