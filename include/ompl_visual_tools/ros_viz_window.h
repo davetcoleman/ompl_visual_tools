@@ -43,58 +43,50 @@
 #include <ompl_visual_tools/ompl_visual_tools.h>
 #include <ompl/tools/debug/VizWindow.h>
 
-namespace ob = ompl::base;
-namespace og = ompl::geometric;
-namespace bnu = boost::numeric::ublas;
+// namespace ob = ompl::base;
+// namespace og = ompl::geometric;
+// namespace bnu = boost::numeric::ublas;
 
 namespace ompl_visual_tools
 {
 class ROSVizWindow : public ompl::tools::VizWindow
 {
 public:
-  ROSVizWindow(ompl_visual_tools::OmplVisualToolsPtr visual_tools)
-    : name_("ros_viz_window"), visual_tools_(visual_tools)
-  {
-    ROS_DEBUG_STREAM_NAMED(name_, "Initializing ROSVizWindow()");
-  }
+  ROSVizWindow(ompl_visual_tools::OmplVisualToolsPtr visual_tools);
 
-  /** \brief Visualize planner's data during runtime, externally */
-  void state(const ompl::base::State* state, ompl::tools::VizSizes size, ompl::tools::VizColors color, double extraData)
-  {
-    visual_tools_->vizState(state, size, color, extraData);
-  }
+  /** \brief Visualize a state during runtime, externally */
+  void state(const ompl::base::State* state, ompl::tools::VizSizes size, ompl::tools::VizColors color,
+             double extraData);
 
-  /** \brief Visualize planner's data during runtime, externally */
-  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
-  {
-    visual_tools_->vizEdge(stateA, stateB, cost);
-  }
+  /** \brief Visualize a state with a level during runtime, externally */
+  void state(const ompl::base::State* state, std::size_t level, ompl::tools::VizSizes type,
+             ompl::tools::VizColors color, double extraData);
 
-  /** \brief Visualize planner's data during runtime, externally */
-  void path(ompl::geometric::PathGeometric* path, std::size_t size, ompl::tools::VizColors color)
-  {
-    visual_tools_->vizPath(path, size, color);
-  }
+  /** \brief Visualize edge during runtime, externally */
+  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost);
 
-  /** \brief Trigger visualizer to publish graphics */
-  void trigger()
-  {
-    visual_tools_->vizTrigger();
-  }
+  /** \brief Visualize edge with a level during runtime, externally */
+  void edge(const ompl::base::State* stateA, std::size_t levelA, const ompl::base::State* stateB,
+            std::size_t levelB, ompl::tools::VizSizes size, ompl::tools::VizColors color);
+
+  /** \brief Visualize path during runtime, externally */
+  void path(ompl::geometric::PathGeometric* path, std::size_t size, ompl::tools::VizColors color);
+
+  /** \brief Trigger visualizer to refresh/repaint/display all graphics */
+  void trigger();
 
   /** \brief Trigger visualizer to clear all graphics */
-  void deleteAllMarkers()
-  {
-    visual_tools_->deleteAllMarkers();
-  }
+  void deleteAllMarkers();
 
 private:
-
   /** \brief Short name of class */
   std::string name_;
 
   /** \brief Rviz visualization tools */
   ompl_visual_tools::OmplVisualToolsPtr visual_tools_;
+
+  /** \brief Remember what space we are working in */
+  ompl::base::SpaceInformationPtr si_;
 };
 
 typedef std::shared_ptr<ROSVizWindow> ROSVizWindowPtr;

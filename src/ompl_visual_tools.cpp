@@ -76,6 +76,8 @@ OmplVisualTools::OmplVisualTools(const std::string& base_link, const std::string
                                  robot_model::RobotModelConstPtr robot_model)
   : MoveItVisualTools(base_link, marker_topic, robot_model)
 {
+  // in OmplVisualTools, all pubs must be manually triggered
+  batch_publishing_enabled_ = true;
 }
 
 void OmplVisualTools::setStateSpace(ompl::base::StateSpacePtr space)
@@ -488,10 +490,6 @@ bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rvt:
 bool OmplVisualTools::publishSpheres(const ob::PlannerDataPtr& planner_data, const rvt::colors& color,
                                      const rvt::scales scale, const std::string& ns)
 {
-  // Error check
-  if (!checkSpaceInformation())
-    return false;
-
   og::PathGeometric path(si_);
   convertPlannerData(planner_data, path);
 
@@ -591,10 +589,6 @@ bool OmplVisualTools::publishStates(std::vector<const ompl::base::State*> states
 
 bool OmplVisualTools::publishRobotState(const ompl::base::State* state)
 {
-  // Error check
-  if (!checkSpaceInformation())
-    return false;
-
   // Make sure a robot state is available
   loadSharedRobotState();
 
@@ -612,10 +606,6 @@ bool OmplVisualTools::publishTrajectoryPath(const ompl::base::PlannerDataPtr& pa
                                             const std::vector<const robot_model::LinkModel*>& tips,
                                             bool show_trajectory_animated)
 {
-  // Error check
-  if (!checkSpaceInformation())
-    return false;
-
   // Make sure a robot state is available
   loadSharedRobotState();
 
@@ -764,10 +754,6 @@ bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
 bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const rvt::colors& color,
                                   const double thickness, const std::string& ns)
 {
-  // Error check
-  if (!checkSpaceInformation())
-    return false;
-
   og::PathGeometric path(si_);
   convertPlannerData(planner_data, path);
 
@@ -826,10 +812,6 @@ Eigen::Vector3d OmplVisualTools::stateToPoint(const ob::ScopedState<> state)
 
 Eigen::Vector3d OmplVisualTools::stateToPoint(const ob::State* state)
 {
-  // Error check
-  if (!checkSpaceInformation())
-    exit(-1);
-
   if (!state)
   {
     ROS_FATAL_NAMED(name_, "No state found for vertex");
@@ -959,10 +941,6 @@ bool OmplVisualTools::convertRobotStatesToTipPoints(const ompl::base::PlannerDat
                                                     const std::vector<const robot_model::LinkModel*>& tips,
                                                     std::vector<std::vector<geometry_msgs::Point> >& vertex_tip_points)
 {
-  // Error check
-  if (!checkSpaceInformation())
-    return false;
-
   // Make sure a robot state is available
   loadSharedRobotState();
 
@@ -1044,28 +1022,7 @@ void OmplVisualTools::vizTrigger()
   }
 }
 
-void OmplVisualTools::vizState(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color,
-                               double extra_data)
-{
-  // Error check
-  if (!checkSpaceInformation())
-    return;
-
-  // Check for clear all visuals mode
-  if (type == 0)
-  {
-    deleteAllMarkers();
-    return;
-  }
-
-  // Determine which StateSpace to work in
-  if (si_->getStateSpace()->getDimension() <= 3)
-    vizState2D(stateToPoint(state), type, color, extra_data);
-  else
-    vizStateRobot(state, type, color, extra_data);
-}
-
-void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color,
+void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes size, ompl::tools::VizColors color,
                                     double extra_data)
 {
   // Make sure a robot state is available
@@ -1085,7 +1042,7 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools:
   mb_state_space->copyToRobotState(*root_robot_state_, state);
   Eigen::Affine3d pose = root_robot_state_->getGlobalLinkTransform("right_gripper_target");
 
-  switch (type)
+  switch (size)
   {
     case ompl::tools::SMALL:
       publishSphere(pose, rvt::GREEN, rvt::SMALL);
@@ -1120,15 +1077,13 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools:
   }  // end switch
 }
 
-void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::VizSizes type, ompl::tools::VizColors color,
+void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::VizSizes size, ompl::tools::VizColors color,
                                  double extra_data)
 {
-  batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
-
   Eigen::Vector3d point2 = point;
   point2.z() += 0.5;
 
-  switch (type)
+  switch (size)
   {
     case ompl::tools::SMALL:
       publishSphere(point2, intToColor(color), rvt::SMALL);
@@ -1157,14 +1112,12 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::VizS
       publishSphere(point2, rvt::TRANSLUCENT_LIGHT, extra_data);
       break;
     default:
-      ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state type value");
+      ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state size value");
   }
 }
 
 void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
 {
-  batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
-
   // Error check
   if (si_->getStateSpace()->equalStates(stateA, stateB))
   {
@@ -1196,8 +1149,6 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
 
 void OmplVisualTools::vizPath(const og::PathGeometric* path, std::size_t type, ompl::tools::VizColors color)
 {
-  batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
-
   // Convert
   const og::PathGeometric& geometric_path = *path; //static_cast<og::PathGeometric&>(*path);
 

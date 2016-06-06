@@ -60,6 +60,7 @@ target_link_libraries(${PROJECT_NAME}_ppm
 # OMPL Visual Tools Library
 add_library(${PROJECT_NAME}
   src/ompl_visual_tools.cpp
+  src/ros_viz_window.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_ppm

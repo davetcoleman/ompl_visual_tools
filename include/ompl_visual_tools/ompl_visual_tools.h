@@ -386,6 +386,12 @@ public:
   /** \brief Convert a number to an rviz_visual_tools color enum */
   rviz_visual_tools::colors intToColor(std::size_t color);
 
+  /** \brief Getter for SpaceInformation */
+  const ompl::base::SpaceInformationPtr& getSpaceInformation() const
+  {
+    return si_;
+  }
+
 private:
   // Keep a pointer to an optional cost map
   intMatrixPtr cost_;
