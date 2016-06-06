@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2015, University of Colorado, Boulder
+ *  Copyright (c) 2016, University of Colorado, Boulder
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -63,32 +63,15 @@ namespace ob = ompl::base;
 namespace og = ompl::geometric;
 namespace bnu = boost::numeric::ublas;
 
-// Forward Declartions
-// namespace ompl
-// {
-// namespace base
-// {
-// class PlannerData;
-// typedef boost::shared_ptr<PlannerData> PlannerDataPtr;
-// }
-// }
-
 namespace ompl_interface
 {
 class ModelBasedPlanningContext;
 typedef boost::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPtr;
 }
 
-// namespace moveit
-//{
-// namespace core
-//{
-// class LinkModel;
-//{
-//}
-
 namespace ompl_visual_tools
 {
+
 // Default constants
 static const std::string RVIZ_MARKER_TOPIC = "/ompl_rviz_markers";
 static const double COST_HEIGHT_OFFSET = 0.5;
@@ -370,9 +353,9 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void vizTrigger();
-  void vizState(const ompl::base::State* state, ompl::tools::sizes type, ompl::tools::colors color, double extra_data = 0);
-  void vizStateRobot(const ompl::base::State* state, ompl::tools::sizes type, ompl::tools::colors color, double extra_data);
-  void vizState2D(const Eigen::Vector3d& point, ompl::tools::sizes type, ompl::tools::colors color, double extra_data = 0);
+  void vizState(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data = 0);
+  void vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data);
+  void vizState2D(const Eigen::Vector3d& point, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data = 0);
   /**
    * \brief Publish a line from state A to state B
    * \param value how red->green the line should be, where [0,1] 0 is red
@@ -386,7 +369,7 @@ public:
    * \param type - the style to display the line as
    * \return true on success
    */
-  void vizPath(const ompl::geometric::PathGeometric* path, std::size_t type, ompl::tools::colors color);
+  void vizPath(const ompl::geometric::PathGeometric* path, std::size_t type, ompl::tools::VizColors color);
 
   /**
    * \brief Helper to set an OMPL's planner to use the visualizer callback
@@ -459,4 +442,4 @@ typedef boost::shared_ptr<const OmplVisualTools> OmplVisualToolsConstPtr;
 
 }  // end namespace
 
-#endif
+#endif // OMPL_VISUAL_TOOLS__OMPL_VISUAL_TOOLS_

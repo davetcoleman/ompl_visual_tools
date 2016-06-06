@@ -1044,7 +1044,7 @@ void OmplVisualTools::vizTrigger()
   }
 }
 
-void OmplVisualTools::vizState(const ompl::base::State* state, ompl::tools::sizes type, ompl::tools::colors color,
+void OmplVisualTools::vizState(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color,
                                double extra_data)
 {
   // Error check
@@ -1065,7 +1065,7 @@ void OmplVisualTools::vizState(const ompl::base::State* state, ompl::tools::size
     vizStateRobot(state, type, color, extra_data);
 }
 
-void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools::sizes type, ompl::tools::colors color,
+void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color,
                                     double extra_data)
 {
   // Make sure a robot state is available
@@ -1120,7 +1120,7 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools:
   }  // end switch
 }
 
-void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::sizes type, ompl::tools::colors color,
+void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::VizSizes type, ompl::tools::VizColors color,
                                  double extra_data)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
@@ -1194,7 +1194,7 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
   publishEdge(stateA, stateB, getColorScale(percent), radius);
 }
 
-void OmplVisualTools::vizPath(const og::PathGeometric* path, std::size_t type, ompl::tools::colors color)
+void OmplVisualTools::vizPath(const og::PathGeometric* path, std::size_t type, ompl::tools::VizColors color)
 {
   batch_publishing_enabled_ = true;  // when using the callbacks, all pubs must be manually triggered
 
