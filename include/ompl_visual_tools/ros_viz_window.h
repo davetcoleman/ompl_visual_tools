@@ -58,16 +58,12 @@ public:
   void state(const ompl::base::State* state, ompl::tools::VizSizes size, ompl::tools::VizColors color,
              double extraData);
 
-  /** \brief Visualize a state with a level during runtime, externally */
-  void state(const ompl::base::State* state, std::size_t level, ompl::tools::VizSizes type,
-             ompl::tools::VizColors color, double extraData);
-
   /** \brief Visualize edge during runtime, externally */
   void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost);
 
   /** \brief Visualize edge with a level during runtime, externally */
-  void edge(const ompl::base::State* stateA, std::size_t levelA, const ompl::base::State* stateB,
-            std::size_t levelB, ompl::tools::VizSizes size, ompl::tools::VizColors color);
+  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB,
+            ompl::tools::VizSizes size, ompl::tools::VizColors color);
 
   /** \brief Visualize path during runtime, externally */
   void path(ompl::geometric::PathGeometric* path, std::size_t size, ompl::tools::VizColors color);
@@ -87,8 +83,6 @@ private:
 
   /** \brief Remember what space we are working in */
   ompl::base::SpaceInformationPtr si_;
-
-  double z_scale_;
 };
 
 typedef std::shared_ptr<ROSVizWindow> ROSVizWindowPtr;

@@ -243,14 +243,15 @@ public:
    * where the list of states is also the order of the path
    * \return true on success
    */
-  RVIZ_VISUAL_TOOLS_DEPRECATED
-  bool publishPath(const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors& color,
-                   const double thickness = 0.4, const std::string& ns = "result_path");
+  // RVIZ_VISUAL_TOOLS_DEPRECATED
+  // bool publishPath(const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors& color,
+  //                  const double thickness = 0.4, const std::string& ns = "result_path");
 
   /**
    * \brief Display result path from a solver
    * \return true on success
    */
+  RVIZ_VISUAL_TOOLS_DEPRECATED
   bool publishPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color, const double thickness = 0.4,
                    const std::string& ns = "result_path");
 
@@ -420,6 +421,7 @@ private:
   double max_state_radius_ = 0.1;
   double min_state_radius_ = 0.5;
 
+  double level_scale_ = 20.0;
 };  // end class
 
 typedef boost::shared_ptr<OmplVisualTools> OmplVisualToolsPtr;

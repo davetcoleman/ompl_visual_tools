@@ -751,16 +751,16 @@ bool OmplVisualTools::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
 }
 
 // Deprecated
-bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const rvt::colors& color,
-                                  const double thickness, const std::string& ns)
-{
-  og::PathGeometric path(si_);
-  convertPlannerData(planner_data, path);
+// bool OmplVisualTools::publishPath(const ob::PlannerDataPtr& planner_data, const rvt::colors& color,
+//                                   const double thickness, const std::string& ns)
+// {
+//   og::PathGeometric path(si_);
+//   convertPlannerData(planner_data, path);
 
-  return publishPath(path, color, thickness, ns);
-}
+//   return publishPath(path, color, thickness, ns);
+// }
 
-// TODO: deprecate
+// Deprecated
 bool OmplVisualTools::publishPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,
                                   const std::string& ns)
 {
@@ -839,7 +839,7 @@ Eigen::Vector3d OmplVisualTools::stateToPoint2D(const ob::State* state)
   temp_eigen_point_.y() = real_state->values[1];
 
   if (si_->getStateSpace()->getDimension() == 2)
-    temp_eigen_point_.z() = 0.0;
+    temp_eigen_point_.z() = level_scale_ * si_->getStateSpace()->getLevel(state);
   else
     temp_eigen_point_.z() = real_state->values[2];
 
@@ -1158,8 +1158,6 @@ void OmplVisualTools::vizPath(const og::PathGeometric* path, std::size_t type, o
   switch (type)
   {
     case 1:  // Basic black line with vertiices
-             // 2D world: publishPath(geometric_path, rvt::BLACK, /*thickness*/ 0.2);
-      // publishPath(geometric_path, rvt::BLUE, /*thickness*/ 0.01);
       publishPath(geometric_path, intToColor(color), /*thickness*/ min_edge_radius_);
       publishSpheres(geometric_path, intToColor(color), rvt::SMALL);
       break;
