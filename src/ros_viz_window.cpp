@@ -89,7 +89,7 @@ void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State
       exit(-1);
   }
 
-  visual_tools_->publishCylinder(pointA, pointB, visual_tools_->intToColor(color), radius);
+  visual_tools_->publishCylinder(pointA, pointB, visual_tools_->omplColorToRviz(color), radius);
 }
 
 void ROSVizWindow::path(ompl::geometric::PathGeometric* path, std::size_t size, ot::VizColors color)
@@ -105,6 +105,17 @@ void ROSVizWindow::trigger()
 void ROSVizWindow::deleteAllMarkers()
 {
   visual_tools_->deleteAllMarkers();
+}
+
+bool ROSVizWindow::shutdownRequested()
+{
+  if (!ros::ok())
+  {
+    std::cout << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << "Shutting down process by request of ros::ok()" << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+  }
 }
 
 }  // namespace ompl_visual_tools

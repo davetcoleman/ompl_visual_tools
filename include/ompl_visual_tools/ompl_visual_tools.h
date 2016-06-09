@@ -385,7 +385,7 @@ public:
   }
 
   /** \brief Convert a number to an rviz_visual_tools color enum */
-  rviz_visual_tools::colors intToColor(std::size_t color);
+  rviz_visual_tools::colors omplColorToRviz(std::size_t color);
 
   /** \brief Getter for SpaceInformation */
   const ompl::base::SpaceInformationPtr& getSpaceInformation() const

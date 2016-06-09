@@ -285,7 +285,7 @@ bool OmplVisualTools::publishTriangle(int x, int y, visualization_msgs::Marker* 
   color.g = image->data[image->getID(x, y)].green / 255.0;
   color.b = image->data[image->getID(x, y)].blue / 255.0;
   if (color.r + color.g + color.b == 3.0)
-    color.a = 0.0; // transparent
+    color.a = 0.0;  // transparent
   else
     color.a = 1.0;
 
@@ -456,7 +456,7 @@ bool OmplVisualTools::publishEdge(const ob::State* stateA, const ob::State* stat
                                   const double radius)
 {
   return RvizVisualTools::publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
-  //return RvizVisualTools::publishLine(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
+  // return RvizVisualTools::publishLine(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
 }
 
 bool OmplVisualTools::publishSampleIDs(const og::PathGeometric& path, const rvt::colors& color, const rvt::scales scale,
@@ -1012,18 +1012,18 @@ void OmplVisualTools::vizTrigger()
   triggerBatchPublish();
 
   // Kill OMPL
-  if (!ros::ok())
-  {
-    std::cout << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << "Shutting down process by request of ros::ok()" << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
-    exit(0);
-  }
+  // if (!ros::ok())
+  // {
+  //   std::cout << std::endl;
+  //   std::cout << "-------------------------------------------------------" << std::endl;
+  //   std::cout << "Shutting down process by request of ros::ok()" << std::endl;
+  //   std::cout << "-------------------------------------------------------" << std::endl;
+  //   exit(0);
+  // }
 }
 
-void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes size, ompl::tools::VizColors color,
-                                    double extra_data)
+void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes size,
+                                    ompl::tools::VizColors color, double extra_data)
 {
   // Make sure a robot state is available
   loadSharedRobotState();
@@ -1045,13 +1045,13 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools:
   switch (size)
   {
     case ompl::tools::SMALL:
-      publishSphere(pose, rvt::GREEN, rvt::SMALL);
+      publishSphere(pose, omplColorToRviz(color), rvt::SMALL);
       break;
     case ompl::tools::MEDIUM:
-      publishSphere(pose, rvt::BLUE, rvt::REGULAR);
+      publishSphere(pose, omplColorToRviz(color), rvt::REGULAR);
       break;
     case ompl::tools::LARGE:
-      publishSphere(pose, rvt::RED, rvt::LARGE);
+      publishSphere(pose, omplColorToRviz(color), rvt::LARGE);
       break;
     case ompl::tools::VARIABLE_SIZE:  // Medium purple, translucent outline
       publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
@@ -1070,7 +1070,7 @@ void OmplVisualTools::vizStateRobot(const ompl::base::State* state, ompl::tools:
     break;
     case ompl::tools::ROBOT:  // Show actual robot in custom color
       mb_state_space->copyToRobotState(*shared_robot_state_, state);
-      MoveItVisualTools::publishRobotState(shared_robot_state_, intToColor(color));
+      MoveItVisualTools::publishRobotState(shared_robot_state_, omplColorToRviz(color));
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
@@ -1089,16 +1089,16 @@ void OmplVisualTools::vizState2D(const Eigen::Vector3d& point, ompl::tools::VizS
   switch (size)
   {
     case ompl::tools::SMALL:
-      publishSphere(point2, intToColor(color), rvt::SMALL);
+      publishSphere(point2, omplColorToRviz(color), rvt::SMALL);
       break;
     case ompl::tools::MEDIUM:
-      publishSphere(point2, intToColor(color), rvt::REGULAR);
+      publishSphere(point2, omplColorToRviz(color), rvt::REGULAR);
       break;
     case ompl::tools::LARGE:
-      publishSphere(point2, intToColor(color), rvt::LARGE);
+      publishSphere(point2, omplColorToRviz(color), rvt::LARGE);
       break;
     case ompl::tools::VARIABLE_SIZE:
-      publishSphere(point2, intToColor(color), extra_data * 2);
+      publishSphere(point2, omplColorToRviz(color), extra_data * 2);
       break;
     case ompl::tools::SCALE:
     {
@@ -1153,13 +1153,13 @@ void OmplVisualTools::vizEdge(const ompl::base::State* stateA, const ompl::base:
 void OmplVisualTools::vizPath(const og::PathGeometric* path, std::size_t type, ompl::tools::VizColors color)
 {
   // Convert
-  const og::PathGeometric& geometric_path = *path; //static_cast<og::PathGeometric&>(*path);
+  const og::PathGeometric& geometric_path = *path;  // static_cast<og::PathGeometric&>(*path);
 
   switch (type)
   {
     case 1:  // Basic black line with vertiices
-      publishPath(geometric_path, intToColor(color), /*thickness*/ min_edge_radius_);
-      publishSpheres(geometric_path, intToColor(color), rvt::SMALL);
+      publish2DPath(geometric_path, omplColorToRviz(color), min_edge_radius_);
+      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
       break;
     case 3:  // Playback motion for real robot
       // Check that jmg_ was set
@@ -1173,7 +1173,7 @@ void OmplVisualTools::vizPath(const og::PathGeometric* path, std::size_t type, o
   }
 }
 
-rvt::colors OmplVisualTools::intToColor(std::size_t color)
+rvt::colors OmplVisualTools::omplColorToRviz(std::size_t color)
 {
   // clang-format off
   switch (color)

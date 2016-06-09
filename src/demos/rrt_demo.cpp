@@ -410,7 +410,7 @@ public:
       simple_setup_->getSolutionPath().interpolate();
 
       // Show path
-      visual_tools_->publishPath( simple_setup_->getSolutionPath(), rviz_visual_tools::GREEN, 1.0, "final_solution");
+      visual_tools_->publish2DPath( simple_setup_->getSolutionPath(), rviz_visual_tools::GREEN, 1.0, "final_solution");
     }
 
     // Print the states to screen -----------------------------------------------------
