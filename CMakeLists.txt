@@ -59,7 +59,7 @@ target_link_libraries(${PROJECT_NAME}_ppm
 
 # OMPL Visual Tools Library
 add_library(${PROJECT_NAME}
-  src/ompl_visual_tools.cpp
+  #src/ompl_visual_tools.cpp
   src/ros_viz_window.cpp
 )
 target_link_libraries(${PROJECT_NAME}
@@ -69,19 +69,19 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # Executable for Demos and Testing
-add_executable(${PROJECT_NAME}_rrt_demo
-  src/demos/rrt_demo.cpp
-)
-set_target_properties(${PROJECT_NAME}_rrt_demo
-  PROPERTIES OUTPUT_NAME rrt_demo PREFIX ""
-)
-target_link_libraries(${PROJECT_NAME}_rrt_demo
-  ${OMPL_LIBRARIES}
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${PROJECT_NAME}
-  ${PROJECT_NAME}_ppm
-)
+# add_executable(${PROJECT_NAME}_rrt_demo
+#   src/demos/rrt_demo.cpp
+# )
+# set_target_properties(${PROJECT_NAME}_rrt_demo
+#   PROPERTIES OUTPUT_NAME rrt_demo PREFIX ""
+# )
+# target_link_libraries(${PROJECT_NAME}_rrt_demo
+#   ${OMPL_LIBRARIES}
+#   ${catkin_LIBRARIES}
+#   ${Boost_LIBRARIES}
+#   ${PROJECT_NAME}
+#   ${PROJECT_NAME}_ppm
+# )
 
 ## Install
 
@@ -96,8 +96,8 @@ install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_
 install(DIRECTORY launch    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY resources DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-# Install executables
-install(TARGETS
-    ${PROJECT_NAME}_rrt_demo
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+# # Install executables
+# install(TARGETS
+#     ${PROJECT_NAME}_rrt_demo
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
