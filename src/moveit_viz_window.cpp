@@ -69,13 +69,89 @@ MoveItVizWindow::MoveItVizWindow(moveit_visual_tools::MoveItVisualToolsPtr visua
 
 void MoveItVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::VizColors color, double extra_data)
 {
-  vizStateRobot(state, size, color, extra_data);
-}
+  // Make sure a robot state is available
+  visuals_->loadSharedRobotState();
 
+  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
+      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
+
+  // Convert to robot state
+  // mb_state_space->copyToRobotState(visuals_->getSharedRobotState(), state);
+  // visuals_->publishRobotState(visuals_->getSharedRobotState(), rvt::GREEN);
+
+  // Show the joint limits in the console
+  // MoveItVisualTools::showJointLimits(visuals_->getSharedRobotState());
+
+  // We must use the root_robot_state here so that the virtual_joint isn't affected
+  mb_state_space->copyToRobotState(*visuals_->getRootRobotState(), state);
+  Eigen::Affine3d pose = visuals_->getRootRobotState()->getGlobalLinkTransform("right_gripper_target");
+
+  switch (size)
+  {
+    case ompl::tools::SMALL:
+      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::SMALL);
+      break;
+    case ompl::tools::MEDIUM:
+      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::REGULAR);
+      break;
+    case ompl::tools::LARGE:
+      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::LARGE);
+      break;
+    case ompl::tools::VARIABLE_SIZE:  // Medium purple, translucent outline
+      visuals_->publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
+      // visuals_->publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, extra_data * 2);
+      break;
+    case ompl::tools::SCALE:  // Display sphere based on value between 0-100
+    {
+      const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+      geometry_msgs::Vector3 scale;
+      scale.x = radius;
+      scale.y = radius;
+      scale.z = radius;
+      visuals_->publishSphere(pose, visuals_->getColorScale(percent), scale);
+    }
+    break;
+    case ompl::tools::ROBOT:  // Show actual robot in custom color
+      mb_state_space->copyToRobotState(*visuals_->getSharedRobotState(), state);
+      visuals_->publishRobotState(visuals_->getSharedRobotState(), omplColorToRviz(color));
+      break;
+    default:
+      ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
+  }  // end switch
+}
 
 void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
 {
-  vizEdge(stateA, stateB, cost);
+  // Error check
+  if (si_->getStateSpace()->equalStates(stateA, stateB))
+  {
+    ROS_WARN_STREAM_NAMED(name_, "Unable to visualize edge because states are the same");
+    visuals_->publishSphere(stateToPoint(stateA), rvt::RED, rvt::XLARGE);
+    visuals_->triggerBatchPublish();
+    ros::Duration(0.01).sleep();
+    return;
+  }
+
+  // Convert input cost
+  double percent = (cost - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
+
+  // Swap colors
+  if (invert_edge_cost_)
+  {
+    percent = 1 - percent;
+  }
+
+  const double radius = (max_edge_radius_ - min_edge_radius_) * percent + min_edge_radius_;
+
+  if (true)
+  {
+    std::cout << "cost: " << cost << " min_edge_cost_: " << min_edge_cost_ << " max_edge_cost_: " << max_edge_cost_
+              << " percent: " << percent << " radius: " << radius << std::endl;
+    std::cout << "max edge r: " << max_edge_radius_ << " min edge r: " << min_edge_radius_ << std::endl;
+  }
+
+  visuals_->publishLine(stateToPoint(stateA), stateToPoint(stateB), visuals_->getColorScale(percent), radius / 2.0);
 }
 
 void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB,
@@ -94,13 +170,15 @@ void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::St
       radius = 0.1;
       break;
     case ompl::tools::LARGE:
-      radius = 1;
+      radius = 1.0;
       break;
     default:
       OMPL_ERROR("Unknown size");
       exit(-1);
   }
 
+  std::cout << "publish line, size " << size << " radius " << radius << std::endl;
+  radius = 1.0;
   visuals_->publishLine(pointA, pointB, omplColorToRviz(color), radius / 2.0);
 }
 
@@ -133,13 +211,6 @@ bool MoveItVizWindow::shutdownRequested()
 }
 
 // From ompl_visual_tools ------------------------------------------------------
-
-bool MoveItVizWindow::publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA& color,
-                                  const double radius)
-{
-  return visuals_->publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
-  // return visuals_->publishLine(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
-}
 
 bool MoveItVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, double scale,
                                      const std::string& ns)
@@ -492,92 +563,6 @@ void MoveItVizWindow::vizTrigger()
   //   std::cout << "-------------------------------------------------------" << std::endl;
   //   exit(0);
   // }
-}
-
-void MoveItVizWindow::vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes size,
-                                    ompl::tools::VizColors color, double extra_data)
-{
-  // Make sure a robot state is available
-  visuals_->loadSharedRobotState();
-
-  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-  // Convert to robot state
-  // mb_state_space->copyToRobotState(visuals_->getSharedRobotState(), state);
-  // visuals_->publishRobotState(visuals_->getSharedRobotState(), rvt::GREEN);
-
-  // Show the joint limits in the console
-  // MoveItVisualTools::showJointLimits(visuals_->getSharedRobotState());
-
-  // We must use the root_robot_state here so that the virtual_joint isn't affected
-  mb_state_space->copyToRobotState(*visuals_->getRootRobotState(), state);
-  Eigen::Affine3d pose = visuals_->getRootRobotState()->getGlobalLinkTransform("right_gripper_target");
-
-  switch (size)
-  {
-    case ompl::tools::SMALL:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::SMALL);
-      break;
-    case ompl::tools::MEDIUM:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::REGULAR);
-      break;
-    case ompl::tools::LARGE:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::LARGE);
-      break;
-    case ompl::tools::VARIABLE_SIZE:  // Medium purple, translucent outline
-      visuals_->publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
-      // visuals_->publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, extra_data * 2);
-      break;
-    case ompl::tools::SCALE:  // Display sphere based on value between 0-100
-    {
-      const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
-      geometry_msgs::Vector3 scale;
-      scale.x = radius;
-      scale.y = radius;
-      scale.z = radius;
-      visuals_->publishSphere(pose, visuals_->getColorScale(percent), scale);
-    }
-    break;
-    case ompl::tools::ROBOT:  // Show actual robot in custom color
-      mb_state_space->copyToRobotState(*visuals_->getSharedRobotState(), state);
-      visuals_->publishRobotState(visuals_->getSharedRobotState(), omplColorToRviz(color));
-      break;
-    default:
-      ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
-  }  // end switch
-}
-
-void MoveItVizWindow::vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
-{
-  // Error check
-  if (si_->getStateSpace()->equalStates(stateA, stateB))
-  {
-    ROS_WARN_STREAM_NAMED(name_, "Unable to visualize edge because states are the same");
-    visuals_->publishSphere(stateToPoint(stateA), rvt::RED, rvt::XLARGE);
-    visuals_->triggerBatchPublish();
-    ros::Duration(0.01).sleep();
-    return;
-  }
-
-  // Convert input cost
-  double percent = (cost - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-
-  // Swap colors
-  if (invert_edge_cost_)
-  {
-    percent = 1 - percent;
-  }
-
-  // const double radius = percent / 6.0 + 0.15;
-  const double radius = (max_edge_radius_ - min_edge_radius_) * percent + min_edge_radius_;
-
-  if (false)
-    std::cout << "cost: " << cost << " min_edge_cost_: " << min_edge_cost_ << " max_edge_cost_: " << max_edge_cost_
-              << " percent: " << percent << " radius: " << radius << std::endl;
-
-  publishEdge(stateA, stateB, visuals_->getColorScale(percent), radius);
 }
 
 void MoveItVizWindow::vizPath(const og::PathGeometric* path, std::size_t type, ompl::tools::VizColors color)

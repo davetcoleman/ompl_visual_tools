@@ -128,26 +128,6 @@ public:
                       const geometry_msgs::Vector3& scale, const std::string& ns = "path_spheres");
 
   /**
-   * \brief Display a connection between two states as a straight line
-   */
-  bool publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA& color,
-                   const double radius = 0.05);
-
-  /**
-   * \brief Display labels on samples
-   */
-  // bool publishSampleIDs(const og::PathGeometric& path, const rviz_visual_tools::colors& color = rviz_visual_tools::RED,
-  //                       const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL,
-  //                       const std::string& ns = "sample_labels");
-
-  /**
-   * \brief Convert PlannerData to PathGeometric. Assume ordering of verticies is order of path
-   * \param PlannerData
-   * \param PathGeometric
-   */
-  //void convertPlannerData(const ob::PlannerDataPtr planner_data, og::PathGeometric& path);
-
-  /**
    * \brief Display States
    * \return true on success
    */
@@ -284,15 +264,6 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void vizTrigger();
-  void vizState(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data = 0);
-  void vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data);
-
-  /**
-   * \brief Publish a line from state A to state B
-   * \param value how red->green the line should be, where [0,1] 0 is red
-   * \return true on success
-   */
-  void vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double value);
 
   /**
    * \brief Publish a full path of multiple points and edges
