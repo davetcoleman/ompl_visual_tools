@@ -55,9 +55,6 @@
 // Custom validity checker that accounts for cost
 #include <ompl_visual_tools/costs/cost_map_2d_optimization_objective.h>
 
-// MoveIt
-#include <moveit/robot_model/link_model.h>
-
 // Visualization
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
@@ -84,7 +81,7 @@ typedef std::map<std::string, std::list<std::size_t> > MarkerList;
 class ROSVizWindow : public ompl::tools::VizWindow
 {
 public:
-  ROSVizWindow(moveit_visual_tools::MoveItVisualToolsPtr visuals, ompl::base::SpaceInformationPtr si);
+  ROSVizWindow(rviz_visual_tools::RvizVisualToolsPtr visuals, ompl::base::SpaceInformationPtr si);
 
   /** \brief Visualize a state during runtime, externally */
   void state(const ompl::base::State* state, ompl::tools::VizSizes size, ompl::tools::VizColors color,
@@ -110,18 +107,12 @@ public:
   bool shutdownRequested();
 
   /** \brief Get the underlying visualizer */
-  moveit_visual_tools::MoveItVisualToolsPtr getVisualTools()
+  rviz_visual_tools::RvizVisualToolsPtr getVisualTools()
   {
     return visuals_;
   }
 
   // From ompl_visual_tools ------------------------------------------------------
-
-  /**
-   * \brief Load the OMPL state space or space information pointer
-   */
-  void setStateSpace(ompl::base::StateSpacePtr space);
-  void setSpaceInformation(ompl::base::SpaceInformationPtr si);
 
   /**
    * \brief Optional cost map for 2D environments
@@ -134,12 +125,6 @@ public:
   double getCost(const geometry_msgs::Point& point);
 
   /**
-   * \brief Use bilinear interpolation, if necessary, to find the cost of a point between whole numbers
-   *        From http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
-   */
-  //double getCostHeight(const geometry_msgs::Point& point);
-
-  /**
    * \brief Visualize Results
    */
   bool publishCostMap(PPMImage* image, bool static_id = true);
@@ -150,23 +135,6 @@ public:
   bool publishTriangle(int x, int y, visualization_msgs::Marker* marker, PPMImage* image);
 
   /**
-   * \brief Helper Function for Display Graph that makes the exploration lines follow the curvature of the map
-   */
-  // bool interpolateLine(const geometry_msgs::Point& p1, const geometry_msgs::Point& p2,
-  //                      visualization_msgs::Marker* marker, const std_msgs::ColorRGBA color);
-
-  /**
-   * \brief Display Start Goal
-   */
-  //bool publishStartGoalSpheres(ob::PlannerDataPtr planner_data, const std::string& ns);
-
-  /**
-   * \brief Display Explored Space
-   */
-  // bool publishGraph(ob::PlannerDataPtr planner_data, const rviz_visual_tools::colors& color = rviz_visual_tools::BLUE,
-  //                   const double thickness = 0.2, const std::string& ns = "space_exploration");
-
-  /**
    * \brief Publish a marker of a series of spheres to rviz
    * \param spheres - where to publish them
    * \param color - an enum pre-defined name of a color
@@ -174,10 +142,6 @@ public:
    * \param ns - namespace of marker
    * \return true on success
    */
-  // bool publishSpheres(const ob::PlannerDataPtr& planner_data,
-  //                     const rviz_visual_tools::colors& color = rviz_visual_tools::RED,
-  //                     const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL,
-  //                     const std::string& ns = "planner_data_spheres");
   bool publishSpheres(const og::PathGeometric& path, const rviz_visual_tools::colors& color = rviz_visual_tools::RED,
                       double scale = 0.1, const std::string& ns = "path_spheres");
   bool publishSpheres(const og::PathGeometric& path, const rviz_visual_tools::colors& color = rviz_visual_tools::RED,
@@ -193,73 +157,10 @@ public:
                    const double radius = 0.05);
 
   /**
-   * \brief Display labels on samples
-   */
-  // bool publishSampleIDs(const og::PathGeometric& path, const rviz_visual_tools::colors& color = rviz_visual_tools::RED,
-  //                       const rviz_visual_tools::scales scale = rviz_visual_tools::SMALL,
-  //                       const std::string& ns = "sample_labels");
-
-  /**
-   * \brief Convert PlannerData to PathGeometric. Assume ordering of verticies is order of path
-   * \param PlannerData
-   * \param PathGeometric
-   */
-  //void convertPlannerData(const ob::PlannerDataPtr planner_data, og::PathGeometric& path);
-
-  /**
    * \brief Display States
    * \return true on success
    */
   bool publishStates(std::vector<const ompl::base::State*> states);
-
-  /**
-   * \brief Convert an OMPL state to a MoveIt! robot state and publish it
-   * \param OMPL format of a robot state
-   * \return true on success
-   */
-  bool publishRobotState(const ompl::base::State* state);
-
-  /**
-   * \brief Display resulting path from a solver, in the form of a planner_data
-   *        where the list of states is also the order of the path. This uses MoveIt's robot state for inverse
-   * kinematics
-   * \return true on success
-   */
-  RVIZ_VISUAL_TOOLS_DEPRECATED
-  bool publishRobotPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* jmg,
-                        const std::vector<const robot_model::LinkModel*>& tips, bool show_trajectory_animated)
-  {
-    return publishTrajectoryPath(path, jmg, tips, show_trajectory_animated);
-  }
-
-  RVIZ_VISUAL_TOOLS_DEPRECATED
-  bool publishRobotPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
-                        const bool blocking)
-  {
-    return publishTrajectoryPath(path, jmg, blocking);
-  }
-
-  bool publishTrajectoryPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* jmg,
-                             const std::vector<const robot_model::LinkModel*>& tips, bool show_trajectory_animated);
-
-  bool publishTrajectoryPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
-                             const bool blocking);
-
-  /**
-   * \brief Display resulting graph from a planner, in the form of a planner_data object
-   *        This uses MoveIt's robot state for inverse kinematics
-   * \return true on success
-   */
-  // bool publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
-  //                        const std::vector<const robot_model::LinkModel*>& tips);p
-  /**
-   * \brief Display result path from a solver, in the form of a planner_data
-   * where the list of states is also the order of the path
-   * \return true on success
-   */
-  // RVIZ_VISUAL_TOOLS_DEPRECATED
-  // bool publishPath(const ob::PlannerDataPtr& planner_data, const rviz_visual_tools::colors& color,
-  //                  const double thickness = 0.4, const std::string& ns = "result_path");
 
   /**
    * \brief Display result path from a solver
@@ -281,8 +182,6 @@ public:
   //Eigen::Vector3d stateToPoint(std::size_t vertex_id, ob::PlannerDataPtr planner_data);
   Eigen::Vector3d stateToPoint(const ob::ScopedState<> state);
   Eigen::Vector3d stateToPoint(const ob::State* state);
-  Eigen::Vector3d stateToPoint2D(const ob::State* state);
-  Eigen::Vector3d stateToPointRobot(const ob::State* state);
 
   /**
    * \brief Nat_Rounding helper function to make readings from cost map more accurate
@@ -317,29 +216,6 @@ public:
   bool publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance);
 
   /**
-   * \brief Publish text to rviz at a given location
-   */
-  // bool publishText(const geometry_msgs::Point& point, const std::string& text,
-  //                  const rviz_visual_tools::colors& color = rviz_visual_tools::BLACK, bool static_id = true);
-
-  // bool publishText(const geometry_msgs::Pose& pose, const std::string& text,
-  //                  const rviz_visual_tools::colors& color = rviz_visual_tools::BLACK, bool static_id = true);
-
-  /**
-   * \brief Convet each vertex in a graph into a list of tip locations, as desired
-   * \param input - description
-   * \param input - description
-   * \return
-   */
-  // bool convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr& graph,
-  //                                    const std::vector<const robot_model::LinkModel*>& tips,
-  //                                    std::vector<std::vector<geometry_msgs::Point> >& vertex_tip_points);
-
-  /** \brief Convert path formats */
-  bool convertPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
-                   robot_trajectory::RobotTrajectoryPtr& traj, double speed = 0.1);
-
-  /**
    * \brief Set the range to visualize the edge costs
    * \param invert - if true, red is largest values and green is lowest
    */
@@ -369,8 +245,8 @@ public:
    */
   void vizTrigger();
   void vizState(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data = 0);
-  void vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data);
   void vizState2D(const Eigen::Vector3d& point, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data = 0);
+
   /**
    * \brief Publish a line from state A to state B
    * \param value how red->green the line should be, where [0,1] 0 is red
@@ -386,18 +262,6 @@ public:
    */
   void vizPath(const ompl::geometric::PathGeometric* path, std::size_t type, ompl::tools::VizColors color);
 
-  /** \brief Getter for JointModelGroup */
-  const robot_model::JointModelGroup* getJointModelGroup() const
-  {
-    return jmg_;
-  }
-
-  /** \brief Setter for JointModelGroup */
-  void setJointModelGroup(const robot_model::JointModelGroup* jmg)
-  {
-    jmg_ = jmg;
-  }
-
   /** \brief Convert a number to an rviz_visual_tools color enum */
   rviz_visual_tools::colors omplColorToRviz(std::size_t color);
 
@@ -412,7 +276,7 @@ private:
   std::string name_;
 
   /** \brief Rviz visualization tools */
-  moveit_visual_tools::MoveItVisualToolsPtr visuals_;
+  rviz_visual_tools::RvizVisualToolsPtr visuals_;
 
   /** \brief Remember what space we are working in */
   ompl::base::SpaceInformationPtr si_;
@@ -422,15 +286,9 @@ private:
   // Keep a pointer to an optional cost map
   intMatrixPtr cost_;
 
-  // Remember what joint model group we care about so that calls from OMPL don't have to
-  const robot_model::JointModelGroup* jmg_;
-
   // Cached Point object to reduce memory loading
   geometry_msgs::Point temp_point_;
   Eigen::Vector3d temp_eigen_point_;
-
-  // Mode that disables showing 3D in Rviz
-  //bool disable_3d_ = false;
 
   // Set bounds on an edge's cost/weight/value for visualization purposes
   double max_edge_cost_ = 100.0;

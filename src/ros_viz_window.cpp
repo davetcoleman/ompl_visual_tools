@@ -49,17 +49,11 @@
 
 // OMPL
 #include <ompl/base/spaces/SE3StateSpace.h>
-//#include <ompl/base/PlannerData.h>
 #include <ompl/base/ScopedState.h>
-
-//#include <ompl/config.h>
 
 // Custom validity checker that accounts for cost
 #include <ompl_visual_tools/costs/cost_map_2d_optimization_objective.h>
 
-// For converting OMPL state to a MoveIt robot state
-#include <moveit_ompl/model_based_state_space.h>
-#include <moveit/robot_state/robot_state.h>
 #include <moveit/macros/deprecation.h>
 
 namespace ot = ompl::tools;
@@ -69,7 +63,7 @@ namespace bnu = boost::numeric::ublas;
 
 namespace ompl_visual_tools
 {
-ROSVizWindow::ROSVizWindow(moveit_visual_tools::MoveItVisualToolsPtr visuals, ompl::base::SpaceInformationPtr si)
+ROSVizWindow::ROSVizWindow(rviz_visual_tools::RvizVisualToolsPtr visuals, ompl::base::SpaceInformationPtr si)
   : name_("ros_viz_window"), visuals_(visuals), si_(si)
 {
   // with this OMPL interface to Rviz all pubs must be manually triggered
@@ -80,11 +74,7 @@ ROSVizWindow::ROSVizWindow(moveit_visual_tools::MoveItVisualToolsPtr visuals, om
 
 void ROSVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::VizColors color, double extra_data)
 {
-  // Determine which StateSpace to work in
-  if (si_->getStateSpace()->getDimension() <= 3)
-    vizState2D(stateToPoint(state), size, color, extra_data);
-  else
-    vizStateRobot(state, size, color, extra_data);
+  vizState2D(stateToPoint(state), size, color, extra_data);
 }
 
 
@@ -116,10 +106,7 @@ void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State
       exit(-1);
   }
 
-  if (si_->getStateSpace()->getDimension() <= 3)
-    visuals_->publishCylinder(pointA, pointB, omplColorToRviz(color), radius);
-  else
-    visuals_->publishLine(pointA, pointB, omplColorToRviz(color), radius / 2.0);
+  visuals_->publishCylinder(pointA, pointB, omplColorToRviz(color), radius);
 }
 
 void ROSVizWindow::path(ompl::geometric::PathGeometric* path, std::size_t size, ot::VizColors color)
@@ -151,16 +138,6 @@ bool ROSVizWindow::shutdownRequested()
 }
 
 // From ompl_visual_tools ------------------------------------------------------
-
-void ROSVizWindow::setStateSpace(ompl::base::StateSpacePtr space)
-{
-  si_.reset(new ompl::base::SpaceInformation(space));
-}
-
-void ROSVizWindow::setSpaceInformation(ompl::base::SpaceInformationPtr si)
-{
-  si_ = si;
-}
 
 void ROSVizWindow::setCostMap(intMatrixPtr cost)
 {
@@ -337,207 +314,11 @@ bool ROSVizWindow::publishTriangle(int x, int y, visualization_msgs::Marker* mar
   return true;
 }
 
-// bool ROSVizWindow::interpolateLine(const geometry_msgs::Point& p1, const geometry_msgs::Point& p2,
-//                                       visualization_msgs::Marker* marker, const std_msgs::ColorRGBA color)
-// {
-//   // Copy to non-const
-//   geometry_msgs::Point point_a = p1;
-//   geometry_msgs::Point point_b = p2;
-
-//   // Get the heights
-//   // point_a.z = getCostHeight(point_a);
-//   // point_b.z = getCostHeight(point_b);
-
-//   // ROS_INFO_STREAM("a is: " << point_a);
-//   // ROS_INFO_STREAM("b is: " << point_b);
-
-//   // Switch the coordinates such that x1 < x2
-//   if (point_a.x > point_b.x)
-//   {
-//     // Swap the coordinates
-//     geometry_msgs::Point point_temp = point_a;
-//     point_a = point_b;
-//     point_b = point_temp;
-//   }
-
-//   // Show the straight line --------------------------------------------------------------------
-//   if (false)
-//   {
-//     // Add the point pair to the line message
-//     marker->points.push_back(point_a);
-//     marker->points.push_back(point_b);
-//     marker->colors.push_back(color);
-//     marker->colors.push_back(color);
-
-//     // Show start and end point
-//     visuals_->publishSphere(point_a, rvt::GREEN);
-//     visuals_->publishSphere(point_b, rvt::RED);
-//   }
-
-//   // Interpolate the line ----------------------------------------------------------------------
-
-//   // Calculate slope between the lines
-//   double m = (point_b.y - point_a.y) / (point_b.x - point_a.x);
-
-//   // Calculate the y-intercep
-//   double b = point_a.y - m * point_a.x;
-
-//   // Define the interpolation interval
-//   double interval = 0.1;  // 0.5;
-
-//   // Make new locations
-//   geometry_msgs::Point temp_a = point_a;  // remember the last point
-//   geometry_msgs::Point temp_b = point_a;  // move along this point
-
-//   // Loop through the line adding segements along the cost map
-//   for (temp_b.x = point_a.x + interval; temp_b.x <= point_b.x; temp_b.x += interval)
-//   {
-//     // publishSphere(temp_b, color2);
-
-//     // Find the y coordinate
-//     temp_b.y = m * temp_b.x + b;
-
-//     // Add the new heights
-//     temp_a.z = getCostHeight(temp_a);
-//     temp_b.z = getCostHeight(temp_b);
-
-//     // Add the point pair to the line message
-//     marker->points.push_back(temp_a);
-//     marker->points.push_back(temp_b);
-//     // Add colors
-//     marker->colors.push_back(color);
-//     marker->colors.push_back(color);
-
-//     // Remember the last coordiante for next iteration
-//     temp_a = temp_b;
-//   }
-
-//   // Finish the line for non-even interval lengths
-//   marker->points.push_back(temp_a);
-//   marker->points.push_back(point_b);
-//   // Add colors
-//   marker->colors.push_back(color);
-//   marker->colors.push_back(color);
-
-//   return true;
-// }
-
-// bool ROSVizWindow::publishStartGoalSpheres(ob::PlannerDataPtr planner_data, const std::string& ns)
-// {
-//   for (std::size_t i = 0; i < planner_data->numStartVertices(); ++i)
-//   {
-//     visuals_->publishSphere(convertPoint(stateToPoint(planner_data->getStartVertex(i).getState())), rvt::GREEN, rvt::REGULAR, ns);
-//   }
-//   for (std::size_t i = 0; i < planner_data->numGoalVertices(); ++i)
-//   {
-//     visuals_->publishSphere(convertPoint(stateToPoint(planner_data->getGoalVertex(i).getState())), rvt::RED, rvt::REGULAR, ns);
-//   }
-
-//   return true;
-// }
-
-// bool ROSVizWindow::publishGraph(ob::PlannerDataPtr planner_data, const rvt::colors& color, const double thickness,
-//                                    const std::string& ns)
-// {
-//   visualization_msgs::Marker marker;
-//   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-//   marker.header.frame_id = visuals_->getBaseFrame();
-//   marker.header.stamp = ros::Time();
-
-//   // Set the namespace and id for this marker.  This serves to create a unique ID
-//   marker.ns = ns;
-
-//   // Set the marker type.
-//   marker.type = visualization_msgs::Marker::LINE_LIST;
-
-//   // Set the marker action.  Options are ADD and DELETE
-//   marker.action = visualization_msgs::Marker::ADD;
-//   marker.id = 0;
-
-//   marker.pose.position.x = 0.0;
-//   marker.pose.position.y = 0.0;
-//   marker.pose.position.z = 0.0;
-
-//   marker.pose.orientation.x = 0.0;
-//   marker.pose.orientation.y = 0.0;
-//   marker.pose.orientation.z = 0.0;
-//   marker.pose.orientation.w = 1.0;
-
-//   marker.scale.x = thickness;
-//   marker.scale.y = 1.0;
-//   marker.scale.z = 1.0;
-
-//   marker.color = visuals_->getColor(color);
-
-//   geometry_msgs::Point this_vertex;
-//   geometry_msgs::Point next_vertex;
-
-//   // Loop through all verticies
-//   for (std::size_t vertex_id = 0; vertex_id < planner_data->numVertices(); ++vertex_id)
-//   {
-//     this_vertex = convertPoint(stateToPoint(vertex_id, planner_data));
-
-//     // Get the out edges from the current vertex
-//     std::vector<unsigned int> edge_list;
-//     planner_data->getEdges(vertex_id, edge_list);
-
-//     // Now loop through each edge
-//     for (std::vector<unsigned int>::const_iterator edge_it = edge_list.begin(); edge_it != edge_list.end(); ++edge_it)
-//     {
-//       // Convert vertex id to next coordinates
-//       next_vertex = convertPoint(stateToPoint(*edge_it, planner_data));
-
-//       interpolateLine(this_vertex, next_vertex, &marker, marker.color);
-//     }
-//   }
-
-//   // Send to Rviz
-//   return visuals_->publishMarker(marker);
-// }
-
 bool ROSVizWindow::publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA& color,
                                   const double radius)
 {
   return visuals_->publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
-  // return visuals_->publishLine(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
 }
-
-// bool ROSVizWindow::publishSampleIDs(const og::PathGeometric& path, const rvt::colors& color, const rvt::scales scale,
-//                                        const std::string& ns)
-// {
-//   // Create a small scale for font size
-//   geometry_msgs::Vector3 scale_msg;
-//   if (cost_)
-//   {
-//     int size = ceil(cost_->size1() / 30.0);  // only z is required (size of an "A")
-//     scale_msg.x = size;
-//     scale_msg.y = size;
-//     scale_msg.z = size;
-//   }
-//   else
-//     scale_msg = getScale(scale);  // TODO tune this
-
-//   std::string text;
-//   // Publish all
-//   for (std::size_t i = 0; i < path.getStateCount(); ++i)
-//   {
-//     text = boost::lexical_cast<std::string>(i + 2);
-
-//     // send to moveit_visual_tools
-//     visuals_->publishText(convertPointToPose(stateToPoint(path.getState(i))), text, color, scale_msg, false);
-//   }
-
-//   return true;
-// }
-
-// bool ROSVizWindow::publishSpheres(const ob::PlannerDataPtr& planner_data, const rvt::colors& color,
-//                                      const rvt::scales scale, const std::string& ns)
-// {
-//   og::PathGeometric path(si_);
-//   convertPlannerData(planner_data, path);
-
-//   return publishSpheres(path, color, scale, ns);
-// }
 
 bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, double scale,
                                      const std::string& ns)
@@ -627,179 +408,6 @@ bool ROSVizWindow::publishStates(std::vector<const ompl::base::State*> states)
   return visuals_->publishMarker(marker);
 }
 
-bool ROSVizWindow::publishRobotState(const ompl::base::State* state)
-{
-  // Make sure a robot state is available
-  visuals_->loadSharedRobotState();
-
-  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-  // Convert to robot state
-  mb_state_space->copyToRobotState(*visuals_->getSharedRobotState(), state);
-
-  // Show the robot visualized in Rviz
-  return visuals_->publishRobotState(visuals_->getSharedRobotState());
-}
-
-bool ROSVizWindow::publishTrajectoryPath(const ompl::base::PlannerDataPtr& path, robot_model::JointModelGroup* jmg,
-                                            const std::vector<const robot_model::LinkModel*>& tips,
-                                            bool show_trajectory_animated)
-{
-  // Make sure a robot state is available
-  visuals_->loadSharedRobotState();
-
-  // Vars
-  Eigen::Affine3d pose;
-  std::vector<std::vector<geometry_msgs::Point> > paths_msgs(tips.size());  // each tip has its own path of points
-  robot_trajectory::RobotTrajectoryPtr robot_trajectory;
-
-  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-  // Optionally save the trajectory
-  if (show_trajectory_animated)
-  {
-    robot_trajectory.reset(new robot_trajectory::RobotTrajectory(visuals_->getRobotModel(), jmg->getName()));
-  }
-
-  // Each state in the path
-  for (std::size_t state_id = 0; state_id < path->numVertices(); ++state_id)
-  {
-    // Check if program is shutting down
-    if (!ros::ok())
-      return false;
-
-    // Convert to robot state
-    mb_state_space->copyToRobotState(*visuals_->getSharedRobotState(), path->getVertex(state_id).getState());
-    ROS_WARN_STREAM_NAMED("temp", "updateStateWithFakeBase disabled");
-    // visuals_->getSharedRobotState()->updateStateWithFakeBase();
-
-    visuals_->publishRobotState(visuals_->getSharedRobotState());
-
-    // Each tip in the robot state
-    for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
-    {
-      // Forward kinematics
-      pose = visuals_->getSharedRobotState()->getGlobalLinkTransform(tips[tip_id]);
-
-      // Optionally save the trajectory
-      if (show_trajectory_animated)
-      {
-        robot_state::RobotState robot_state_copy = *visuals_->getSharedRobotState();
-        robot_trajectory->addSuffixWayPoint(robot_state_copy, 0.05);  // 1 second interval
-      }
-
-      // Debug pose
-      // std::cout << "Pose: " << state_id << " of link " << tips[tip_id]->getName() << ": \n" << pose.translation() <<
-      // std::endl;
-
-      paths_msgs[tip_id].push_back(visuals_->convertPose(pose).position);
-
-      // Show goal state arrow
-      if (state_id == path->numVertices() - 1)
-      {
-        visuals_->publishArrow(pose, rvt::BLACK);
-      }
-    }
-  }  // for each state
-
-  for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
-  {
-    visuals_->publishPath(paths_msgs[tip_id], rvt::RAND, rvt::SMALL);
-    ros::Duration(0.05).sleep();
-    visuals_->publishSpheres(paths_msgs[tip_id], rvt::ORANGE, rvt::SMALL);
-    ros::Duration(0.05).sleep();
-  }
-
-  // Debugging - Convert to trajectory
-  if (show_trajectory_animated)
-  {
-    visuals_->publishTrajectoryPath(*robot_trajectory, true);
-  }
-
-  return true;
-}
-
-bool ROSVizWindow::publishTrajectoryPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
-                                            const bool blocking)
-{
-  // Convert to MoveIt! format
-  robot_trajectory::RobotTrajectoryPtr traj;
-  double speed = 0.01;
-  if (!convertPath(path, jmg, traj, speed))
-  {
-    return false;
-  }
-
-  return visuals_->publishTrajectoryPath(*traj, blocking);
-}
-
-// bool ROSVizWindow::publishRobotGraph(const ompl::base::PlannerDataPtr& graph,
-//                                         const std::vector<const robot_model::LinkModel*>& tips)
-// {
-//   // Make sure a robot state is available
-//   visuals_->loadSharedRobotState();
-
-//   // Turn into multiple graphs (one for each tip)
-//   std::vector<graph_msgs::GeometryGraph> graphs(tips.size());
-
-//   // Convert states to points
-//   std::vector<std::vector<geometry_msgs::Point> > vertex_tip_points;
-//   convertRobotStatesToTipPoints(graph, tips, vertex_tip_points);
-
-//   // Copy tip points to each resulting tip graph
-//   for (std::size_t vertex_id = 0; vertex_id < vertex_tip_points.size(); ++vertex_id)
-//   {
-//     for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
-//     {
-//       graphs[tip_id].nodes.push_back(vertex_tip_points[vertex_id][tip_id]);
-//     }
-//   }
-
-//   // Now just copy the edges into each structure
-//   for (std::size_t vertex_id = 0; vertex_id < graph->numVertices(); ++vertex_id)
-//   {
-//     // Get the out edges from the current vertex
-//     std::vector<unsigned int> edge_list;
-//     graph->getEdges(vertex_id, edge_list);
-
-//     // Do for each tip
-//     for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
-//     {
-//       // Create new edge with all the node ids listed
-//       graph_msgs::Edges edge;
-//       edge.node_ids = edge_list;
-//       graphs[tip_id].edges.push_back(edge);
-
-//     }  // for each tip
-//   }    // for each vertex
-
-//   // Now publish each tip graph
-//   for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
-//   {
-//     const rvt::colors color = getRandColor();
-//     // std::cout << "Color is  " << color << std::endl;
-//     visuals_->publishGraph(graphs[tip_id], color, 0.005);
-//     ros::Duration(0.1).sleep();
-
-//     visuals_->publishSpheres(graphs[tip_id].nodes, rvt::ORANGE, rvt::SMALL);
-//     ros::Duration(0.1).sleep();
-//   }
-
-//   return true;
-// }
-
-// Deprecated
-// bool ROSVizWindow::publishPath(const ob::PlannerDataPtr& planner_data, const rvt::colors& color,
-//                                   const double thickness, const std::string& ns)
-// {
-//   og::PathGeometric path(si_);
-//   convertPlannerData(planner_data, path);
-
-//   return publishPath(path, color, thickness, ns);
-// }
-
 // Deprecated
 bool ROSVizWindow::publishPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,
                                   const std::string& ns)
@@ -858,18 +466,6 @@ Eigen::Vector3d ROSVizWindow::stateToPoint(const ob::State* state)
     exit(1);
   }
 
-  // Handle 2D world
-  if (si_->getStateSpace()->getDimension() <= 3)
-  {
-    return stateToPoint2D(state);
-  }
-
-  // Handle robot world
-  return stateToPointRobot(state);
-}
-
-Eigen::Vector3d ROSVizWindow::stateToPoint2D(const ob::State* state)
-{
   // Convert to RealVectorStateSpace
   const ob::RealVectorStateSpace::StateType* real_state =
       static_cast<const ob::RealVectorStateSpace::StateType*>(state);
@@ -884,23 +480,6 @@ Eigen::Vector3d ROSVizWindow::stateToPoint2D(const ob::State* state)
     temp_eigen_point_.z() = real_state->values[2];
 
   return temp_eigen_point_;
-}
-
-Eigen::Vector3d ROSVizWindow::stateToPointRobot(const ob::State* state)
-{
-  // Make sure a robot state is available
-  visuals_->loadSharedRobotState();
-
-  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-  // Convert to robot state
-  mb_state_space->copyToRobotState(*visuals_->getRootRobotState(), state);
-
-  // Get pose
-  // TODO(davetcoleman): do not hard code
-  Eigen::Affine3d pose = visuals_->getRootRobotState()->getGlobalLinkTransform("right_gripper_target");
-  return pose.translation();
 }
 
 int ROSVizWindow::natRound(double x)
@@ -949,104 +528,6 @@ bool ROSVizWindow::publishSampleRegion(const ob::ScopedState<>& state_area, cons
   return visuals_->publishSphere(temp_point_, rvt::TRANSLUCENT, rvt::REGULAR, "sample_region");
 }
 
-// bool ROSVizWindow::publishText(const geometry_msgs::Point& point, const std::string& text, const rvt::colors&
-// color,
-//                                   bool static_id)
-// {
-//   geometry_msgs::Pose text_pose;
-//   text_pose.position = point;
-
-//   return publishText(text_pose, text, color, static_id);
-// }
-
-// bool ROSVizWindow::publishText(const geometry_msgs::Pose& pose, const std::string& text, const rvt::colors& color,
-//                                   bool static_id)
-// {
-//   geometry_msgs::Vector3 scale;
-//   if (cost_)
-//   {
-//     int size = ceil(cost_->size1() / 20.0);  // only z is required (size of an "A")
-//     scale.x = size;
-//     scale.y = size;
-//     scale.z = size;
-//   }
-//   else
-//     scale = getScale(rvt::REGULAR);  // TODO tune this
-
-//   // send to moveit_visual_tools
-//   return RvizVisualTools::publishText(pose, text, color, scale, static_id);
-// }
-
-// bool ROSVizWindow::convertRobotStatesToTipPoints(const ompl::base::PlannerDataPtr& graph,
-//                                                     const std::vector<const robot_model::LinkModel*>& tips,
-//                                                     std::vector<std::vector<geometry_msgs::Point> >& vertex_tip_points)
-// {
-//   // Make sure a robot state is available
-//   visuals_->loadSharedRobotState();
-
-//   // Vars
-//   Eigen::Affine3d pose;
-
-//   // Load information about the robot's geometry
-//   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-//       std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-//   // Rows correspond to robot states
-//   vertex_tip_points.clear();
-//   vertex_tip_points.resize(graph->numVertices());
-
-//   // Each state in the path
-//   for (std::size_t state_id = 0; state_id < graph->numVertices(); ++state_id)
-//   {
-//     // Convert to robot state
-//     mb_state_space->copyToRobotState(visuals_->getSharedRobotState(), graph->getVertex(state_id).getState());
-//     ROS_WARN_STREAM_NAMED("temp", "updateStateWithFakeBase disabled");
-//     // visuals_->getSharedRobotState()->updateStateWithFakeBase();
-
-//     // Each tip in the robot state
-//     for (std::size_t tip_id = 0; tip_id < tips.size(); ++tip_id)
-//     {
-//       // Forward kinematics
-//       pose = visuals_->getSharedRobotState()->getGlobalLinkTransform(tips[tip_id]);
-
-//       vertex_tip_points[state_id].push_back(visuals_->convertPose(pose).position);
-//     }
-//   }
-
-//   return true;
-// }
-
-bool ROSVizWindow::convertPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
-                                  robot_trajectory::RobotTrajectoryPtr& traj, double speed)
-{
-  // Error check
-  if (path.getStateCount() <= 0)
-  {
-    ROS_WARN_STREAM_NAMED(name_, "No states found in path");
-    return false;
-  }
-
-  // New trajectory
-  traj.reset(new robot_trajectory::RobotTrajectory(visuals_->getRobotModel(), jmg));
-  moveit::core::RobotState state(*visuals_->getSharedRobotState());  // TODO(davetcoleman):do i need to copy this?
-
-  // Get correct type of space
-  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-  // Convert solution to MoveIt! format, reversing the solution
-  // for (std::size_t i = path.getStateCount(); i > 0; --i)
-  for (std::size_t i = 0; i < path.getStateCount(); ++i)
-  {
-    // Convert format
-    mb_state_space->copyToRobotState(state, path.getState(i));
-
-    // Add to trajectory
-    traj->addSuffixWayPoint(state, speed);
-  }
-  return true;
-}
-
 void ROSVizWindow::vizTrigger()
 {
   visuals_->triggerBatchPublish();
@@ -1060,61 +541,6 @@ void ROSVizWindow::vizTrigger()
   //   std::cout << "-------------------------------------------------------" << std::endl;
   //   exit(0);
   // }
-}
-
-void ROSVizWindow::vizStateRobot(const ompl::base::State* state, ompl::tools::VizSizes size,
-                                    ompl::tools::VizColors color, double extra_data)
-{
-  // Make sure a robot state is available
-  visuals_->loadSharedRobotState();
-
-  moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
-      std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-  // Convert to robot state
-  // mb_state_space->copyToRobotState(visuals_->getSharedRobotState(), state);
-  // visuals_->publishRobotState(visuals_->getSharedRobotState(), rvt::GREEN);
-
-  // Show the joint limits in the console
-  // MoveItVisualTools::showJointLimits(visuals_->getSharedRobotState());
-
-  // We must use the root_robot_state here so that the virtual_joint isn't affected
-  mb_state_space->copyToRobotState(*visuals_->getRootRobotState(), state);
-  Eigen::Affine3d pose = visuals_->getRootRobotState()->getGlobalLinkTransform("right_gripper_target");
-
-  switch (size)
-  {
-    case ompl::tools::SMALL:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::SMALL);
-      break;
-    case ompl::tools::MEDIUM:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::REGULAR);
-      break;
-    case ompl::tools::LARGE:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::LARGE);
-      break;
-    case ompl::tools::VARIABLE_SIZE:  // Medium purple, translucent outline
-      visuals_->publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
-      // visuals_->publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, extra_data * 2);
-      break;
-    case ompl::tools::SCALE:  // Display sphere based on value between 0-100
-    {
-      const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
-      geometry_msgs::Vector3 scale;
-      scale.x = radius;
-      scale.y = radius;
-      scale.z = radius;
-      visuals_->publishSphere(pose, visuals_->getColorScale(percent), scale);
-    }
-    break;
-    case ompl::tools::ROBOT:  // Show actual robot in custom color
-      mb_state_space->copyToRobotState(*visuals_->getSharedRobotState(), state);
-      visuals_->publishRobotState(visuals_->getSharedRobotState(), omplColorToRviz(color));
-      break;
-    default:
-      ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
-  }  // end switch
 }
 
 void ROSVizWindow::vizState2D(const Eigen::Vector3d& point, ompl::tools::VizSizes size, ompl::tools::VizColors color,
@@ -1202,11 +628,7 @@ void ROSVizWindow::vizPath(const og::PathGeometric* path, std::size_t type, ompl
       publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
       break;
     case 3:  // Playback motion for real robot
-      // Check that jmg_ was set
-      if (!jmg_)
-        ROS_ERROR_STREAM_NAMED(name_, "Joint model group has not been set");
 
-      publishTrajectoryPath(geometric_path, jmg_, true /*wait_for_trajectory*/);
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "Invalid vizPath type value " << type);
