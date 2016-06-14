@@ -56,7 +56,7 @@
 namespace ompl_visual_tools
 {
 typedef boost::numeric::ublas::matrix<int> intMatrix;
-typedef boost::shared_ptr<intMatrix> intMatrixPtr;
+typedef std::shared_ptr<intMatrix> intMatrixPtr;
 }
 
 namespace ob = ompl::base;

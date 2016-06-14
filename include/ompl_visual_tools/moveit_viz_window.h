@@ -64,7 +64,7 @@ namespace rvt = rviz_visual_tools;
 namespace ompl_interface
 {
 class ModelBasedPlanningContext;
-typedef boost::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPtr;
+typedef std::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPtr;
 }
 
 namespace ompl_visual_tools

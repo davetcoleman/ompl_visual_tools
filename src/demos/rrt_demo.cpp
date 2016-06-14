@@ -80,7 +80,7 @@ private:
   ompl::base::CostMap2DOptimizationObjectivePtr cost_map_;
 
   // Cost is just path length
-  boost::shared_ptr<ompl::base::PathLengthOptimizationObjective> path_length_objective_;
+  std::shared_ptr<ompl::base::PathLengthOptimizationObjective> path_length_objective_;
 
   // The visual tools for interfacing with Rviz
   ompl_visual_tools::OmplVisualToolsPtr visual_tools_;
