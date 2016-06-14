@@ -75,10 +75,6 @@ void MoveItVizWindow::state(const ompl::base::State* state, ot::VizSizes size, o
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
       std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
 
-  // Convert to robot state
-  // mb_state_space->copyToRobotState(visuals_->getSharedRobotState(), state);
-  // visuals_->publishRobotState(visuals_->getSharedRobotState(), rvt::GREEN);
-
   // Show the joint limits in the console
   // MoveItVisualTools::showJointLimits(visuals_->getSharedRobotState());
 
@@ -164,22 +160,20 @@ void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::St
   switch (size)
   {
     case ompl::tools::SMALL:
-      radius = 0.01;
+      radius = 0.001;
       break;
     case ompl::tools::MEDIUM:
-      radius = 0.1;
+      radius = 0.01;
       break;
     case ompl::tools::LARGE:
-      radius = 1.0;
+      radius = 0.1;
       break;
     default:
       OMPL_ERROR("Unknown size");
       exit(-1);
   }
 
-  std::cout << "publish line, size " << size << " radius " << radius << std::endl;
-  radius = 1.0;
-  visuals_->publishLine(pointA, pointB, omplColorToRviz(color), radius / 2.0);
+  visuals_->publishLine(pointA, pointB, omplColorToRviz(color), radius);
 }
 
 void MoveItVizWindow::path(ompl::geometric::PathGeometric* path, std::size_t size, ot::VizColors color)
@@ -435,14 +429,6 @@ bool MoveItVizWindow::publish2DPath(const og::PathGeometric& path, const rvt::co
 
   return true;
 }
-
-// Eigen::Vector3d MoveItVizWindow::stateToPoint(std::size_t vertex_id, ob::PlannerDataPtr planner_data)
-// {
-//   ob::PlannerDataVertex* vertex = &planner_data->getVertex(vertex_id);
-
-//   // Get this vertex's coordinates
-//   return stateToPoint(vertex->getState());
-// }
 
 Eigen::Vector3d MoveItVizWindow::stateToPoint(const ob::ScopedState<> state)
 {
