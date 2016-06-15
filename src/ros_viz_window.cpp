@@ -109,9 +109,23 @@ void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State
   visuals_->publishCylinder(pointA, pointB, omplColorToRviz(color), radius);
 }
 
-void ROSVizWindow::path(ompl::geometric::PathGeometric* path, std::size_t size, ot::VizColors color)
+void ROSVizWindow::path(ompl::geometric::PathGeometric* path, ompl::tools::VizSizes type, ot::VizColors color)
 {
-  vizPath(path, size, color);
+  // Convert
+  const og::PathGeometric& geometric_path = *path;  // static_cast<og::PathGeometric&>(*path);
+
+  switch (type)
+  {
+    case ompl::tools::SMALL:  // Basic black line with vertiices
+      publish2DPath(geometric_path, omplColorToRviz(color), min_edge_radius_);
+      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
+      break;
+    case ompl::tools::ROBOT:
+      // Playback motion for real robot, which is not applicable for this space
+      break;
+    default:
+      ROS_ERROR_STREAM_NAMED(name_, "Invalid vizPath type value " << type);
+  }
 }
 
 void ROSVizWindow::trigger()
@@ -614,25 +628,6 @@ void ROSVizWindow::vizEdge(const ompl::base::State* stateA, const ompl::base::St
               << " percent: " << percent << " radius: " << radius << std::endl;
 
   publishEdge(stateA, stateB, visuals_->getColorScale(percent), radius);
-}
-
-void ROSVizWindow::vizPath(const og::PathGeometric* path, std::size_t type, ompl::tools::VizColors color)
-{
-  // Convert
-  const og::PathGeometric& geometric_path = *path;  // static_cast<og::PathGeometric&>(*path);
-
-  switch (type)
-  {
-    case 1:  // Basic black line with vertiices
-      publish2DPath(geometric_path, omplColorToRviz(color), min_edge_radius_);
-      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
-      break;
-    case 3:  // Playback motion for real robot
-
-      break;
-    default:
-      ROS_ERROR_STREAM_NAMED(name_, "Invalid vizPath type value " << type);
-  }
 }
 
 rvt::colors ROSVizWindow::omplColorToRviz(std::size_t color)

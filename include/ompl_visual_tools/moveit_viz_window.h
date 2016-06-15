@@ -91,8 +91,13 @@ public:
   void edge(const ompl::base::State* stateA, const ompl::base::State* stateB,
             ompl::tools::VizSizes size, ompl::tools::VizColors color);
 
-  /** \brief Visualize path during runtime, externally */
-  void path(ompl::geometric::PathGeometric* path, std::size_t size, ompl::tools::VizColors color);
+  /**
+   * \brief Publish a full path of multiple points and edges
+   * \param path
+   * \param type - the style to display the line as
+   * \return true on success
+   */
+  void path(ompl::geometric::PathGeometric* path, ompl::tools::VizSizes type, ompl::tools::VizColors color);
 
   /** \brief Trigger visualizer to refresh/repaint/display all graphics */
   void trigger();
@@ -264,14 +269,6 @@ public:
    * \param pointer to the planner, to be used for getPlannerData()
    */
   void vizTrigger();
-
-  /**
-   * \brief Publish a full path of multiple points and edges
-   * \param path
-   * \param type - the style to display the line as
-   * \return true on success
-   */
-  void vizPath(const ompl::geometric::PathGeometric* path, std::size_t type, ompl::tools::VizColors color);
 
   /** \brief Getter for JointModelGroup */
   const robot_model::JointModelGroup* getJointModelGroup() const

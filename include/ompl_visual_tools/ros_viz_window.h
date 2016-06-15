@@ -95,7 +95,7 @@ public:
             ompl::tools::VizSizes size, ompl::tools::VizColors color);
 
   /** \brief Visualize path during runtime, externally */
-  void path(ompl::geometric::PathGeometric* path, std::size_t size, ompl::tools::VizColors color);
+  void path(ompl::geometric::PathGeometric* path, ompl::tools::VizSizes type, ompl::tools::VizColors color);
 
   /** \brief Trigger visualizer to refresh/repaint/display all graphics */
   void trigger();
@@ -253,14 +253,6 @@ public:
    * \return true on success
    */
   void vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double value);
-
-  /**
-   * \brief Publish a full path of multiple points and edges
-   * \param path
-   * \param type - the style to display the line as
-   * \return true on success
-   */
-  void vizPath(const ompl::geometric::PathGeometric* path, std::size_t type, ompl::tools::VizColors color);
 
   /** \brief Convert a number to an rviz_visual_tools color enum */
   rviz_visual_tools::colors omplColorToRviz(std::size_t color);

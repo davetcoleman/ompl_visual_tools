@@ -176,9 +176,35 @@ void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::St
   visuals_->publishLine(pointA, pointB, omplColorToRviz(color), radius);
 }
 
-void MoveItVizWindow::path(ompl::geometric::PathGeometric* path, std::size_t size, ot::VizColors color)
+void MoveItVizWindow::path(ompl::geometric::PathGeometric* path, ompl::tools::VizSizes type, ot::VizColors color)
 {
-  vizPath(path, size, color);
+  // Convert
+  const og::PathGeometric& geometric_path = *path;  // static_cast<og::PathGeometric&>(*path);
+
+  switch (type)
+  {
+    case ompl::tools::SMALL:  // Basic line with vertiices
+      publish2DPath(geometric_path, omplColorToRviz(color), min_edge_radius_);
+      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
+      break;
+    case ompl::tools::MEDIUM:  // Basic line with vertiices
+      publish2DPath(geometric_path, omplColorToRviz(color), max_edge_radius_ / 2.0);
+      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
+      break;
+    case ompl::tools::LARGE:  // Basic line with vertiices
+      publish2DPath(geometric_path, omplColorToRviz(color), max_edge_radius_);
+      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
+      break;
+    case ompl::tools::ROBOT:  // Playback motion for real robot
+      // Check that jmg_ was set
+      if (!jmg_)
+        ROS_ERROR_STREAM_NAMED(name_, "Joint model group has not been set");
+
+      publishTrajectoryPath(geometric_path, jmg_, true /*wait_for_trajectory*/);
+      break;
+    default:
+      ROS_ERROR_STREAM_NAMED(name_, "Invalid vizPath type value " << type);
+  }
 }
 
 void MoveItVizWindow::trigger()
@@ -549,29 +575,6 @@ void MoveItVizWindow::vizTrigger()
   //   std::cout << "-------------------------------------------------------" << std::endl;
   //   exit(0);
   // }
-}
-
-void MoveItVizWindow::vizPath(const og::PathGeometric* path, std::size_t type, ompl::tools::VizColors color)
-{
-  // Convert
-  const og::PathGeometric& geometric_path = *path;  // static_cast<og::PathGeometric&>(*path);
-
-  switch (type)
-  {
-    case 1:  // Basic black line with vertiices
-      publish2DPath(geometric_path, omplColorToRviz(color), min_edge_radius_);
-      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
-      break;
-    case 3:  // Playback motion for real robot
-      // Check that jmg_ was set
-      if (!jmg_)
-        ROS_ERROR_STREAM_NAMED(name_, "Joint model group has not been set");
-
-      publishTrajectoryPath(geometric_path, jmg_, true /*wait_for_trajectory*/);
-      break;
-    default:
-      ROS_ERROR_STREAM_NAMED(name_, "Invalid vizPath type value " << type);
-  }
 }
 
 rvt::colors MoveItVizWindow::omplColorToRviz(std::size_t color)
