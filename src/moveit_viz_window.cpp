@@ -69,15 +69,10 @@ MoveItVizWindow::MoveItVizWindow(moveit_visual_tools::MoveItVisualToolsPtr visua
 
 void MoveItVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::VizColors color, double extra_data)
 {
-  // Make sure a robot state is available
+  // We do not use stateToPoint() because the publishRobotState() function might need the robot state in this function
   visuals_->loadSharedRobotState();
-
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
       std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
-
-  // Show the joint limits in the console
-  // MoveItVisualTools::showJointLimits(visuals_->getSharedRobotState());
-
   // We must use the root_robot_state here so that the virtual_joint isn't affected
   mb_state_space->copyToRobotState(*visuals_->getRootRobotState(), state);
   Eigen::Affine3d pose = visuals_->getRootRobotState()->getGlobalLinkTransform("right_gripper_target");
@@ -469,12 +464,6 @@ Eigen::Vector3d MoveItVizWindow::stateToPoint(const ob::State* state)
     exit(1);
   }
 
-  // Handle robot world
-  return stateToPointRobot(state);
-}
-
-Eigen::Vector3d MoveItVizWindow::stateToPointRobot(const ob::State* state)
-{
   // Make sure a robot state is available
   visuals_->loadSharedRobotState();
 
@@ -487,6 +476,7 @@ Eigen::Vector3d MoveItVizWindow::stateToPointRobot(const ob::State* state)
   // Get pose
   // TODO(davetcoleman): do not hard code
   Eigen::Affine3d pose = visuals_->getRootRobotState()->getGlobalLinkTransform("right_gripper_target");
+
   return pose.translation();
 }
 

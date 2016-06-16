@@ -187,10 +187,8 @@ public:
    * \param result from an OMPL planner
    * \return geometry point msg with no z value filled in
    */
-  //Eigen::Vector3d stateToPoint(std::size_t vertex_id, ob::PlannerDataPtr planner_data);
   Eigen::Vector3d stateToPoint(const ob::ScopedState<> state);
   Eigen::Vector3d stateToPoint(const ob::State* state);
-  Eigen::Vector3d stateToPointRobot(const ob::State* state);
 
   /**
    * \brief Display the start and goal states on the image map
