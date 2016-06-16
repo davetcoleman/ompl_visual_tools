@@ -145,8 +145,8 @@ void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::St
   visuals_->publishLine(stateToPoint(stateA), stateToPoint(stateB), visuals_->getColorScale(percent), radius / 2.0);
 }
 
-void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB,
-                        ot::VizSizes size, ot::VizColors color)
+void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, ot::VizSizes size,
+                           ot::VizColors color)
 {
   Eigen::Vector3d pointA = stateToPoint(stateA);
   Eigen::Vector3d pointB = stateToPoint(stateB);
@@ -155,13 +155,13 @@ void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::St
   switch (size)
   {
     case ompl::tools::SMALL:
-      radius = 0.001;
+      radius = 0.0005;
       break;
     case ompl::tools::MEDIUM:
-      radius = 0.01;
+      radius = 0.005;
       break;
     case ompl::tools::LARGE:
-      radius = 0.1;
+      radius = 0.05;
       break;
     default:
       OMPL_ERROR("Unknown size");
