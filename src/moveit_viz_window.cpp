@@ -366,7 +366,7 @@ bool MoveItVizWindow::publishTrajectoryPath(const ompl::base::PlannerDataPtr& pa
       if (show_trajectory_animated)
       {
         robot_state::RobotState robot_state_copy = *visuals_->getSharedRobotState();
-        robot_trajectory->addSuffixWayPoint(robot_state_copy, 0.05);  // 1 second interval
+        robot_trajectory->addSuffixWayPoint(robot_state_copy, 0.01);  // 1 second interval
       }
 
       // Debug pose
