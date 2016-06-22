@@ -63,20 +63,9 @@ namespace og = ompl::geometric;
 namespace bnu = boost::numeric::ublas;
 namespace rvt = rviz_visual_tools;
 
-namespace ompl_interface
-{
-class ModelBasedPlanningContext;
-typedef std::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPtr;
-}
 
 namespace ompl_visual_tools
 {
-
-// Default constants
-static const std::string RVIZ_MARKER_TOPIC = "/ompl_rviz_markers";
-static const double COST_HEIGHT_OFFSET = 0.5;
-
-typedef std::map<std::string, std::list<std::size_t> > MarkerList;
 
 class ROSVizWindow : public ompl::tools::VizWindow
 {
@@ -166,7 +155,6 @@ public:
    * \brief Display result path from a solver
    * \return true on success
    */
-  RVIZ_VISUAL_TOOLS_DEPRECATED
   bool publishPath(const og::PathGeometric& path, const rviz_visual_tools::colors& color, const double thickness = 0.4,
                    const std::string& ns = "result_path");
 
@@ -237,25 +225,6 @@ public:
     min_state_radius_ = min_state_radius;
     max_state_radius_ = max_state_radius;
   }
-
-  /**
-   * \brief An OMPL planner calls this function directly through boost::bind to display its graph's progress during
-   * search
-   * \param pointer to the planner, to be used for getPlannerData()
-   */
-  void vizTrigger();
-  void vizState(const ompl::base::State* state, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data = 0);
-  void vizState2D(const Eigen::Vector3d& point, ompl::tools::VizSizes type, ompl::tools::VizColors color, double extra_data = 0);
-
-  /**
-   * \brief Publish a line from state A to state B
-   * \param value how red->green the line should be, where [0,1] 0 is red
-   * \return true on success
-   */
-  void vizEdge(const ompl::base::State* stateA, const ompl::base::State* stateB, double value);
-
-  /** \brief Convert a number to an rviz_visual_tools color enum */
-  rviz_visual_tools::colors omplColorToRviz(std::size_t color);
 
   /** \brief Getter for SpaceInformation */
   const ompl::base::SpaceInformationPtr& getSpaceInformation() const

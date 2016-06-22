@@ -80,13 +80,13 @@ void MoveItVizWindow::state(const ompl::base::State* state, ot::VizSizes size, o
   switch (size)
   {
     case ompl::tools::SMALL:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::SMALL);
+      visuals_->publishSphere(pose, visuals_->intToRvizColor(color), rvt::SMALL);
       break;
     case ompl::tools::MEDIUM:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::REGULAR);
+      visuals_->publishSphere(pose, visuals_->intToRvizColor(color), rvt::REGULAR);
       break;
     case ompl::tools::LARGE:
-      visuals_->publishSphere(pose, omplColorToRviz(color), rvt::LARGE);
+      visuals_->publishSphere(pose, visuals_->intToRvizColor(color), rvt::LARGE);
       break;
     case ompl::tools::VARIABLE_SIZE:  // Medium purple, translucent outline
       visuals_->publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
@@ -105,7 +105,7 @@ void MoveItVizWindow::state(const ompl::base::State* state, ot::VizSizes size, o
     break;
     case ompl::tools::ROBOT:  // Show actual robot in custom color
       mb_state_space->copyToRobotState(*visuals_->getSharedRobotState(), state);
-      visuals_->publishRobotState(visuals_->getSharedRobotState(), omplColorToRviz(color));
+      visuals_->publishRobotState(visuals_->getSharedRobotState(), visuals_->intToRvizColor(color));
       break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizStateRobot: Invalid state type value");
@@ -168,7 +168,7 @@ void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::St
       exit(-1);
   }
 
-  visuals_->publishLine(pointA, pointB, omplColorToRviz(color), radius);
+  visuals_->publishLine(pointA, pointB, visuals_->intToRvizColor(color), radius);
 }
 
 void MoveItVizWindow::path(ompl::geometric::PathGeometric* path, ompl::tools::VizSizes type, ot::VizColors color)
@@ -179,16 +179,16 @@ void MoveItVizWindow::path(ompl::geometric::PathGeometric* path, ompl::tools::Vi
   switch (type)
   {
     case ompl::tools::SMALL:  // Basic line with vertiices
-      publish2DPath(geometric_path, omplColorToRviz(color), min_edge_radius_);
-      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
+      publish2DPath(geometric_path, visuals_->intToRvizColor(color), min_edge_radius_);
+      publishSpheres(geometric_path, visuals_->intToRvizColor(color), rvt::SMALL);
       break;
     case ompl::tools::MEDIUM:  // Basic line with vertiices
-      publish2DPath(geometric_path, omplColorToRviz(color), max_edge_radius_ / 2.0);
-      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
+      publish2DPath(geometric_path, visuals_->intToRvizColor(color), max_edge_radius_ / 2.0);
+      publishSpheres(geometric_path, visuals_->intToRvizColor(color), rvt::SMALL);
       break;
     case ompl::tools::LARGE:  // Basic line with vertiices
-      publish2DPath(geometric_path, omplColorToRviz(color), max_edge_radius_);
-      publishSpheres(geometric_path, omplColorToRviz(color), rvt::SMALL);
+      publish2DPath(geometric_path, visuals_->intToRvizColor(color), max_edge_radius_);
+      publishSpheres(geometric_path, visuals_->intToRvizColor(color), rvt::SMALL);
       break;
     case ompl::tools::ROBOT:  // Playback motion for real robot
       // Check that jmg_ was set
@@ -567,35 +567,5 @@ void MoveItVizWindow::vizTrigger()
   // }
 }
 
-rvt::colors MoveItVizWindow::omplColorToRviz(std::size_t color)
-{
-  // clang-format off
-  switch (color)
-  {
-    case 0: return rviz_visual_tools::BLACK; break;
-    case 1: return rviz_visual_tools::BROWN; break;
-    case 2: return rviz_visual_tools::BLUE; break;
-    case 3: return rviz_visual_tools::CYAN; break;
-    case 4: return rviz_visual_tools::GREY; break;
-    case 5: return rviz_visual_tools::DARK_GREY; break;
-    case 6: return rviz_visual_tools::GREEN; break;
-    case 7: return rviz_visual_tools::LIME_GREEN; break;
-    case 8: return rviz_visual_tools::MAGENTA; break;
-    case 9: return rviz_visual_tools::ORANGE; break;
-    case 10: return rviz_visual_tools::PURPLE; break;
-    case 11: return rviz_visual_tools::RED; break;
-    case 12: return rviz_visual_tools::PINK; break;
-    case 13: return rviz_visual_tools::WHITE; break;
-    case 14: return rviz_visual_tools::YELLOW; break;
-    case 15: return rviz_visual_tools::TRANSLUCENT; break;
-    case 16: return rviz_visual_tools::TRANSLUCENT_LIGHT; break;
-    case 17: return rviz_visual_tools::TRANSLUCENT_DARK; break;
-    case 18: return rviz_visual_tools::RAND; break;
-    case 19: return rviz_visual_tools::CLEAR; break;
-    case 20: return rviz_visual_tools::DEFAULT; break;
-  }
-  // clang-format on
-  return rviz_visual_tools::DEFAULT;
-}
 
 }  // namespace ompl_visual_tools
