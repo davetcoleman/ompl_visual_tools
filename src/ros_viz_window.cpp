@@ -83,7 +83,7 @@ void ROSVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::
   switch (size)
   {
     case ompl::tools::SMALL:
-visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::SMALL);
+      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::SMALL);
       break;
     case ompl::tools::MEDIUM:
       visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::REGULAR);

@@ -261,6 +261,9 @@ private:
   double range0_ = 0;
   double range1_ = 0;
   double range2_ = 0;
+  double low0_ = 0;
+  double low1_ = 0;
+  double low2_ = 0;
 };
 
 typedef std::shared_ptr<ProjectionVizWindow> ProjectionVizWindowPtr;

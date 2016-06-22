@@ -82,8 +82,13 @@ ProjectionVizWindow::ProjectionVizWindow(rviz_visual_tools::RvizVisualToolsPtr v
 
   range0_ = fabs(bounds.high[0] - bounds.low[0]);
   range1_ = fabs(bounds.high[1] - bounds.low[1]);
+  low0_ = bounds.low[0];
+  low1_ = bounds.low[1];
   if (si_->getStateSpace()->getDimension() == 3)
+  {
     range2_ = fabs(bounds.high[2] - bounds.low[2]);
+    low2_ = bounds.low[2];
+  }
   BOOST_ASSERT_MSG(range0_ > 0, "Range is zero");
   BOOST_ASSERT_MSG(range1_ > 0, "Range is zero");
 
@@ -93,10 +98,6 @@ ProjectionVizWindow::ProjectionVizWindow(rviz_visual_tools::RvizVisualToolsPtr v
 void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::VizColors color, double extra_data)
 {
   Eigen::Vector3d point2 = stateToPoint(state);
-
-  // Optional - show state above lines - looks good in 2D but not 3D TODO(davetcoleman): how to auto choose this
-  if (false)
-    point2.z() += 0.5;
 
   switch (size)
   {
@@ -110,6 +111,7 @@ void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes siz
       visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::LARGE);
       break;
     case ompl::tools::VARIABLE_SIZE:
+      extra_data = extra_data / range0_; // hack for projection TODO(davetcoleman): is this correct?
       visuals_->publishSphere(point2, visuals_->intToRvizColor(color), extra_data * 2);
       break;
     case ompl::tools::SCALE:
@@ -123,14 +125,10 @@ void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes siz
       visuals_->publishSphere(visuals_->convertPointToPose(point2), visuals_->getColorScale(percent), scale);
     }
     break;
-    case ompl::tools::SMALL_TRANSLUCENT:
-      visuals_->publishSphere(point2, rvt::TRANSLUCENT_LIGHT, extra_data);
-      break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state size value");
-  }
+  } // switch
 }
-
 
 void ProjectionVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
 {
@@ -429,14 +427,13 @@ Eigen::Vector3d ProjectionVizWindow::stateToPoint(const ob::State* state)
 void ProjectionVizWindow::projectPoint(Eigen::Vector3d &point)
 {
   // Visualize within a 1:1:1 3D space
-  point.x() = point.x() / range0_;
-  point.y() = point.y() / range1_;
+  point.x() = (point.x() - low0_) / range0_;
+  point.y() = (point.y() - low1_) / range1_;
   if (si_->getStateSpace()->getDimension() == 3) // avoid divide by zero
-    point.z() = point.z() / range2_;
+    point.z() = (point.z() - low2_) / range2_;
 
   // Move all points to a hard coded location
-  point.x() += 1.5;
-  point.y() += 0.5;
+  point.x() += 1.0;
 
   // TODO(davetcoleman):remove
   // std::cout << "point.x(): " << point.x() << std::endl;
