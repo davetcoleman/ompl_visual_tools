@@ -70,10 +70,9 @@ typedef std::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPtr;
 
 namespace ompl_visual_tools
 {
-
 // Default constants
-//static const std::string RVIZ_MARKER_TOPIC = "/ompl_rviz_markers";
-//static const double COST_HEIGHT_OFFSET = 0.5;
+// static const std::string RVIZ_MARKER_TOPIC = "/ompl_rviz_markers";
+// static const double COST_HEIGHT_OFFSET = 0.5;
 
 typedef std::map<std::string, std::list<std::size_t> > MarkerList;
 
@@ -86,12 +85,20 @@ public:
   void state(const ompl::base::State* state, ompl::tools::VizSizes size, ompl::tools::VizColors color,
              double extraData);
 
+  /** \brief Visualize multiple states during runtime, externally */
+  void states(std::vector<const ompl::base::State*> states, std::vector<ompl::tools::VizColors> colors,
+  ompl::tools::VizSizes size);
+
   /** \brief Visualize edge during runtime, externally */
   void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost);
 
   /** \brief Visualize edge with a level during runtime, externally */
-  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB,
-            ompl::tools::VizSizes size, ompl::tools::VizColors color);
+  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, ompl::tools::VizSizes size,
+            ompl::tools::VizColors color);
+
+  /** \brief Visualize multiple edges during runtime, externally */
+  void edges(const std::vector<const ompl::base::State*> stateAs, const std::vector<const ompl::base::State*> stateBs,
+             std::vector<ompl::tools::VizColors> colors, ompl::tools::VizSizes size);
 
   /** \brief Visualize path during runtime, externally */
   void path(ompl::geometric::PathGeometric* path, ompl::tools::VizSizes type, ompl::tools::VizColors color);
@@ -136,12 +143,6 @@ public:
                    const double radius = 0.05);
 
   /**
-   * \brief Display States
-   * \return true on success
-   */
-  bool publishStates(std::vector<const ompl::base::State*> states);
-
-  /**
    * \brief Display result path from a solver
    * \return true on success
    */
@@ -157,7 +158,7 @@ public:
    * \param result from an OMPL planner
    * \return geometry point msg with no z value filled in
    */
-  //Eigen::Vector3d stateToPoint(std::size_t vertex_id, ob::PlannerDataPtr planner_data);
+  // Eigen::Vector3d stateToPoint(std::size_t vertex_id, ob::PlannerDataPtr planner_data);
   Eigen::Vector3d stateToPoint(const ob::ScopedState<> state);
   Eigen::Vector3d stateToPoint(const ob::State* state);
 
@@ -194,7 +195,7 @@ public:
   bool publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance);
 
   /** \brief Hack for visualizing arms in 3D */
-  void projectPoint(Eigen::Vector3d &point);
+  void projectPoint(Eigen::Vector3d& point);
 
   /**
    * \brief Set the range to visualize the edge costs

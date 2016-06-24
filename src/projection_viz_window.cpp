@@ -66,7 +66,8 @@ namespace bnu = boost::numeric::ublas;
 
 namespace ompl_visual_tools
 {
-ProjectionVizWindow::ProjectionVizWindow(rviz_visual_tools::RvizVisualToolsPtr visuals, ompl::base::SpaceInformationPtr si)
+ProjectionVizWindow::ProjectionVizWindow(rviz_visual_tools::RvizVisualToolsPtr visuals,
+                                         ompl::base::SpaceInformationPtr si)
   : name_("projection_viz_window"), visuals_(visuals), si_(si)
 {
   // with this OMPL interface to Rviz all pubs must be manually triggered
@@ -78,7 +79,8 @@ ProjectionVizWindow::ProjectionVizWindow(rviz_visual_tools::RvizVisualToolsPtr v
   ompl::base::RealVectorBounds bounds = mb_state_space->getBounds();
 
   // Only allow 2 or 3 dimensions
-  BOOST_ASSERT_MSG(si_->getStateSpace()->getDimension() == 2 || si_->getStateSpace()->getDimension() == 3, "Invalid number of dimensions");
+  BOOST_ASSERT_MSG(si_->getStateSpace()->getDimension() == 2 || si_->getStateSpace()->getDimension() == 3,
+                   "Invalid number of dimensions");
 
   range0_ = fabs(bounds.high[0] - bounds.low[0]);
   range1_ = fabs(bounds.high[1] - bounds.low[1]);
@@ -95,7 +97,8 @@ ProjectionVizWindow::ProjectionVizWindow(rviz_visual_tools::RvizVisualToolsPtr v
   ROS_DEBUG_STREAM_NAMED(name_, "Initializing ProjectionVizWindow()");
 }
 
-void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::VizColors color, double extra_data)
+void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::VizColors color,
+                                double extra_data)
 {
   Eigen::Vector3d point2 = stateToPoint(state);
 
@@ -111,7 +114,7 @@ void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes siz
       visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::LARGE);
       break;
     case ompl::tools::VARIABLE_SIZE:
-      extra_data = extra_data / range0_; // hack for projection TODO(davetcoleman): is this correct?
+      extra_data = extra_data / range0_;  // hack for projection TODO(davetcoleman): is this correct?
       visuals_->publishSphere(point2, visuals_->intToRvizColor(color), extra_data * 2);
       break;
     case ompl::tools::SCALE:
@@ -127,7 +130,26 @@ void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes siz
     break;
     default:
       ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state size value");
-  } // switch
+  }  // switch
+}
+
+void ProjectionVizWindow::states(std::vector<const ompl::base::State*> states, std::vector<ot::VizColors> colors,
+                                 ot::VizSizes size)
+{
+  // Cache spheres
+  EigenSTL::vector_Vector3d sphere_points;
+  std::vector<rvt::colors> sphere_colors;
+
+  for (std::size_t i = 0; i < states.size(); ++i)
+  {
+    // Convert OMPL state to vector3
+    sphere_points.push_back(stateToPoint(states[i]));
+    // Convert OMPL color to Rviz color
+    sphere_colors.push_back(visuals_->intToRvizColor(colors[i]));
+  }
+
+  // Publish
+  visuals_->publishSpheres(sphere_points, sphere_colors, visuals_->intToRvizScale(size));
 }
 
 void ProjectionVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
@@ -161,30 +183,34 @@ void ProjectionVizWindow::edge(const ompl::base::State* stateA, const ompl::base
   publishEdge(stateA, stateB, visuals_->getColorScale(percent), radius);
 }
 
-void ProjectionVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB,
-                        ot::VizSizes size, ot::VizColors color)
+void ProjectionVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, ot::VizSizes size,
+                               ot::VizColors color)
 {
-  Eigen::Vector3d pointA = stateToPoint(stateA);
-  Eigen::Vector3d pointB = stateToPoint(stateB);
+  visuals_->publishCylinder(stateToPoint(stateA), stateToPoint(stateB), visuals_->intToRvizColor(color),
+                            visuals_->intToRvizScale(size));
+}
 
-  double radius;
-  switch (size)
+void ProjectionVizWindow::edges(const std::vector<const ompl::base::State*> stateAs,
+                                const std::vector<const ompl::base::State*> stateBs,
+                                std::vector<ompl::tools::VizColors> colors, ompl::tools::VizSizes size)
+{
+  // Cache edges
+  EigenSTL::vector_Vector3d aPoints;
+  EigenSTL::vector_Vector3d bPoints;
+  std::vector<rvt::colors> rviz_colors;
+
+  for (std::size_t i = 0; i < stateAs.size(); ++i)
   {
-    case ompl::tools::SMALL:
-      radius = 0.01;
-      break;
-    case ompl::tools::MEDIUM:
-      radius = 0.1;
-      break;
-    case ompl::tools::LARGE:
-      radius = 1;
-      break;
-    default:
-      OMPL_ERROR("Unknown size");
-      exit(-1);
+    // Convert OMPL states to vector3
+    aPoints.push_back(stateToPoint(stateAs[i]));
+    bPoints.push_back(stateToPoint(stateBs[i]));
+
+    // Convert OMPL color to Rviz color
+    rviz_colors.push_back(visuals_->intToRvizColor(colors[i]));
   }
 
-  visuals_->publishCylinder(pointA, pointB, visuals_->intToRvizColor(color), radius);
+  // Publish
+  visuals_->publishLines(aPoints, bPoints, rviz_colors, visuals_->intToRvizScale(size));
 }
 
 void ProjectionVizWindow::path(ompl::geometric::PathGeometric* path, ompl::tools::VizSizes type, ot::VizColors color)
@@ -231,14 +257,14 @@ bool ProjectionVizWindow::shutdownRequested()
 
 // From ompl_visual_tools ------------------------------------------------------
 
-bool ProjectionVizWindow::publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA& color,
-                                  const double radius)
+bool ProjectionVizWindow::publishEdge(const ob::State* stateA, const ob::State* stateB,
+                                      const std_msgs::ColorRGBA& color, const double radius)
 {
   return visuals_->publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
 }
 
 bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, double scale,
-                                     const std::string& ns)
+                                         const std::string& ns)
 {
   geometry_msgs::Vector3 scale_vector;
   scale_vector.x = scale;
@@ -247,14 +273,14 @@ bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rv
   return publishSpheres(path, color, scale_vector, ns);
 }
 
-bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, const rvt::scales scale,
-                                     const std::string& ns)
+bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
+                                         const rvt::scales scale, const std::string& ns)
 {
   return publishSpheres(path, color, visuals_->getScale(scale, false, 0.25), ns);
 }
 
 bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
-                                     const geometry_msgs::Vector3& scale, const std::string& ns)
+                                         const geometry_msgs::Vector3& scale, const std::string& ns)
 {
   std::vector<geometry_msgs::Point> points;
   for (std::size_t i = 0; i < path.getStateCount(); ++i)
@@ -263,68 +289,15 @@ bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rv
   return visuals_->publishSpheres(points, color, scale, ns);
 }
 
-bool ProjectionVizWindow::publishStates(std::vector<const ompl::base::State*> states)
-{
-  visualization_msgs::Marker marker;
-  // Set the frame ID and timestamp.
-  marker.header.frame_id = visuals_->getBaseFrame();
-  marker.header.stamp = ros::Time();
-
-  // Set the namespace and id for this marker.  This serves to create a unique ID
-  marker.ns = "states";
-
-  // Set the marker type.
-  marker.type = visualization_msgs::Marker::SPHERE_LIST;
-
-  // Set the marker action.  Options are ADD and DELETE
-  marker.action = visualization_msgs::Marker::ADD;
-  marker.id = 0;
-
-  marker.pose.position.x = 0.0;
-  marker.pose.position.y = 0.0;
-  marker.pose.position.z = 0.0;
-
-  marker.pose.orientation.x = 0.0;
-  marker.pose.orientation.y = 0.0;
-  marker.pose.orientation.z = 0.0;
-  marker.pose.orientation.w = 1.0;
-
-  marker.scale.x = 0.4;
-  marker.scale.y = 0.4;
-  marker.scale.z = 0.4;
-
-  marker.color = visuals_->getColor(rvt::RED);
-
-  // Make line color
-  std_msgs::ColorRGBA color = visuals_->getColor(rvt::RED);
-
-  // Point
-  geometry_msgs::Point point_a;
-
-  // Loop through all verticies
-  for (int vertex_id = 0; vertex_id < int(states.size()); ++vertex_id)
-  {
-    // First point
-    point_a = visuals_->convertPoint(stateToPoint(states[vertex_id]));
-
-    // Add the point pair to the line message
-    marker.points.push_back(point_a);
-    marker.colors.push_back(color);
-  }
-
-  // Send to Rviz
-  return visuals_->publishMarker(marker);
-}
-
 // Deprecated
 bool ProjectionVizWindow::publishPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,
-                                  const std::string& ns)
+                                      const std::string& ns)
 {
   return publish2DPath(path, color, thickness, ns);
 }
 
 bool ProjectionVizWindow::publish2DPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,
-                                    const std::string& ns)
+                                        const std::string& ns)
 {
   // Error check
   if (path.getStateCount() <= 0)
@@ -359,31 +332,31 @@ int ProjectionVizWindow::natRound(double x)
 }
 
 bool ProjectionVizWindow::publishState(const ob::State* state, const rvt::colors& color, const rvt::scales scale,
-                                   const std::string& ns)
+                                       const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale, ns);
 }
 
 bool ProjectionVizWindow::publishState(const ob::State* state, const rvt::colors& color, const double scale,
-                                   const std::string& ns)
+                                       const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale, ns);
 }
 
 bool ProjectionVizWindow::publishState(const ob::ScopedState<> state, const rvt::colors& color, const rvt::scales scale,
-                                   const std::string& ns)
+                                       const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale, ns);
 }
 
 bool ProjectionVizWindow::publishState(const ob::ScopedState<> state, const rvt::colors& color, double scale,
-                                   const std::string& ns)
+                                       const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale, ns);
 }
 
 bool ProjectionVizWindow::publishState(const ob::ScopedState<> state, const rvt::colors& color,
-                                   const geometry_msgs::Vector3& scale, const std::string& ns)
+                                       const geometry_msgs::Vector3& scale, const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale.x, ns);
 }
@@ -424,21 +397,16 @@ Eigen::Vector3d ProjectionVizWindow::stateToPoint(const ob::State* state)
   return temp_eigen_point_;
 }
 
-void ProjectionVizWindow::projectPoint(Eigen::Vector3d &point)
+void ProjectionVizWindow::projectPoint(Eigen::Vector3d& point)
 {
   // Visualize within a 1:1:1 3D space
   point.x() = (point.x() - low0_) / range0_;
   point.y() = (point.y() - low1_) / range1_;
-  if (si_->getStateSpace()->getDimension() == 3) // avoid divide by zero
+  if (si_->getStateSpace()->getDimension() == 3)  // avoid divide by zero
     point.z() = (point.z() - low2_) / range2_;
 
   // Move all points to a hard coded location
   point.x() += 1.0;
-
-  // TODO(davetcoleman):remove
-  // std::cout << "point.x(): " << point.x() << std::endl;
-  // std::cout << "point.y(): " << point.y() << std::endl;
-  // std::cout << "point.z(): " << point.z() << std::endl;
 }
 
 }  // namespace ompl_visual_tools

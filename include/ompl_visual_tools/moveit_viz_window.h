@@ -69,7 +69,6 @@ typedef std::shared_ptr<ModelBasedPlanningContext> ModelBasedPlanningContextPtr;
 
 namespace ompl_visual_tools
 {
-
 class MoveItVizWindow : public ompl::tools::VizWindow
 {
 public:
@@ -79,12 +78,20 @@ public:
   void state(const ompl::base::State* state, ompl::tools::VizSizes size, ompl::tools::VizColors color,
              double extraData);
 
+  /** \brief Visualize multiple states during runtime, externally */
+  // void states(std::vector<const ompl::base::State*> states, std::vector<const ompl::tools::VizColors> colors,
+  //             ompl::tools::VizSizes size){};
+
   /** \brief Visualize edge during runtime, externally */
   void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost);
 
   /** \brief Visualize edge with a level during runtime, externally */
-  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB,
-            ompl::tools::VizSizes size, ompl::tools::VizColors color);
+  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, ompl::tools::VizSizes size,
+            ompl::tools::VizColors color);
+
+  /** \brief Visualize multiple edges during runtime, externally */
+  // void edges(const std::vector<const ompl::base::State*> stateAs, const std::vector<const ompl::base::State*> stateBs,
+  //            std::vector<ompl::tools::VizColors> colors, ompl::tools::VizSizes size){};
 
   /**
    * \brief Publish a full path of multiple points and edges
@@ -131,7 +138,7 @@ public:
    * \brief Display States
    * \return true on success
    */
-  bool publishStates(std::vector<const ompl::base::State*> states);
+  //bool publishStates(std::vector<const ompl::base::State*> states);
 
   /**
    * \brief Convert an OMPL state to a MoveIt! robot state and publish it
@@ -154,8 +161,7 @@ public:
   }
 
   RVIZ_VISUAL_TOOLS_DEPRECATED
-  bool publishRobotPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg,
-                        const bool blocking)
+  bool publishRobotPath(const og::PathGeometric& path, const robot_model::JointModelGroup* jmg, const bool blocking)
   {
     return publishTrajectoryPath(path, jmg, blocking);
   }
@@ -312,7 +318,6 @@ private:
   double min_state_radius_ = 0.5;
 
   double level_scale_ = 20.0;
-
 };
 
 typedef std::shared_ptr<MoveItVizWindow> MoveItVizWindowPtr;
