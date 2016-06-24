@@ -104,15 +104,6 @@ void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes siz
 
   switch (size)
   {
-    case ompl::tools::SMALL:
-      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::SMALL);
-      break;
-    case ompl::tools::MEDIUM:
-      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::REGULAR);
-      break;
-    case ompl::tools::LARGE:
-      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::LARGE);
-      break;
     case ompl::tools::VARIABLE_SIZE:
       extra_data = extra_data / range0_;  // hack for projection TODO(davetcoleman): is this correct?
       visuals_->publishSphere(point2, visuals_->intToRvizColor(color), extra_data * 2);
@@ -129,7 +120,7 @@ void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes siz
     }
     break;
     default:
-      ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state size value");
+      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), visuals_->intToRvizScale(size));
   }  // switch
 }
 
