@@ -194,9 +194,6 @@ public:
    */
   bool publishSampleRegion(const ob::ScopedState<>& state_area, const double& distance);
 
-  /** \brief Hack for visualizing arms in 3D */
-  void projectPoint(Eigen::Vector3d& point);
-
   /**
    * \brief Set the range to visualize the edge costs
    * \param invert - if true, red is largest values and green is lowest
@@ -259,12 +256,8 @@ private:
   double level_scale_ = 20.0;
 
   // Properties of state space
-  double range0_ = 0;
-  double range1_ = 0;
-  double range2_ = 0;
-  double low0_ = 0;
-  double low1_ = 0;
-  double low2_ = 0;
+  std::vector<double> range_;
+  std::vector<double> low_;
 };
 
 typedef std::shared_ptr<ProjectionVizWindow> ProjectionVizWindowPtr;

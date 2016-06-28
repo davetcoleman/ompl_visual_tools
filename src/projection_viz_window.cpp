@@ -57,8 +57,6 @@
 // MoveIt
 #include <moveit_ompl/model_based_state_space.h>
 
-//#include <moveit/macros/deprecation.h>
-
 namespace ot = ompl::tools;
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -78,21 +76,17 @@ ProjectionVizWindow::ProjectionVizWindow(rviz_visual_tools::RvizVisualToolsPtr v
       std::static_pointer_cast<moveit_ompl::ModelBasedStateSpace>(si_->getStateSpace());
   ompl::base::RealVectorBounds bounds = mb_state_space->getBounds();
 
-  // Only allow 2 or 3 dimensions
-  BOOST_ASSERT_MSG(si_->getStateSpace()->getDimension() == 2 || si_->getStateSpace()->getDimension() == 3,
+  // Only allow up to 6 dimensions
+  BOOST_ASSERT_MSG(si_->getStateSpace()->getDimension() > 0 && si_->getStateSpace()->getDimension() <= 6,
                    "Invalid number of dimensions");
 
-  range0_ = fabs(bounds.high[0] - bounds.low[0]);
-  range1_ = fabs(bounds.high[1] - bounds.low[1]);
-  low0_ = bounds.low[0];
-  low1_ = bounds.low[1];
-  if (si_->getStateSpace()->getDimension() == 3)
+  // For each dimension
+  for (std::size_t i = 0; i < si_->getStateSpace()->getDimension(); ++i)
   {
-    range2_ = fabs(bounds.high[2] - bounds.low[2]);
-    low2_ = bounds.low[2];
+    range_.push_back(fabs(bounds.high[i] - bounds.low[i]));
+    low_.push_back(bounds.low[i]);
+    BOOST_ASSERT_MSG(range_.back() > 0, "Range is zero");
   }
-  BOOST_ASSERT_MSG(range0_ > 0, "Range is zero");
-  BOOST_ASSERT_MSG(range1_ > 0, "Range is zero");
 
   ROS_DEBUG_STREAM_NAMED(name_, "Initializing ProjectionVizWindow()");
 }
@@ -105,7 +99,7 @@ void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes siz
   switch (size)
   {
     case ompl::tools::VARIABLE_SIZE:
-      extra_data = extra_data / range0_;  // hack for projection TODO(davetcoleman): is this correct?
+      extra_data = extra_data / range_[0];  // hack for projection TODO(davetcoleman): is this correct?
       visuals_->publishSphere(point2, visuals_->intToRvizColor(color), extra_data * 2);
       break;
     case ompl::tools::SCALE:
@@ -267,7 +261,7 @@ bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rv
 bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
                                          const rvt::scales scale, const std::string& ns)
 {
-  return publishSpheres(path, color, visuals_->getScale(scale, false, 0.25), ns);
+  return publishSpheres(path, color, visuals_->getScale(scale), ns);
 }
 
 bool ProjectionVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
@@ -376,28 +370,34 @@ Eigen::Vector3d ProjectionVizWindow::stateToPoint(const ob::State* state)
     exit(1);
   }
 
-  // Copy point
-  temp_eigen_point_.x() = state->as<moveit_ompl::ModelBasedStateSpace::StateType>()->values[0];
-  temp_eigen_point_.y() = state->as<moveit_ompl::ModelBasedStateSpace::StateType>()->values[1];
-  if (si_->getStateSpace()->getDimension() == 3)
-    temp_eigen_point_.z() = state->as<moveit_ompl::ModelBasedStateSpace::StateType>()->values[2];
+  std::vector<double> point(3 /*size*/, 0 /*default value*/);
+  double temp;
 
-  // Move point to useful location
-  projectPoint(temp_eigen_point_);
+  // For each dimension
+  for (std::size_t i = 0; i < si_->getStateSpace()->getDimension(); ++i)
+  {
+    temp = state->as<moveit_ompl::ModelBasedStateSpace::StateType>()->values[i];
+
+    if (i < 3) // regular dimensions
+    {
+      // Project to 1:1:1 3D space
+      point[i] = (temp - low_[i]) / range_[i];
+    }
+    else if (i >= 3) // Move the 3D space over
+    {
+      // Project to 1:1:1 3D space
+      temp = (temp - low_[i]) / range_[i];
+
+      point[i-3] += temp * 5;
+    }
+  }
+
+  // Copy to eigen structure
+  temp_eigen_point_.x() = point[0] + 1.0; // Move all points to a hard coded location
+  temp_eigen_point_.y() = point[1];
+  temp_eigen_point_.z() = point[2];
 
   return temp_eigen_point_;
-}
-
-void ProjectionVizWindow::projectPoint(Eigen::Vector3d& point)
-{
-  // Visualize within a 1:1:1 3D space
-  point.x() = (point.x() - low0_) / range0_;
-  point.y() = (point.y() - low1_) / range1_;
-  if (si_->getStateSpace()->getDimension() == 3)  // avoid divide by zero
-    point.z() = (point.z() - low2_) / range2_;
-
-  // Move all points to a hard coded location
-  point.x() += 1.0;
 }
 
 }  // namespace ompl_visual_tools

@@ -341,7 +341,7 @@ bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colo
 bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, const rvt::scales scale,
                                      const std::string& ns)
 {
-  return publishSpheres(path, color, visuals_->getScale(scale, false, 0.25), ns);
+  return publishSpheres(path, color, visuals_->getScale(scale), ns);
 }
 
 bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
