@@ -67,7 +67,7 @@ ROSVizWindow::ROSVizWindow(rviz_visual_tools::RvizVisualToolsPtr visuals, ompl::
   : name_("ros_viz_window"), visuals_(visuals), si_(si)
 {
   // with this OMPL interface to Rviz all pubs must be manually triggered
-  visuals_->enableBatchPublishing(false);
+  //visuals_->enableBatchPublishing(true);
 
   ROS_DEBUG_STREAM_NAMED(name_, "Initializing ROSVizWindow()");
 }

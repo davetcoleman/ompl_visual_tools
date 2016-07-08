@@ -62,7 +62,7 @@ MoveItVizWindow::MoveItVizWindow(moveit_visual_tools::MoveItVisualToolsPtr visua
   : name_("moveit_viz_window"), visuals_(visuals), si_(si)
 {
   // with this OMPL interface to Rviz all pubs must be manually triggered
-  visuals_->enableBatchPublishing(false);
+  //visuals_->enableBatchPublishing(false);
 
   ROS_DEBUG_STREAM_NAMED(name_, "Initializing MoveItVizWindow()");
 }

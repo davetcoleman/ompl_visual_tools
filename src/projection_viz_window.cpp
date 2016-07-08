@@ -69,7 +69,7 @@ ProjectionVizWindow::ProjectionVizWindow(rviz_visual_tools::RvizVisualToolsPtr v
   : name_("projection_viz_window"), visuals_(visuals), si_(si)
 {
   // with this OMPL interface to Rviz all pubs must be manually triggered
-  visuals_->enableBatchPublishing(false);
+  //visuals_->enableBatchPublishing(false);
 
   // Calculate ranges
   moveit_ompl::ModelBasedStateSpacePtr mb_state_space =
