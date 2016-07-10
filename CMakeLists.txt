@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ompl_visual_tools)
 
 # C++ 11
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall ${CMAKE_CXX_FLAGS}")
+add_compile_options(-std=c++11) 
 
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
