@@ -393,9 +393,13 @@ Eigen::Vector3d ProjectionVizWindow::stateToPoint(const ob::State* state)
   }
 
   // Copy to eigen structure
-  temp_eigen_point_.x() = point[0] + 1.0; // Move all points to a hard coded location
-  temp_eigen_point_.y() = point[1];
-  temp_eigen_point_.z() = point[2];
+  //const double x_offset = 1.0; // Move all points to a hard coded location
+  static const double x_offset = -0.5; // Move all points to a hard coded location
+  static const double y_offset = -0.5;
+  static const double z_offset = 0.0;
+  temp_eigen_point_.x() = point[0] + x_offset;
+  temp_eigen_point_.y() = point[1] + y_offset;
+  temp_eigen_point_.z() = point[2] + z_offset;
 
   return temp_eigen_point_;
 }
