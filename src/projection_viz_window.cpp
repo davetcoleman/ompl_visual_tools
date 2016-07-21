@@ -99,8 +99,15 @@ void ProjectionVizWindow::state(const ompl::base::State* state, ot::VizSizes siz
   switch (size)
   {
     case ompl::tools::VARIABLE_SIZE:
-      extra_data = extra_data / range_[0];  // hack for projection TODO(davetcoleman): is this correct?
-      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), extra_data * 2);
+
+      //extra_data /= range_[0];  // hack for projection TODO(davetcoleman): is this correct?
+      std::cout << "orig extra_data " << extra_data << std::endl;
+      extra_data = (extra_data - low_[0]) / range_[0];
+      std::cout << "projected extra_data " << extra_data << std::endl;
+      extra_data /= visuals_->getGlobalScale();
+      std::cout << "reverse scaled extra_data " << extra_data << std::endl;
+
+      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), extra_data);
       break;
     case ompl::tools::SCALE:
     {

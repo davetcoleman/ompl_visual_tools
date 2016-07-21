@@ -89,13 +89,18 @@ void MoveItVizWindow::state(const ompl::base::State* state, ot::VizSizes size, o
       visuals_->publishSphere(pose, visuals_->intToRvizColor(color), rvt::LARGE);
       break;
     case ompl::tools::VARIABLE_SIZE:  // Medium purple, translucent outline
-      visuals_->publishSphere(pose, rvt::PURPLE, rvt::REGULAR);
-      // visuals_->publishSphere(pose.translation(), rvt::TRANSLUCENT_LIGHT, extra_data * 2);
+      // Visual tools has a scaling feature that will mess up the exact scaling we desire, so we out-smart it
+      extra_data /= visuals_->getGlobalScale();
+      visuals_->publishSphere(visuals_->convertPose(pose), visuals_->intToRvizColor(color), extra_data * 2);
       break;
     case ompl::tools::SCALE:  // Display sphere based on value between 0-100
     {
       const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+      double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+
+      // Visual tools has a scaling feature that will mess up the exact scaling we desire, so we out-smart it
+      radius /= visuals_->getGlobalScale();
+
       geometry_msgs::Vector3 scale;
       scale.x = radius;
       scale.y = radius;

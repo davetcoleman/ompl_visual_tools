@@ -78,12 +78,12 @@ public:
   // void states(std::vector<const ompl::base::State*> states, std::vector<const ompl::tools::VizColors> colors,
   //             ompl::tools::VizSizes size){};
 
-  /** \brief Visualize edge during runtime, externally */
-  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost);
-
   /** \brief Visualize edge with a level during runtime, externally */
   void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, ompl::tools::VizSizes size,
             ompl::tools::VizColors color);
+
+  /** \brief Visualize edge during runtime, externally */
+  void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost);
 
   /** \brief Visualize multiple edges during runtime, externally */
   // void edges(const std::vector<const ompl::base::State*> stateAs, const std::vector<const ompl::base::State*> stateBs,

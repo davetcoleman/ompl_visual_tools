@@ -67,52 +67,99 @@ ROSVizWindow::ROSVizWindow(rviz_visual_tools::RvizVisualToolsPtr visuals, ompl::
   : name_("ros_viz_window"), visuals_(visuals), si_(si)
 {
   // with this OMPL interface to Rviz all pubs must be manually triggered
-  //visuals_->enableBatchPublishing(true);
+  // visuals_->enableBatchPublishing(true);
 
   ROS_DEBUG_STREAM_NAMED(name_, "Initializing ROSVizWindow()");
 }
 
 void ROSVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::VizColors color, double extra_data)
 {
-  Eigen::Vector3d point2 = stateToPoint(state);
+  Eigen::Vector3d point = stateToPoint(state);
 
   // Optional - show state above lines - looks good in 2D but not 3D TODO(davetcoleman): how to auto choose this
-  if (false)
-    point2.z() += 0.5;
+  if (true)
+    point.z() += 0.5;
 
   switch (size)
   {
+    case ompl::tools::XXSMALL:
+      visuals_->publishSphere(point, visuals_->intToRvizColor(color), rvt::XXXSMALL);
+      break;
+    case ompl::tools::XSMALL:
+      visuals_->publishSphere(point, visuals_->intToRvizColor(color), rvt::XXSMALL);
+      break;
     case ompl::tools::SMALL:
-      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::SMALL);
+      visuals_->publishSphere(point, visuals_->intToRvizColor(color), rvt::XSMALL);
       break;
     case ompl::tools::MEDIUM:
-      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::REGULAR);
+      visuals_->publishSphere(point, visuals_->intToRvizColor(color), rvt::SMALL);
       break;
     case ompl::tools::LARGE:
-      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), rvt::LARGE);
+      visuals_->publishSphere(point, visuals_->intToRvizColor(color), rvt::MEDIUM);
+      break;
+    case ompl::tools::XLARGE:
+      visuals_->publishSphere(point, visuals_->intToRvizColor(color), rvt::LARGE);
+      break;
+    case ompl::tools::XXLARGE:
+      visuals_->publishSphere(point, visuals_->intToRvizColor(color), rvt::XLARGE);
       break;
     case ompl::tools::VARIABLE_SIZE:
-      visuals_->publishSphere(point2, visuals_->intToRvizColor(color), extra_data * 2);
+      // Visual tools has a scaling feature that will mess up the exact scaling we desire, so we out-smart it
+      extra_data /= visuals_->getGlobalScale();
+      visuals_->publishSphere(point, visuals_->intToRvizColor(color), extra_data * 2);
       break;
     case ompl::tools::SCALE:
     {
       const double percent = (extra_data - min_edge_cost_) / (max_edge_cost_ - min_edge_cost_);
-      const double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+      double radius = ((max_state_radius_ - min_state_radius_) * percent + min_state_radius_);
+
+      // Visual tools has a scaling feature that will mess up the exact scaling we desire, so we out-smart it
+      radius /= visuals_->getGlobalScale();
+
       geometry_msgs::Vector3 scale;
       scale.x = radius;
       scale.y = radius;
       scale.z = radius;
-      visuals_->publishSphere(visuals_->convertPointToPose(point2), visuals_->getColorScale(percent), scale);
+      visuals_->publishSphere(visuals_->convertPointToPose(point), visuals_->getColorScale(percent), scale);
     }
     break;
     case ompl::tools::SMALL_TRANSLUCENT:
-      visuals_->publishSphere(point2, rvt::TRANSLUCENT_LIGHT, extra_data);
+      OMPL_WARN("SMALL_TRANSLUCENT in ros_viz_window... I think this should be removed");
+      visuals_->publishSphere(point, rvt::TRANSLUCENT_LIGHT, extra_data);
+      break;
+    case ompl::tools::ROBOT:
+      std::cout << "skipping visualizing robot state " << std::endl;
       break;
     default:
-      ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state size value");
+      ROS_ERROR_STREAM_NAMED(name_, "vizState2D: Invalid state size value " << size);
   }
 }
 
+void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, ot::VizSizes size,
+                        ot::VizColors color)
+{
+  Eigen::Vector3d pointA = stateToPoint(stateA);
+  Eigen::Vector3d pointB = stateToPoint(stateB);
+
+  double radius;
+  switch (size)
+  {
+    case ompl::tools::SMALL:
+      radius = 0.1;
+      break;
+    case ompl::tools::MEDIUM:
+      radius = 0.2;
+      break;
+    case ompl::tools::LARGE:
+      radius = 0.5;
+      break;
+    default:
+      OMPL_ERROR("Unknown size");
+      exit(-1);
+  }
+
+  visuals_->publishCylinder(pointA, pointB, visuals_->intToRvizColor(color), radius);
+}
 
 void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
 {
@@ -143,32 +190,6 @@ void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State
               << " percent: " << percent << " radius: " << radius << std::endl;
 
   publishEdge(stateA, stateB, visuals_->getColorScale(percent), radius);
-}
-
-void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB,
-                        ot::VizSizes size, ot::VizColors color)
-{
-  Eigen::Vector3d pointA = stateToPoint(stateA);
-  Eigen::Vector3d pointB = stateToPoint(stateB);
-
-  double radius;
-  switch (size)
-  {
-    case ompl::tools::SMALL:
-      radius = 0.01;
-      break;
-    case ompl::tools::MEDIUM:
-      radius = 0.1;
-      break;
-    case ompl::tools::LARGE:
-      radius = 1;
-      break;
-    default:
-      OMPL_ERROR("Unknown size");
-      exit(-1);
-  }
-
-  visuals_->publishCylinder(pointA, pointB, visuals_->intToRvizColor(color), radius);
 }
 
 void ROSVizWindow::path(ompl::geometric::PathGeometric* path, ompl::tools::VizSizes type, ot::VizColors color)
@@ -323,13 +344,13 @@ bool ROSVizWindow::publishTriangle(int x, int y, visualization_msgs::Marker* mar
 }
 
 bool ROSVizWindow::publishEdge(const ob::State* stateA, const ob::State* stateB, const std_msgs::ColorRGBA& color,
-                                  const double radius)
+                               const double radius)
 {
   return visuals_->publishCylinder(stateToPoint(stateA), stateToPoint(stateB), color, radius / 2.0);
 }
 
 bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, double scale,
-                                     const std::string& ns)
+                                  const std::string& ns)
 {
   geometry_msgs::Vector3 scale_vector;
   scale_vector.x = scale;
@@ -339,13 +360,13 @@ bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colo
 }
 
 bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color, const rvt::scales scale,
-                                     const std::string& ns)
+                                  const std::string& ns)
 {
   return publishSpheres(path, color, visuals_->getScale(scale), ns);
 }
 
 bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colors& color,
-                                     const geometry_msgs::Vector3& scale, const std::string& ns)
+                                  const geometry_msgs::Vector3& scale, const std::string& ns)
 {
   std::vector<geometry_msgs::Point> points;
   for (std::size_t i = 0; i < path.getStateCount(); ++i)
@@ -409,13 +430,13 @@ bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colo
 
 // Deprecated
 bool ROSVizWindow::publishPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,
-                                  const std::string& ns)
+                               const std::string& ns)
 {
   return publish2DPath(path, color, thickness, ns);
 }
 
 bool ROSVizWindow::publish2DPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,
-                                    const std::string& ns)
+                                 const std::string& ns)
 {
   // Error check
   if (path.getStateCount() <= 0)
@@ -479,31 +500,31 @@ int ROSVizWindow::natRound(double x)
 }
 
 bool ROSVizWindow::publishState(const ob::State* state, const rvt::colors& color, const rvt::scales scale,
-                                   const std::string& ns)
+                                const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale, ns);
 }
 
 bool ROSVizWindow::publishState(const ob::State* state, const rvt::colors& color, const double scale,
-                                   const std::string& ns)
+                                const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale, ns);
 }
 
 bool ROSVizWindow::publishState(const ob::ScopedState<> state, const rvt::colors& color, const rvt::scales scale,
-                                   const std::string& ns)
+                                const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale, ns);
 }
 
 bool ROSVizWindow::publishState(const ob::ScopedState<> state, const rvt::colors& color, double scale,
-                                   const std::string& ns)
+                                const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale, ns);
 }
 
 bool ROSVizWindow::publishState(const ob::ScopedState<> state, const rvt::colors& color,
-                                   const geometry_msgs::Vector3& scale, const std::string& ns)
+                                const geometry_msgs::Vector3& scale, const std::string& ns)
 {
   return visuals_->publishSphere(stateToPoint(state), color, scale.x, ns);
 }
