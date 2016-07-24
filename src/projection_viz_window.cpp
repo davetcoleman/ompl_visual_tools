@@ -238,10 +238,7 @@ bool ProjectionVizWindow::shutdownRequested()
 {
   if (!ros::ok())
   {
-    std::cout << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
     std::cout << "Shutting down process by request of ros::ok()" << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
     return true;
   }
   return false;
