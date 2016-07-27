@@ -135,6 +135,25 @@ void ROSVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::
   }
 }
 
+void ROSVizWindow::states(std::vector<const ompl::base::State*> states, std::vector<ot::VizColors> colors,
+                          ot::VizSizes size)
+{
+  // Cache spheres
+  EigenSTL::vector_Vector3d sphere_points;
+  std::vector<rvt::colors> sphere_colors;
+
+  for (std::size_t i = 0; i < states.size(); ++i)
+  {
+    // Convert OMPL state to vector3
+    sphere_points.push_back(stateToPoint(states[i]));
+    // Convert OMPL color to Rviz color
+    sphere_colors.push_back(visuals_->intToRvizColor(colors[i]));
+  }
+
+  // Publish
+  visuals_->publishSpheres(sphere_points, sphere_colors, visuals_->intToRvizScale(size));
+}
+
 void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, ot::VizSizes size,
                         ot::VizColors color)
 {
@@ -371,59 +390,6 @@ bool ROSVizWindow::publishSpheres(const og::PathGeometric& path, const rvt::colo
 
   return visuals_->publishSpheres(points, color, scale, ns);
 }
-
-// bool ROSVizWindow::publishStates(std::vector<const ompl::base::State*> states)
-// {
-//   visualization_msgs::Marker marker;
-//   // Set the frame ID and timestamp.
-//   marker.header.frame_id = visuals_->getBaseFrame();
-//   marker.header.stamp = ros::Time();
-
-//   // Set the namespace and id for this marker.  This serves to create a unique ID
-//   marker.ns = "states";
-
-//   // Set the marker type.
-//   marker.type = visualization_msgs::Marker::SPHERE_LIST;
-
-//   // Set the marker action.  Options are ADD and DELETE
-//   marker.action = visualization_msgs::Marker::ADD;
-//   marker.id = 0;
-
-//   marker.pose.position.x = 0.0;
-//   marker.pose.position.y = 0.0;
-//   marker.pose.position.z = 0.0;
-
-//   marker.pose.orientation.x = 0.0;
-//   marker.pose.orientation.y = 0.0;
-//   marker.pose.orientation.z = 0.0;
-//   marker.pose.orientation.w = 1.0;
-
-//   marker.scale.x = 0.4;
-//   marker.scale.y = 0.4;
-//   marker.scale.z = 0.4;
-
-//   marker.color = visuals_->getColor(rvt::RED);
-
-//   // Make line color
-//   std_msgs::ColorRGBA color = visuals_->getColor(rvt::RED);
-
-//   // Point
-//   geometry_msgs::Point point_a;
-
-//   // Loop through all verticies
-//   for (int vertex_id = 0; vertex_id < int(states.size()); ++vertex_id)
-//   {
-//     // First point
-//     point_a = visuals_->convertPoint(stateToPoint(states[vertex_id]));
-
-//     // Add the point pair to the line message
-//     marker.points.push_back(point_a);
-//     marker.colors.push_back(color);
-//   }
-
-//   // Send to Rviz
-//   return visuals_->publishMarker(marker);
-// }
 
 // Deprecated
 bool ROSVizWindow::publishPath(const og::PathGeometric& path, const rvt::colors& color, const double thickness,

@@ -117,6 +117,26 @@ void MoveItVizWindow::state(const ompl::base::State* state, ot::VizSizes size, o
   }  // end switch
 }
 
+void MoveItVizWindow::states(std::vector<const ompl::base::State*> states, std::vector<ot::VizColors> colors,
+                          ot::VizSizes size)
+{
+  std::cout << "not implemented for mvoeit_viz_window " << std::endl;
+  // // Cache spheres
+  // EigenSTL::vector_Vector3d sphere_points;
+  // std::vector<rvt::colors> sphere_colors;
+
+  // for (std::size_t i = 0; i < states.size(); ++i)
+  // {
+  //   // Convert OMPL state to vector3
+  //   sphere_points.push_back(stateToPoint(states[i]));
+  //   // Convert OMPL color to Rviz color
+  //   sphere_colors.push_back(visuals_->intToRvizColor(colors[i]));
+  // }
+
+  // // Publish
+  // visuals_->publishSpheres(sphere_points, sphere_colors, visuals_->intToRvizScale(size));
+}
+
 void MoveItVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost)
 {
   // Error check

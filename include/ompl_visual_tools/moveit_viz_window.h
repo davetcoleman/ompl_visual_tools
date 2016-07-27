@@ -79,8 +79,7 @@ public:
              double extraData);
 
   /** \brief Visualize multiple states during runtime, externally */
-  // void states(std::vector<const ompl::base::State*> states, std::vector<const ompl::tools::VizColors> colors,
-  //             ompl::tools::VizSizes size){};
+  void states(std::vector<const ompl::base::State*> states, std::vector<ompl::tools::VizColors> colors, ompl::tools::VizSizes size);
 
   /** \brief Visualize edge during runtime, externally */
   void edge(const ompl::base::State* stateA, const ompl::base::State* stateB, double cost);
