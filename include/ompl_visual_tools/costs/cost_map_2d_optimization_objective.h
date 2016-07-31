@@ -218,7 +218,7 @@ public:
         }
 
         // Override for blank images
-        if (max_pixel_ == 0)
+        if (max_pixel_ < std::numeric_limits<double>::epsilon())
         {
           std::cout << "BLANK IMAGE - cost_map_2d_opt... " << std::endl;
           min_pixel_ = 0;

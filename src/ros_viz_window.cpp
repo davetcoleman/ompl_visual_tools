@@ -144,14 +144,20 @@ void ROSVizWindow::states(std::vector<const ompl::base::State*> states, std::vec
 
   for (std::size_t i = 0; i < states.size(); ++i)
   {
+    Eigen::Vector3d point = stateToPoint(states[i]);
+
+    // Optional - show state above lines - looks good in 2D but not 3D TODO(davetcoleman): how to auto choose this
+    if (true)
+      point.z() += 0.5;
+
     // Convert OMPL state to vector3
-    sphere_points.push_back(stateToPoint(states[i]));
+    sphere_points.push_back(point);
     // Convert OMPL color to Rviz color
     sphere_colors.push_back(visuals_->intToRvizColor(colors[i]));
   }
 
-  // Publish
-  visuals_->publishSpheres(sphere_points, sphere_colors, visuals_->intToRvizScale(size));
+  // Publish - ROSVizWindow scales are one smaller than MoveItVizWindow
+  visuals_->publishSpheres(sphere_points, sphere_colors, visuals_->intToRvizScale(size - 1));
 }
 
 void ROSVizWindow::edge(const ompl::base::State* stateA, const ompl::base::State* stateB, ot::VizSizes size,
