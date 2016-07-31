@@ -77,7 +77,7 @@ void ROSVizWindow::state(const ompl::base::State* state, ot::VizSizes size, ot::
   Eigen::Vector3d point = stateToPoint(state);
 
   // Optional - show state above lines - looks good in 2D but not 3D TODO(davetcoleman): how to auto choose this
-  if (true)
+  if (si_->getStateDimension() == 2)
     point.z() += 0.5;
 
   switch (size)
@@ -147,7 +147,7 @@ void ROSVizWindow::states(std::vector<const ompl::base::State*> states, std::vec
     Eigen::Vector3d point = stateToPoint(states[i]);
 
     // Optional - show state above lines - looks good in 2D but not 3D TODO(davetcoleman): how to auto choose this
-    if (true)
+    if (si_->getStateDimension() == 2)
       point.z() += 0.5;
 
     // Convert OMPL state to vector3
