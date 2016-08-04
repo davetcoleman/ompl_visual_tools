@@ -144,14 +144,15 @@ void ROSVizWindow::states(std::vector<const ompl::base::State*> states, std::vec
 
   for (std::size_t i = 0; i < states.size(); ++i)
   {
+    // Convert OMPL state to vector3
     Eigen::Vector3d point = stateToPoint(states[i]);
 
     // Optional - show state above lines - looks good in 2D but not 3D TODO(davetcoleman): how to auto choose this
     if (si_->getStateDimension() == 2)
       point.z() += 0.5;
 
-    // Convert OMPL state to vector3
     sphere_points.push_back(point);
+
     // Convert OMPL color to Rviz color
     sphere_colors.push_back(visuals_->intToRvizColor(colors[i]));
   }
@@ -311,7 +312,7 @@ bool ROSVizWindow::publishCostMap(PPMImage* image, bool static_id)
   marker.scale.x = 1.0;
   marker.scale.y = 1.0;
   marker.scale.z = 1.0;
-  marker.color = visuals_->getColor(rvt::RED);
+  marker.color = visuals_->getColor(rvt::BLACK);
 
   // Visualize Results -------------------------------------------------------------------------------------------------
   for (std::size_t marker_id = 0; marker_id < image->getSize(); ++marker_id)
@@ -319,22 +320,32 @@ bool ROSVizWindow::publishCostMap(PPMImage* image, bool static_id)
     unsigned int x = marker_id % image->x;  // Map index back to coordinates
     unsigned int y = marker_id / image->x;  // Map index back to coordinates
 
+    std_msgs::ColorRGBA color;
+    color.r = image->data[image->getID(x, y)].red / 255.0;
+    color.g = image->data[image->getID(x, y)].green / 255.0;
+    color.b = image->data[image->getID(x, y)].blue / 255.0;
+    if (color.r + color.g + color.b > 3.0 - 2.0*std::numeric_limits<double>::epsilon())
+    {
+      continue; // transparent, do not publish
+    }
+
+    // Overide to black
+    color = visuals_->getColor(rvt::DARK_GREY);
+    color.a = 1.0;
+
     // Make right and down triangle
     // Check that we are not on the far right or bottom
     if (!(x + 1 >= image->x || y + 1 >= image->y))
     {
-      publishTriangle(x, y, &marker, image);
-      publishTriangle(x + 1, y, &marker, image);
-      publishTriangle(x, y + 1, &marker, image);
-    }
+      // Top left triangle
+      publishTriangle(x, y, &marker, color);
+      publishTriangle(x + 1, y, &marker, color);
+      publishTriangle(x + 1, y + 1, &marker, color);
 
-    // Make back and down triangle
-    // Check that we are not on the far left or bottom
-    if (!(int(x) - 1 < 0 || y + 1 >= image->y))
-    {
-      publishTriangle(x, y, &marker, image);
-      publishTriangle(x, y + 1, &marker, image);
-      publishTriangle(x - 1, y + 1, &marker, image);
+      // Bottom right triangle
+      publishTriangle(x, y, &marker, color);
+      publishTriangle(x, y + 1, &marker, color);
+      publishTriangle(x + 1, y + 1, &marker, color);
     }
   }
 
@@ -342,7 +353,7 @@ bool ROSVizWindow::publishCostMap(PPMImage* image, bool static_id)
   return visuals_->publishMarker(marker);
 }
 
-bool ROSVizWindow::publishTriangle(int x, int y, visualization_msgs::Marker* marker, PPMImage* image)
+bool ROSVizWindow::publishTriangle(int x, int y, visualization_msgs::Marker* marker, std_msgs::ColorRGBA color)
 {
   // Point
   temp_point_.x = x;
@@ -350,16 +361,6 @@ bool ROSVizWindow::publishTriangle(int x, int y, visualization_msgs::Marker* mar
   temp_point_.z = 0.1;  // all costs become zero in flat world
 
   marker->points.push_back(temp_point_);
-
-  std_msgs::ColorRGBA color;
-  color.r = image->data[image->getID(x, y)].red / 255.0;
-  color.g = image->data[image->getID(x, y)].green / 255.0;
-  color.b = image->data[image->getID(x, y)].blue / 255.0;
-  if (color.r + color.g + color.b == 3.0)
-    color.a = 0.0;  // transparent
-  else
-    color.a = 1.0;
-
   marker->colors.push_back(color);
 
   return true;

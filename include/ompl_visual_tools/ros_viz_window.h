@@ -126,7 +126,7 @@ public:
   /**
    * \brief Helper Function to display triangles
    */
-  bool publishTriangle(int x, int y, visualization_msgs::Marker* marker, PPMImage* image);
+  bool publishTriangle(int x, int y, visualization_msgs::Marker* marker, std_msgs::ColorRGBA color);
 
   /**
    * \brief Publish a marker of a series of spheres to rviz
