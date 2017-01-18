@@ -19,12 +19,12 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
-    - Class: rviz/Marker
+    - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /ompl_rviz_markers
       Name: OMPL Visual Tools
       Namespaces:
-        cost_map: false
+        cost_map: true
         final_solution: true
         plan_from_scratch: true
         plan_start_goal: true
