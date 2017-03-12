@@ -1,5 +1,11 @@
 # OMPL Visual Tools
 
+# THIS LIBRAY IS NO LONGER MAINTAINED IN KINETIC ONWARD
+
+The configuration with a custom version of OMPL was too much to maintain for me, and I am stopping support for this package as of ROS Kinetic.
+
+---
+
 The OMPL Visual Tools is a library for visualizing and debugging [Open Motion Planning Library](http://ompl.kavrakilab.org/) algorithms in Rviz.
 
 Formally named ompl_rviz_viewer until August 2014, this project spun out of an internship at Willow Garage. [Video](https://www.youtube.com/watch?v=RcGvi4Svd4k)
